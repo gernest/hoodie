@@ -394,6 +394,31 @@ pub const URL = struct {
         return uri;
     }
 
+    fn dump(u: *URL, out: *Buffer) !void {
+        if (u.scheme) |scheme| {
+            try out.append(scheme);
+        }
+        if (u.opaque) |opaque| {
+            try out.append(opaque);
+        } else {
+            if (u.scheme != null or u.host != null or u.user != null) {
+                if (u.host != null or u.path != null or u.user != null) {
+                    try out.append("//");
+                }
+                if (u.user) |usr| {
+                    try usr.dump(out);
+                    try out.appendByte('@');
+                }
+                if (u.host) |h| {
+                    const x = out.len();
+                    const ctx = countEscape(h, encoding.host);
+                    try out.resize(x+ctx.len())
+                    try escape(out.toSlice()[x..],h,encoding.host);
+                }
+            }
+        }
+    }
+
     fn parseInternal(u: *URL, raw_url: []const u8, via_request: bool) !void {
         if (raw_url.len == 0 and via_request) {
             return error.EmptyURL;
