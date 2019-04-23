@@ -1,0 +1,15 @@
+{
+  "name": "protocol",
+  "version": "1.0.0",
+  "description": "generates lsp types for use with hoodie",
+  "main": "go.js",
+  "scripts": {
+    "gen": "tsc go.ts && node go.js -d tmp/ -o out.go"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^11.13.7",
+    "typescript": "^3.4.4"
+  }
+}
