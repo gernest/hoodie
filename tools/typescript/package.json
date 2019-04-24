@@ -4,7 +4,7 @@
   "description": "generates lsp types for use with hoodie",
   "main": "go.js",
   "scripts": {
-    "gen": "tsc go.ts && node go.js -d tmp/ -o out.go"
+    "gen": "tsc go.ts && node go.js -d tmp/ -o out.zig"
   },
   "author": "",
   "license": "MIT",

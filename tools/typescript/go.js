@@ -344,7 +344,7 @@ function generate(files, options) {
         if (str == undefined && first == undefined) {
             return;
         } // various
-        var ty = (str != undefined) ? 'string' : 'float64';
+        var ty = (str != undefined) ? 'string' : 'f64';
         var val = (str != undefined) ? str.replace(/'/g, '"') : first;
         var name = toGoName(getText(id));
         var c = {
@@ -717,11 +717,12 @@ function generate(files, options) {
     }
 }
 function getComments(node) {
-    var sf = node.getSourceFile();
-    var start = node.getStart(sf, false);
-    var starta = node.getStart(sf, true);
-    var x = sf.text.substring(starta, start);
-    return x;
+    // const sf = node.getSourceFile();
+    // const start = node.getStart(sf, false)
+    // const starta = node.getStart(sf, true)
+    // const x = sf.text.substring(starta, start)
+    // return x
+    return '';
 }
 function emitTypes() {
     for (var _i = 0, Types_1 = Types; _i < Types_1.length; _i++) {
@@ -749,10 +750,11 @@ function emitStructs() {
         prgo(genComments(str.name, getComments(str.me)));
         /* prgo(`// ${str.name} is:\n`)
         prgo(getComments(str.me))*/
-        prgo("type " + str.name + " struct {\n");
+        prgo("const  " + str.name + " =struct {\n");
         for (var _a = 0, _b = str.embeds; _a < _b.length; _a++) {
             var s = _b[_a];
-            prgo("\t" + s + "\n");
+            // TODO generate embeds
+            // prgo(`\t${s}\n`)
         }
         if (str.fields != undefined) {
             for (var _c = 0, _d = str.fields; _c < _d.length; _c++) {
@@ -760,16 +762,17 @@ function emitStructs() {
                 prgo(strField(f));
             }
         }
-        prgo("}\n");
+        prgo("};\n");
     }
 }
 function genComments(name, maybe) {
-    if (maybe == '')
-        return "\n\t// " + name + " is\n";
-    if (maybe.indexOf('/**') == 0) {
-        return maybe.replace('/**', "\n/*" + name + " defined:");
-    }
-    throw new Error("weird comment " + maybe.indexOf('/**'));
+    // if (maybe == '') return `\n    // ${name} is\n`;
+    // if (maybe.indexOf('/**') == 0) {
+    //   return maybe.replace('/**', `\n/*${name} defined:`)
+    // }
+    // throw new Error(`weird comment ${maybe.indexOf('/**')}`)
+    // TODO revisit this?
+    return '';
 }
 // Turn a Field into an output string
 function strField(f) {
@@ -783,20 +786,34 @@ function strField(f) {
         case '[': // []foo
             opt = '';
     }
+    switch (f.goType.charAt(0)) {
+        case 'i': // interface{}
+        case '[': // []foo
+        case 'm': //map
+            //TODO handle interfaces
+            return '';
+    }
     var stuff = (f.gostuff == undefined) ? '' : " // " + f.gostuff;
     ans.push(genComments(f.goName, getComments(f.me)));
     if (f.substruct == undefined) {
-        ans.push("\t" + f.goName + " " + opt + f.goType + " " + f.json + stuff + "\n");
+        ans.push("    " + toZigField(f.goName) + " :" + opt + f.goType + ",\n");
     }
     else {
-        ans.push("\t" + f.goName + " " + opt + "struct {\n");
+        var zigField = toZigField(f.goName);
+        ans.push("    " + zigField + ": " + opt + f.goName + " ,\n");
+        ans.push("    const " + f.goName + " =struct {\n");
         for (var _i = 0, _a = f.substruct; _i < _a.length; _i++) {
             var x = _a[_i];
             ans.push(strField(x));
         }
-        ans.push("\t} " + f.json + stuff + "\n");
+        ans.push("    };\n");
     }
     return (''.concat.apply('', ans));
+}
+function toZigField(name) {
+    name = name.replace(/URI$/, 'Uri');
+    name = name.replace(/ID$/, 'Id');
+    return name.split(/(?=[A-Z])/).join('_').toLowerCase();
 }
 function emitConsts() {
     // Generate modifying prefixes and suffixes to ensure consts are
@@ -848,7 +865,6 @@ function emitHeader(files) {
     }
     prgo("// Package protocol contains data types for LSP jsonrpcs\n");
     prgo("// generated automatically from vscode-languageserver-node\n  //  version of " + lastDate + "\n");
-    prgo('package protocol\n\n');
 }
 ;
 // ad hoc argument parsing: [-d dir] [-o outputfile], and order matters
@@ -875,7 +891,7 @@ function main() {
     generate(files, { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.CommonJS });
     emitHeader(files);
     emitStructs();
-    emitConsts();
-    emitTypes();
+    // emitConsts()
+    // emitTypes()
 }
 main();

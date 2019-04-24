@@ -365,7 +365,7 @@ function generate(files: string[], options: ts.CompilerOptions): void {
     if (str == undefined && first == undefined) {
       return
     }  // various
-    const ty = (str != undefined) ? 'string' : 'float64'
+    const ty = (str != undefined) ? 'string' : 'f64'
     const val = (str != undefined) ? str.replace(/'/g, '"') : first
     const name = toGoName(getText(id))
     const c = {
@@ -724,11 +724,12 @@ function generate(files: string[], options: ts.CompilerOptions): void {
 }
 
 function getComments(node: ts.Node): string {
-  const sf = node.getSourceFile();
-  const start = node.getStart(sf, false)
-  const starta = node.getStart(sf, true)
-  const x = sf.text.substring(starta, start)
-  return x
+  // const sf = node.getSourceFile();
+  // const start = node.getStart(sf, false)
+  // const starta = node.getStart(sf, true)
+  // const x = sf.text.substring(starta, start)
+  // return x
+  return ''
 }
 
 function emitTypes() {
@@ -755,25 +756,28 @@ function emitStructs() {
     prgo(genComments(str.name, getComments(str.me)))
     /* prgo(`// ${str.name} is:\n`)
     prgo(getComments(str.me))*/
-    prgo(`type ${str.name} struct {\n`)
+    prgo(`const  ${str.name} =struct {\n`)
     for (const s of str.embeds) {
-      prgo(`\t${s}\n`)
+      // TODO generate embeds
+      // prgo(`\t${s}\n`)
     }
     if (str.fields != undefined) {
       for (const f of str.fields) {
         prgo(strField(f))
       }
     }
-    prgo(`}\n`)
+    prgo(`};\n`)
   }
 }
 
 function genComments(name: string, maybe: string): string {
-  if (maybe == '') return `\n\t// ${name} is\n`;
-  if (maybe.indexOf('/**') == 0) {
-    return maybe.replace('/**', `\n/*${name} defined:`)
-  }
-  throw new Error(`weird comment ${maybe.indexOf('/**')}`)
+  // if (maybe == '') return `\n    // ${name} is\n`;
+  // if (maybe.indexOf('/**') == 0) {
+  //   return maybe.replace('/**', `\n/*${name} defined:`)
+  // }
+  // throw new Error(`weird comment ${maybe.indexOf('/**')}`)
+  // TODO revisit this?
+  return ''
 }
 
 // Turn a Field into an output string
@@ -788,19 +792,34 @@ function strField(f: Field): string {
     case '[':  // []foo
       opt = ''
   }
+  switch (f.goType.charAt(0)) {
+    case 'i':  // interface{}
+    case '[':  // []foo
+    case 'm': //map
+      //TODO handle interfaces
+      return ''
+  }
   let stuff = (f.gostuff == undefined) ? '' : ` // ${f.gostuff}`
   ans.push(genComments(f.goName, getComments(f.me)))
   if (f.substruct == undefined) {
-    ans.push(`\t${f.goName} ${opt}${f.goType} ${f.json}${stuff}\n`)
+    ans.push(`    ${toZigField(f.goName)} :${opt}${f.goType},\n`)
   }
   else {
-    ans.push(`\t${f.goName} ${opt}struct {\n`)
+    const zigField = toZigField(f.goName);
+    ans.push(`    ${zigField}: ${opt}${f.goName} ,\n`)
+    ans.push(`    const ${f.goName} =struct {\n`)
     for (const x of f.substruct) {
       ans.push(strField(x))
     }
-    ans.push(`\t} ${f.json}${stuff}\n`)
+    ans.push(`    };\n`)
   }
   return (''.concat(...ans))
+}
+
+function toZigField(name: string): string {
+  name = name.replace(/URI$/, 'Uri')
+  name = name.replace(/ID$/, 'Id')
+  return name.split(/(?=[A-Z])/).join('_').toLowerCase();
 }
 
 function emitConsts() {
@@ -853,7 +872,6 @@ function emitHeader(files: string[]) {
   prgo(`// Package protocol contains data types for LSP jsonrpcs\n`)
   prgo(`// generated automatically from vscode-languageserver-node
   //  version of ${lastDate}\n`)
-  prgo('package protocol\n\n')
 };
 
 // ad hoc argument parsing: [-d dir] [-o outputfile], and order matters
@@ -880,8 +898,8 @@ function main() {
     files, { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.CommonJS });
   emitHeader(files)
   emitStructs()
-  emitConsts()
-  emitTypes()
+  // emitConsts()
+  // emitTypes()
 }
 
 main()
