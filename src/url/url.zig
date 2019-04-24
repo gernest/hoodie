@@ -606,8 +606,15 @@ pub const URL = struct {
         return true;
     }
 
+    // validEncodedPath reports whether s is a valid encoded path.
+    // It must not contain any bytes that require escaping during path encoding.
     fn validEncodedPath(s: []const u8) bool {
         for (s) |c| {
+            // RFC 3986, Appendix A.
+            // pchar = unreserved / pct-encoded / sub-delims / ":" / "@".
+            // shouldEscape is not quite compliant with the RFC,
+            // so we check the sub-delims ourselves and let
+            // shouldEscape handle the others.
             switch (c) {
                 '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=', ':', '@' => {},
                 '[', ']' => {
