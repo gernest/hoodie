@@ -4,7 +4,8 @@
   "description": "generates lsp types for use with hoodie",
   "main": "go.js",
   "scripts": {
-    "gen": "tsc go.ts && node go.js -d tmp/ -o out.zig && zig fmt out.zig"
+    "gen": "tsc go.ts && node go.js -d tmp/ -o out.zig && zig fmt out.zig",
+    "copy": "cp out.zig ../../src/protocol/protocol.zig"
   },
   "author": "",
   "license": "MIT",
