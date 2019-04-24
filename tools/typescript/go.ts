@@ -758,7 +758,7 @@ function emitStructs() {
     prgo(genComments(str.name, getComments(str.me)))
     /* prgo(`// ${str.name} is:\n`)
     prgo(getComments(str.me))*/
-    prgo(`pub const  ${str.name} =struct {\n`)
+    prgo(`\npub const  ${str.name} =struct {\n`)
     for (const s of str.embeds) {
       const k = cache.get(s)
       if (k) {
@@ -853,33 +853,53 @@ function emitConsts() {
   let suff = new Map<string, string>([
     ['CompletionItemKind', 'Completion'], ['InsertTextFormat', 'TextFormat']
   ])
+  const collect = new Map<String, Const[]>();
   for (const c of Consts) {
-    if (seenConstTypes[c.typeName]) {
-      continue
+    const cn = collect.get(c.typeName)
+    if (cn) {
+      cn.push(c)
+    } else {
+      collect.set(c.typeName, [c])
     }
-    seenConstTypes[c.typeName] = true
-    if (pref.get(c.typeName) == undefined) {
-      pref.set(c.typeName, '')  // initialize to empty value
-    }
-    if (suff.get(c.typeName) == undefined) {
-      suff.set(c.typeName, '')
-    }
-    prgo(`// ${c.typeName} defines constants\n`)
-    prgo(`type ${c.typeName} ${c.goType}\n`)
   }
-  prgo('const (\n')
-  let seenConsts = new Map<string, boolean>()  // to avoid duplicates
-  for (const c of Consts) {
-    const x = `${pref.get(c.typeName)}${c.name}${suff.get(c.typeName)}`
-    if (seenConsts.get(x)) {
-      continue
+  collect.forEach((value, key) => {
+    const typ = value[0].goType
+    prgo(`const ${key} =enum${enumTyp(typ)}{\n`)
+    for (const c of value) {
+      // TODO fix comments
+      // prgo(genComments(x, getComments(c.me)))
+      prgo(`    ${c.name}${enumVal(c.goType, c.value)},\n`)
     }
-    seenConsts.set(x, true)
-    prgo(genComments(x, getComments(c.me)))
-    prgo(`\t${x} ${c.typeName} = ${c.value}\n`)
-  }
-  prgo(')\n')
+    if (typ == 'string') {
+      prgo(`    pub fn toString(self: ${key}) []const u8{\n`)
+      prgo(`        return switch(self){\n`)
+      for (const c of value) {
+        // TODO fix comments
+        // prgo(genComments(x, getComments(c.me)))
+        prgo(`             ${key}.${c.name}=>${c.value},\n`)
+      }
+      prgo(`             else=>"",\n`)
+      prgo('        };\n')
+      prgo('    }\n')
+    }
+    prgo('};\n')
+  })
 }
+
+function enumTyp(typ: string): string {
+  if (typ == 'string') {
+    return '';
+  }
+  return `(${toZigType(typ)})`
+}
+
+function enumVal(typ: string, val: string): string {
+  if (typ == 'string') {
+    return '';
+  }
+  return `=${val}`
+}
+
 
 function emitHeader(files: string[]) {
   let lastMod = 0
@@ -923,7 +943,7 @@ function main() {
     files, { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.CommonJS });
   emitHeader(files)
   emitStructs()
-  // emitConsts()
+  emitConsts()
   // emitTypes()
 }
 
