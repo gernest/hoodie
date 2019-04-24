@@ -2,3 +2,4 @@ zig-cache
 tmp/
 node_modules/
 *.js
+out.zig
