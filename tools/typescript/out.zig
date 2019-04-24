@@ -1,80 +1,90 @@
 // Package protocol contains data types for LSP jsonrpcs
 // generated automatically from vscode-languageserver-node
 //  version of Tue Apr 23 2019 15:01:15 GMT+0300 (East Africa Time)
+const std = @import("std");
+const json = std.json;
+const ArrayList = std.ArrayList;
 const ImplementationClientCapabilities = struct {
-    text_document: *TextDocument,
+    text_document: ?TextDocument,
     const TextDocument = struct {
-        implementation: *Implementation,
+        implementation: ?Implementation,
         const Implementation = struct {
-            dynamic_registration: bool,
-            link_support: bool,
+            dynamic_registration: ?bool,
+            link_support: ?bool,
         };
     };
 };
 const ImplementationServerCapabilities = struct {
-    implementation_provider: bool,
+    implementation_provider: ?bool,
 };
 const TypeDefinitionClientCapabilities = struct {
-    text_document: *TextDocument,
+    text_document: ?TextDocument,
     const TextDocument = struct {
-        type_definition: *TypeDefinition,
+        type_definition: ?TypeDefinition,
         const TypeDefinition = struct {
-            dynamic_registration: bool,
-            link_support: bool,
+            dynamic_registration: ?bool,
+            link_support: ?bool,
         };
     };
 };
 const TypeDefinitionServerCapabilities = struct {
-    type_definition_provider: bool,
+    type_definition_provider: ?bool,
 };
-const WorkspaceFoldersInitializeParams = struct {};
+const WorkspaceFoldersInitializeParams = struct {
+    workspace_folders: ArrayList(WorkspaceFolder),
+};
 const WorkspaceFoldersClientCapabilities = struct {
-    workspace: *Workspace,
+    workspace: ?Workspace,
     const Workspace = struct {
-        workspace_folders: bool,
+        workspace_folders: ?bool,
     };
 };
 const WorkspaceFoldersServerCapabilities = struct {
-    workspace: *Workspace,
+    workspace: ?Workspace,
     const Workspace = struct {
-        workspace_folders: *WorkspaceFolders,
+        workspace_folders: ?WorkspaceFolders,
         const WorkspaceFolders = struct {
-            supported: bool,
-            change_notifications: string,
+            supported: ?bool,
+            change_notifications: ?[]const u8,
         };
     };
 };
 const WorkspaceFolder = struct {
-    uri: string,
-    name: string,
+    uri: []const u8,
+    name: []const u8,
 };
 const DidChangeWorkspaceFoldersParams = struct {
     event: WorkspaceFoldersChangeEvent,
 };
-const WorkspaceFoldersChangeEvent = struct {};
+const WorkspaceFoldersChangeEvent = struct {
+    added: ArrayList(WorkspaceFolder),
+    removed: ArrayList(WorkspaceFolder),
+};
 const ConfigurationClientCapabilities = struct {
-    workspace: *Workspace,
+    workspace: ?Workspace,
     const Workspace = struct {
-        configuration: bool,
+        configuration: ?bool,
     };
 };
 const ConfigurationItem = struct {
-    scope_uri: string,
-    section: string,
+    scope_uri: ?[]const u8,
+    section: ?[]const u8,
 };
-const ConfigurationParams = struct {};
+const ConfigurationParams = struct {
+    items: ArrayList(ConfigurationItem),
+};
 const ColorClientCapabilities = struct {
-    text_document: *TextDocument,
+    text_document: ?TextDocument,
     const TextDocument = struct {
-        color_provider: *ColorProvider,
+        color_provider: ?ColorProvider,
         const ColorProvider = struct {
-            dynamic_registration: bool,
+            dynamic_registration: ?bool,
         };
     };
 };
 const ColorProviderOptions = struct {};
 const ColorServerCapabilities = struct {
-    color_provider: bool,
+    color_provider: ?bool,
 };
 const DocumentColorParams = struct {
     text_document: TextDocumentIdentifier,
@@ -85,283 +95,417 @@ const ColorPresentationParams = struct {
     range: Range,
 };
 const FoldingRangeClientCapabilities = struct {
-    text_document: *TextDocument,
+    text_document: ?TextDocument,
     const TextDocument = struct {
-        folding_range: *FoldingRange,
+        folding_range: ?FoldingRange,
         const FoldingRange = struct {
-            dynamic_registration: bool,
-            range_limit: float64,
-            line_folding_only: bool,
+            dynamic_registration: ?bool,
+            range_limit: ?f64,
+            line_folding_only: ?bool,
         };
     };
 };
 const FoldingRangeProviderOptions = struct {};
 const FoldingRangeServerCapabilities = struct {
-    folding_range_provider: bool,
+    folding_range_provider: ?bool,
 };
 const FoldingRange = struct {
-    start_line: float64,
-    start_character: float64,
-    end_line: float64,
-    end_character: float64,
-    kind: string,
+    start_line: f64,
+    start_character: ?f64,
+    end_line: f64,
+    end_character: ?f64,
+    kind: ?[]const u8,
 };
 const FoldingRangeParams = struct {
     text_document: TextDocumentIdentifier,
 };
 const DeclarationClientCapabilities = struct {
-    text_document: *TextDocument,
+    text_document: ?TextDocument,
     const TextDocument = struct {
-        declaration: *Declaration,
+        declaration: ?Declaration,
         const Declaration = struct {
-            dynamic_registration: bool,
-            link_support: bool,
+            dynamic_registration: ?bool,
+            link_support: ?bool,
         };
     };
 };
 const DeclarationServerCapabilities = struct {
-    declaration_provider: bool,
+    declaration_provider: ?bool,
 };
 const Registration = struct {
-    id: string,
-    method: string,
+    id: []const u8,
+    method: []const u8,
+    register_options: ?json.Value,
 };
-const RegistrationParams = struct {};
+const RegistrationParams = struct {
+    registrations: ArrayList(Registration),
+};
 const Unregistration = struct {
-    id: string,
-    method: string,
+    id: []const u8,
+    method: []const u8,
 };
-const UnregistrationParams = struct {};
+const UnregistrationParams = struct {
+    unregisterations: ArrayList(Unregistration),
+};
 const TextDocumentPositionParams = struct {
     text_document: TextDocumentIdentifier,
     position: Position,
 };
 const WorkspaceClientCapabilities = struct {
-    apply_edit: bool,
-    workspace_edit: *WorkspaceEdit,
+    apply_edit: ?bool,
+    workspace_edit: ?WorkspaceEdit,
     const WorkspaceEdit = struct {
-        document_changes: bool,
-        failure_handling: *FailureHandlingKind,
+        document_changes: ?bool,
+        resource_operations: ?ArrayList(ResourceOperationKind),
+        failure_handling: ?FailureHandlingKind,
     };
-    did_change_configuration: *DidChangeConfiguration,
+    did_change_configuration: ?DidChangeConfiguration,
     const DidChangeConfiguration = struct {
-        dynamic_registration: bool,
+        dynamic_registration: ?bool,
     };
-    did_change_watched_files: *DidChangeWatchedFiles,
+    did_change_watched_files: ?DidChangeWatchedFiles,
     const DidChangeWatchedFiles = struct {
-        dynamic_registration: bool,
+        dynamic_registration: ?bool,
     };
-    symbol: *Symbol,
+    symbol: ?Symbol,
     const Symbol = struct {
-        dynamic_registration: bool,
-        symbol_kind: *SymbolKind,
-        const SymbolKind = struct {};
+        dynamic_registration: ?bool,
+        symbol_kind: ?SymbolKind,
+        const SymbolKind = struct {
+            value_set: ?ArrayList(SymbolKind),
+        };
     };
-    execute_command: *ExecuteCommand,
+    execute_command: ?ExecuteCommand,
     const ExecuteCommand = struct {
-        dynamic_registration: bool,
+        dynamic_registration: ?bool,
     };
 };
 const TextDocumentClientCapabilities = struct {
-    synchronization: *Synchronization,
+    synchronization: ?Synchronization,
     const Synchronization = struct {
-        dynamic_registration: bool,
-        will_save: bool,
-        will_save_wait_until: bool,
-        did_save: bool,
+        dynamic_registration: ?bool,
+        will_save: ?bool,
+        will_save_wait_until: ?bool,
+        did_save: ?bool,
     };
-    completion: *Completion,
+    completion: ?Completion,
     const Completion = struct {
-        dynamic_registration: bool,
-        completion_item: *CompletionItem,
+        dynamic_registration: ?bool,
+        completion_item: ?CompletionItem,
         const CompletionItem = struct {
-            snippet_support: bool,
-            commit_characters_support: bool,
-            deprecated_support: bool,
-            preselect_support: bool,
+            snippet_support: ?bool,
+            commit_characters_support: ?bool,
+            documentation_format: ?ArrayList(MarkupKind),
+            deprecated_support: ?bool,
+            preselect_support: ?bool,
         };
-        completion_item_kind: *CompletionItemKind,
-        const CompletionItemKind = struct {};
-        context_support: bool,
+        completion_item_kind: ?CompletionItemKind,
+        const CompletionItemKind = struct {
+            value_set: ?ArrayList(CompletionItemKind),
+        };
+        context_support: ?bool,
     };
-    hover: *Hover,
+    hover: ?Hover,
     const Hover = struct {
-        dynamic_registration: bool,
+        dynamic_registration: ?bool,
+        content_format: ?ArrayList(MarkupKind),
     };
-    signature_help: *SignatureHelp,
+    signature_help: ?SignatureHelp,
     const SignatureHelp = struct {
-        dynamic_registration: bool,
-        signature_information: *SignatureInformation,
+        dynamic_registration: ?bool,
+        signature_information: ?SignatureInformation,
         const SignatureInformation = struct {
-            parameter_information: *ParameterInformation,
+            documentation_format: ?ArrayList(MarkupKind),
+            parameter_information: ?ParameterInformation,
             const ParameterInformation = struct {
-                label_offset_support: bool,
+                label_offset_support: ?bool,
             };
         };
     };
-    references: *References,
+    references: ?References,
     const References = struct {
-        dynamic_registration: bool,
+        dynamic_registration: ?bool,
     };
-    document_highlight: *DocumentHighlight,
+    document_highlight: ?DocumentHighlight,
     const DocumentHighlight = struct {
-        dynamic_registration: bool,
+        dynamic_registration: ?bool,
     };
-    document_symbol: *DocumentSymbol,
+    document_symbol: ?DocumentSymbol,
     const DocumentSymbol = struct {
-        dynamic_registration: bool,
-        symbol_kind: *SymbolKind,
-        const SymbolKind = struct {};
-        hierarchical_document_symbol_support: bool,
+        dynamic_registration: ?bool,
+        symbol_kind: ?SymbolKind,
+        const SymbolKind = struct {
+            value_set: ?ArrayList(SymbolKind),
+        };
+        hierarchical_document_symbol_support: ?bool,
     };
-    formatting: *Formatting,
+    formatting: ?Formatting,
     const Formatting = struct {
-        dynamic_registration: bool,
+        dynamic_registration: ?bool,
     };
-    range_formatting: *RangeFormatting,
+    range_formatting: ?RangeFormatting,
     const RangeFormatting = struct {
-        dynamic_registration: bool,
+        dynamic_registration: ?bool,
     };
-    on_type_formatting: *OnTypeFormatting,
+    on_type_formatting: ?OnTypeFormatting,
     const OnTypeFormatting = struct {
-        dynamic_registration: bool,
+        dynamic_registration: ?bool,
     };
-    definition: *Definition,
+    definition: ?Definition,
     const Definition = struct {
-        dynamic_registration: bool,
-        link_support: bool,
+        dynamic_registration: ?bool,
+        link_support: ?bool,
     };
-    code_action: *CodeAction,
+    code_action: ?CodeAction,
     const CodeAction = struct {
-        dynamic_registration: bool,
-        code_action_literal_support: *CodeActionLiteralSupport,
+        dynamic_registration: ?bool,
+        code_action_literal_support: ?CodeActionLiteralSupport,
         const CodeActionLiteralSupport = struct {
             code_action_kind: CodeActionKind,
-            const CodeActionKind = struct {};
+            const CodeActionKind = struct {
+                value_set: ArrayList(CodeActionKind),
+            };
         };
     };
-    code_lens: *CodeLens,
+    code_lens: ?CodeLens,
     const CodeLens = struct {
-        dynamic_registration: bool,
+        dynamic_registration: ?bool,
     };
-    document_link: *DocumentLink,
+    document_link: ?DocumentLink,
     const DocumentLink = struct {
-        dynamic_registration: bool,
+        dynamic_registration: ?bool,
     };
-    rename: *Rename,
+    rename: ?Rename,
     const Rename = struct {
-        dynamic_registration: bool,
-        prepare_support: bool,
+        dynamic_registration: ?bool,
+        prepare_support: ?bool,
     };
-    publish_diagnostics: *PublishDiagnostics,
+    publish_diagnostics: ?PublishDiagnostics,
     const PublishDiagnostics = struct {
-        related_information: bool,
-        tag_support: bool,
+        related_information: ?bool,
+        tag_support: ?bool,
     };
 };
 const WindowClientCapabilities = struct {
-    progress: bool,
+    progress: ?bool,
 };
 const InnerClientCapabilities = struct {
-    workspace: *WorkspaceClientCapabilities,
-    text_document: *TextDocumentClientCapabilities,
-    window: *WindowClientCapabilities,
+    workspace: ?WorkspaceClientCapabilities,
+    text_document: ?TextDocumentClientCapabilities,
+    window: ?WindowClientCapabilities,
+    experimental: ?json.Value,
 };
-const ClientCapabilities = struct {};
+const ClientCapabilities = struct {
+    workspace: ?WorkspaceClientCapabilities,
+    text_document: ?TextDocumentClientCapabilities,
+    window: ?WindowClientCapabilities,
+    experimental: ?json.Value,
+    text_document: ?TextDocument,
+    const TextDocument = struct {
+        implementation: ?Implementation,
+        const Implementation = struct {
+            dynamic_registration: ?bool,
+            link_support: ?bool,
+        };
+    };
+    text_document: ?TextDocument,
+    const TextDocument = struct {
+        type_definition: ?TypeDefinition,
+        const TypeDefinition = struct {
+            dynamic_registration: ?bool,
+            link_support: ?bool,
+        };
+    };
+    workspace: ?Workspace,
+    const Workspace = struct {
+        workspace_folders: ?bool,
+    };
+    workspace: ?Workspace,
+    const Workspace = struct {
+        configuration: ?bool,
+    };
+    text_document: ?TextDocument,
+    const TextDocument = struct {
+        color_provider: ?ColorProvider,
+        const ColorProvider = struct {
+            dynamic_registration: ?bool,
+        };
+    };
+    text_document: ?TextDocument,
+    const TextDocument = struct {
+        folding_range: ?FoldingRange,
+        const FoldingRange = struct {
+            dynamic_registration: ?bool,
+            range_limit: ?f64,
+            line_folding_only: ?bool,
+        };
+    };
+    text_document: ?TextDocument,
+    const TextDocument = struct {
+        declaration: ?Declaration,
+        const Declaration = struct {
+            dynamic_registration: ?bool,
+            link_support: ?bool,
+        };
+    };
+};
 const StaticRegistrationOptions = struct {
-    id: string,
+    id: ?[]const u8,
 };
 const TextDocumentRegistrationOptions = struct {
     document_selector: DocumentSelector,
 };
 const CompletionOptions = struct {
-    resolve_provider: bool,
+    trigger_characters: ?ArrayList([]const u8),
+    all_commit_characters: ?ArrayList([]const u8),
+    resolve_provider: ?bool,
 };
-const SignatureHelpOptions = struct {};
-const CodeActionOptions = struct {};
+const SignatureHelpOptions = struct {
+    trigger_characters: ?ArrayList([]const u8),
+};
+const CodeActionOptions = struct {
+    code_action_kinds: ?ArrayList(CodeActionKind),
+};
 const CodeLensOptions = struct {
-    resolve_provider: bool,
+    resolve_provider: ?bool,
 };
 const DocumentOnTypeFormattingOptions = struct {
-    first_trigger_character: string,
+    first_trigger_character: []const u8,
+    more_trigger_character: ?ArrayList([]const u8),
 };
 const RenameOptions = struct {
-    prepare_provider: bool,
+    prepare_provider: ?bool,
 };
 const DocumentLinkOptions = struct {
-    resolve_provider: bool,
+    resolve_provider: ?bool,
 };
-const ExecuteCommandOptions = struct {};
+const ExecuteCommandOptions = struct {
+    commands: ArrayList([]const u8),
+};
 const SaveOptions = struct {
-    include_text: bool,
+    include_text: ?bool,
 };
 const TextDocumentSyncOptions = struct {
-    open_close: bool,
+    open_close: ?bool,
     change: TextDocumentSyncKind,
-    will_save: bool,
-    will_save_wait_until: bool,
-    save: *SaveOptions,
+    will_save: ?bool,
+    will_save_wait_until: ?bool,
+    save: ?SaveOptions,
 };
 const InnerServerCapabilities = struct {
-    hover_provider: bool,
-    completion_provider: *CompletionOptions,
-    signature_help_provider: *SignatureHelpOptions,
-    definition_provider: bool,
-    references_provider: bool,
-    document_highlight_provider: bool,
-    document_symbol_provider: bool,
-    workspace_symbol_provider: bool,
-    code_action_provider: bool,
-    code_lens_provider: *CodeLensOptions,
-    document_formatting_provider: bool,
-    document_range_formatting_provider: bool,
-    document_on_type_formatting_provider: *DocumentOnTypeFormattingProvider,
+    text_document_sync: ?json.Value,
+    hover_provider: ?bool,
+    completion_provider: ?CompletionOptions,
+    signature_help_provider: ?SignatureHelpOptions,
+    definition_provider: ?bool,
+    references_provider: ?bool,
+    document_highlight_provider: ?bool,
+    document_symbol_provider: ?bool,
+    workspace_symbol_provider: ?bool,
+    code_action_provider: ?bool,
+    code_lens_provider: ?CodeLensOptions,
+    document_formatting_provider: ?bool,
+    document_range_formatting_provider: ?bool,
+    document_on_type_formatting_provider: ?DocumentOnTypeFormattingProvider,
     const DocumentOnTypeFormattingProvider = struct {
-        first_trigger_character: string,
+        first_trigger_character: []const u8,
+        more_trigger_character: ?ArrayList([]const u8),
     };
-    rename_provider: bool,
-    document_link_provider: *DocumentLinkOptions,
-    execute_command_provider: *ExecuteCommandOptions,
+    rename_provider: ?bool,
+    document_link_provider: ?DocumentLinkOptions,
+    execute_command_provider: ?ExecuteCommandOptions,
+    experimental: ?json.Value,
 };
-const ServerCapabilities = struct {};
+const ServerCapabilities = struct {
+    text_document_sync: ?json.Value,
+    hover_provider: ?bool,
+    completion_provider: ?CompletionOptions,
+    signature_help_provider: ?SignatureHelpOptions,
+    definition_provider: ?bool,
+    references_provider: ?bool,
+    document_highlight_provider: ?bool,
+    document_symbol_provider: ?bool,
+    workspace_symbol_provider: ?bool,
+    code_action_provider: ?bool,
+    code_lens_provider: ?CodeLensOptions,
+    document_formatting_provider: ?bool,
+    document_range_formatting_provider: ?bool,
+    document_on_type_formatting_provider: ?DocumentOnTypeFormattingProvider,
+    const DocumentOnTypeFormattingProvider = struct {
+        first_trigger_character: []const u8,
+        more_trigger_character: ?ArrayList([]const u8),
+    };
+    rename_provider: ?bool,
+    document_link_provider: ?DocumentLinkOptions,
+    execute_command_provider: ?ExecuteCommandOptions,
+    experimental: ?json.Value,
+    implementation_provider: ?bool,
+    type_definition_provider: ?bool,
+    workspace: ?Workspace,
+    const Workspace = struct {
+        workspace_folders: ?WorkspaceFolders,
+        const WorkspaceFolders = struct {
+            supported: ?bool,
+            change_notifications: ?[]const u8,
+        };
+    };
+    color_provider: ?bool,
+    folding_range_provider: ?bool,
+    declaration_provider: ?bool,
+};
 const InnerInitializeParams = struct {
-    process_id: float64,
-    root_path: string,
-    root_uri: string,
+    process_id: f64,
+    root_path: ?[]const u8,
+    root_uri: []const u8,
     capabilities: ClientCapabilities,
-    trace: string,
+    initialization_options: ?json.Value,
+    trace: ?[]const u8,
 };
-const InitializeParams = struct {};
+const InitializeParams = struct {
+    process_id: f64,
+    root_path: ?[]const u8,
+    root_uri: []const u8,
+    capabilities: ClientCapabilities,
+    initialization_options: ?json.Value,
+    trace: ?[]const u8,
+    workspace_folders: ArrayList(WorkspaceFolder),
+};
 const InitializeResult = struct {
     capabilities: ServerCapabilities,
+    custom: json.ObjectMap,
 };
 const InitializedParams = struct {};
 const DidChangeConfigurationRegistrationOptions = struct {
-    section: string,
+    section: ?[]const u8,
 };
-const DidChangeConfigurationParams = struct {};
+const DidChangeConfigurationParams = struct {
+    settings: json.Value,
+};
 const ShowMessageParams = struct {
     type: MessageType,
-    message: string,
+    message: []const u8,
 };
 const MessageActionItem = struct {
-    title: string,
+    title: []const u8,
 };
 const ShowMessageRequestParams = struct {
     type: MessageType,
-    message: string,
+    message: []const u8,
+    actions: ?ArrayList(MessageActionItem),
 };
 const LogMessageParams = struct {
     type: MessageType,
-    message: string,
+    message: []const u8,
 };
 const DidOpenTextDocumentParams = struct {
     text_document: TextDocumentItem,
 };
 const DidChangeTextDocumentParams = struct {
     text_document: VersionedTextDocumentIdentifier,
+    content_changes: ArrayList(TextDocumentContentChangeEvent),
 };
 const TextDocumentChangeRegistrationOptions = struct {
+    document_selector: DocumentSelector,
     sync_kind: TextDocumentSyncKind,
 };
 const DidCloseTextDocumentParams = struct {
@@ -369,37 +513,57 @@ const DidCloseTextDocumentParams = struct {
 };
 const DidSaveTextDocumentParams = struct {
     text_document: VersionedTextDocumentIdentifier,
-    text: string,
+    text: ?[]const u8,
 };
-const TextDocumentSaveRegistrationOptions = struct {};
+const TextDocumentSaveRegistrationOptions = struct {
+    document_selector: DocumentSelector,
+    include_text: ?bool,
+};
 const WillSaveTextDocumentParams = struct {
     text_document: TextDocumentIdentifier,
     reason: TextDocumentSaveReason,
 };
-const DidChangeWatchedFilesParams = struct {};
+const DidChangeWatchedFilesParams = struct {
+    changes: ArrayList(FileEvent),
+};
 const FileEvent = struct {
-    uri: string,
+    uri: []const u8,
     type: FileChangeType,
 };
-const DidChangeWatchedFilesRegistrationOptions = struct {};
+const DidChangeWatchedFilesRegistrationOptions = struct {
+    watchers: ArrayList(FileSystemWatcher),
+};
 const FileSystemWatcher = struct {
-    glob_pattern: string,
-    kind: float64,
+    glob_pattern: []const u8,
+    kind: ?f64,
 };
 const PublishDiagnosticsParams = struct {
-    uri: string,
-    version: float64,
+    uri: []const u8,
+    version: ?f64,
+    diagnostics: ArrayList(Diagnostic),
 };
-const CompletionRegistrationOptions = struct {};
+const CompletionRegistrationOptions = struct {
+    document_selector: DocumentSelector,
+    trigger_characters: ?ArrayList([]const u8),
+    all_commit_characters: ?ArrayList([]const u8),
+    resolve_provider: ?bool,
+};
 const CompletionContext = struct {
     trigger_kind: CompletionTriggerKind,
-    trigger_character: string,
+    trigger_character: ?[]const u8,
 };
 const CompletionParams = struct {
-    context: *CompletionContext,
+    text_document: TextDocumentIdentifier,
+    position: Position,
+    context: ?CompletionContext,
 };
-const SignatureHelpRegistrationOptions = struct {};
+const SignatureHelpRegistrationOptions = struct {
+    document_selector: DocumentSelector,
+    trigger_characters: ?ArrayList([]const u8),
+};
 const ReferenceParams = struct {
+    text_document: TextDocumentIdentifier,
+    position: Position,
     context: ReferenceContext,
 };
 const CodeActionParams = struct {
@@ -407,11 +571,17 @@ const CodeActionParams = struct {
     range: Range,
     context: CodeActionContext,
 };
-const CodeActionRegistrationOptions = struct {};
+const CodeActionRegistrationOptions = struct {
+    document_selector: DocumentSelector,
+    code_action_kinds: ?ArrayList(CodeActionKind),
+};
 const CodeLensParams = struct {
     text_document: TextDocumentIdentifier,
 };
-const CodeLensRegistrationOptions = struct {};
+const CodeLensRegistrationOptions = struct {
+    document_selector: DocumentSelector,
+    resolve_provider: ?bool,
+};
 const DocumentFormattingParams = struct {
     text_document: TextDocumentIdentifier,
     options: FormattingOptions,
@@ -424,223 +594,263 @@ const DocumentRangeFormattingParams = struct {
 const DocumentOnTypeFormattingParams = struct {
     text_document: TextDocumentIdentifier,
     position: Position,
-    ch: string,
+    ch: []const u8,
     options: FormattingOptions,
 };
-const DocumentOnTypeFormattingRegistrationOptions = struct {};
+const DocumentOnTypeFormattingRegistrationOptions = struct {
+    document_selector: DocumentSelector,
+    first_trigger_character: []const u8,
+    more_trigger_character: ?ArrayList([]const u8),
+};
 const RenameParams = struct {
     text_document: TextDocumentIdentifier,
     position: Position,
-    new_name: string,
+    new_name: []const u8,
 };
-const RenameRegistrationOptions = struct {};
+const RenameRegistrationOptions = struct {
+    document_selector: DocumentSelector,
+    prepare_provider: ?bool,
+};
 const DocumentLinkParams = struct {
     text_document: TextDocumentIdentifier,
 };
-const DocumentLinkRegistrationOptions = struct {};
-const ExecuteCommandParams = struct {
-    command: string,
+const DocumentLinkRegistrationOptions = struct {
+    document_selector: DocumentSelector,
+    resolve_provider: ?bool,
 };
-const ExecuteCommandRegistrationOptions = struct {};
+const ExecuteCommandParams = struct {
+    command: []const u8,
+    arguments: ?ArrayList(interface{}),
+};
+const ExecuteCommandRegistrationOptions = struct {
+    commands: ArrayList([]const u8),
+};
 const ApplyWorkspaceEditParams = struct {
-    label: string,
+    label: ?[]const u8,
     edit: WorkspaceEdit,
 };
 const ApplyWorkspaceEditResponse = struct {
     applied: bool,
-    failure_reason: string,
-    failed_change: float64,
+    failure_reason: ?[]const u8,
+    failed_change: ?f64,
 };
 const Position = struct {
-    line: float64,
-    character: float64,
+    line: f64,
+    character: f64,
 };
 const Range = struct {
     start: Position,
     end: Position,
 };
 const Location = struct {
-    uri: string,
+    uri: []const u8,
     range: Range,
 };
 const LocationLink = struct {
-    origin_selection_range: *Range,
-    target_uri: string,
+    origin_selection_range: ?Range,
+    target_uri: []const u8,
     target_range: Range,
     target_selection_range: Range,
 };
 const Color = struct {
-    red: float64,
-    green: float64,
-    blue: float64,
-    alpha: float64,
+    red: f64,
+    green: f64,
+    blue: f64,
+    alpha: f64,
 };
 const ColorInformation = struct {
     range: Range,
     color: Color,
 };
 const ColorPresentation = struct {
-    label: string,
-    text_edit: *TextEdit,
+    label: []const u8,
+    text_edit: ?TextEdit,
+    additional_text_edits: ?ArrayList(TextEdit),
 };
 const DiagnosticRelatedInformation = struct {
     location: Location,
-    message: string,
+    message: []const u8,
 };
 const Diagnostic = struct {
     range: Range,
     severity: DiagnosticSeverity,
-    source: string,
-    message: string,
+    code: ?json.Value,
+    source: ?[]const u8,
+    message: []const u8,
+    tags: ?ArrayList(DiagnosticTag),
+    related_information: ?ArrayList(DiagnosticRelatedInformation),
 };
 const Command = struct {
-    title: string,
-    command: string,
+    title: []const u8,
+    command: []const u8,
+    arguments: ?ArrayList(interface{}),
 };
 const TextEdit = struct {
     range: Range,
-    new_text: string,
+    new_text: []const u8,
 };
 const TextDocumentEdit = struct {
     text_document: VersionedTextDocumentIdentifier,
+    edits: ArrayList(TextEdit),
 };
 const ResourceOperation = struct {
-    kind: string,
+    kind: []const u8,
 };
 const CreateFileOptions = struct {
-    overwrite: bool,
-    ignore_if_exists: bool,
+    overwrite: ?bool,
+    ignore_if_exists: ?bool,
 };
 const CreateFile = struct {
-    kind: string,
-    uri: string,
-    options: *CreateFileOptions,
+    kind: []const u8,
+    kind: []const u8,
+    uri: []const u8,
+    options: ?CreateFileOptions,
 };
 const RenameFileOptions = struct {
-    overwrite: bool,
-    ignore_if_exists: bool,
+    overwrite: ?bool,
+    ignore_if_exists: ?bool,
 };
 const RenameFile = struct {
-    kind: string,
-    old_uri: string,
-    new_uri: string,
-    options: *RenameFileOptions,
+    kind: []const u8,
+    kind: []const u8,
+    old_uri: []const u8,
+    new_uri: []const u8,
+    options: ?RenameFileOptions,
 };
 const DeleteFileOptions = struct {
-    recursive: bool,
-    ignore_if_not_exists: bool,
+    recursive: ?bool,
+    ignore_if_not_exists: ?bool,
 };
 const DeleteFile = struct {
-    kind: string,
-    uri: string,
-    options: *DeleteFileOptions,
+    kind: []const u8,
+    kind: []const u8,
+    uri: []const u8,
+    options: ?DeleteFileOptions,
 };
-const WorkspaceEdit = struct {};
+const WorkspaceEdit = struct {
+    changes: ?json.ObjectMap,
+    document_changes: ?ArrayList(TextDocumentEdit),
+};
 const TextEditChange = struct {};
 const TextDocumentIdentifier = struct {
-    uri: string,
+    uri: []const u8,
 };
 const VersionedTextDocumentIdentifier = struct {
-    version: float64,
+    uri: []const u8,
+    version: f64,
 };
 const TextDocumentItem = struct {
-    uri: string,
-    language_id: string,
-    version: float64,
-    text: string,
+    uri: []const u8,
+    language_id: []const u8,
+    version: f64,
+    text: []const u8,
 };
 const MarkupContent = struct {
     kind: MarkupKind,
-    value: string,
+    value: []const u8,
 };
 const CompletionItem = struct {
-    label: string,
+    label: []const u8,
     kind: CompletionItemKind,
-    detail: string,
-    documentation: string,
-    deprecated: bool,
-    preselect: bool,
-    sort_text: string,
-    filter_text: string,
-    insert_text: string,
+    detail: ?[]const u8,
+    documentation: ?[]const u8,
+    deprecated: ?bool,
+    preselect: ?bool,
+    sort_text: ?[]const u8,
+    filter_text: ?[]const u8,
+    insert_text: ?[]const u8,
     insert_text_format: InsertTextFormat,
-    text_edit: *TextEdit,
-    command: *Command,
+    text_edit: ?TextEdit,
+    additional_text_edits: ?ArrayList(TextEdit),
+    commit_characters: ?ArrayList([]const u8),
+    command: ?Command,
+    data: ?json.Value,
 };
 const CompletionList = struct {
     is_incomplete: bool,
+    items: ArrayList(CompletionItem),
 };
 const Hover = struct {
     contents: MarkupContent,
-    range: *Range,
+    range: ?Range,
 };
 const ParameterInformation = struct {
-    label: string,
-    documentation: string,
+    label: []const u8,
+    documentation: ?[]const u8,
 };
 const SignatureInformation = struct {
-    label: string,
-    documentation: string,
+    label: []const u8,
+    documentation: ?[]const u8,
+    parameters: ?ArrayList(ParameterInformation),
 };
 const SignatureHelp = struct {
-    active_signature: float64,
-    active_parameter: float64,
+    signatures: ArrayList(SignatureInformation),
+    active_signature: f64,
+    active_parameter: f64,
 };
 const ReferenceContext = struct {
     include_declaration: bool,
 };
 const DocumentHighlight = struct {
     range: Range,
-    kind: *DocumentHighlightKind,
+    kind: ?DocumentHighlightKind,
 };
 const SymbolInformation = struct {
-    name: string,
+    name: []const u8,
     kind: SymbolKind,
-    deprecated: bool,
+    deprecated: ?bool,
     location: Location,
-    container_name: string,
+    container_name: ?[]const u8,
 };
 const DocumentSymbol = struct {
-    name: string,
-    detail: string,
+    name: []const u8,
+    detail: ?[]const u8,
     kind: SymbolKind,
-    deprecated: bool,
+    deprecated: ?bool,
     range: Range,
     selection_range: Range,
+    children: ?ArrayList(DocumentSymbol),
 };
 const DocumentSymbolParams = struct {
     text_document: TextDocumentIdentifier,
 };
 const WorkspaceSymbolParams = struct {
-    query: string,
+    query: []const u8,
 };
-const CodeActionContext = struct {};
+const CodeActionContext = struct {
+    diagnostics: ArrayList(Diagnostic),
+    only: ?ArrayList(CodeActionKind),
+};
 const CodeAction = struct {
-    title: string,
+    title: []const u8,
     kind: CodeActionKind,
-    edit: *WorkspaceEdit,
-    command: *Command,
+    diagnostics: ?ArrayList(Diagnostic),
+    edit: ?WorkspaceEdit,
+    command: ?Command,
 };
 const CodeLens = struct {
     range: Range,
-    command: *Command,
+    command: ?Command,
+    data: ?json.Value,
 };
 const FormattingOptions = struct {
-    tab_size: float64,
+    tab_size: f64,
     insert_spaces: bool,
-    trim_trailing_whitespace: bool,
-    insert_final_newline: bool,
-    trim_final_newlines: bool,
+    trim_trailing_whitespace: ?bool,
+    insert_final_newline: ?bool,
+    trim_final_newlines: ?bool,
+    key: json.ObjectMap,
 };
 const DocumentLink = struct {
     range: Range,
-    target: string,
+    target: ?[]const u8,
+    data: ?json.Value,
 };
 const TextDocument = struct {
-    uri: string,
-    language_id: string,
-    version: float64,
-    line_count: float64,
+    uri: []const u8,
+    language_id: []const u8,
+    version: f64,
+    line_count: f64,
 };
 const TextDocumentChangeEvent = struct {
     document: TextDocument,
@@ -650,7 +860,7 @@ const TextDocumentWillSaveEvent = struct {
     reason: TextDocumentSaveReason,
 };
 const TextDocumentContentChangeEvent = struct {
-    range: *Range,
-    range_length: float64,
-    text: string,
+    range: ?Range,
+    range_length: ?f64,
+    text: []const u8,
 };

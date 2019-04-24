@@ -737,6 +737,7 @@ function emitTypes() {
 }
 function emitStructs() {
     var seenName = new Map();
+    var cache = new Map();
     for (var _i = 0, Structs_1 = Structs; _i < Structs_1.length; _i++) {
         var str = Structs_1[_i];
         if (str.name == 'InitializeError') {
@@ -747,18 +748,38 @@ function emitStructs() {
             continue;
         }
         seenName[str.name] = true;
+        cache[str.name] = str;
         prgo(genComments(str.name, getComments(str.me)));
         /* prgo(`// ${str.name} is:\n`)
         prgo(getComments(str.me))*/
         prgo("const  " + str.name + " =struct {\n");
         for (var _a = 0, _b = str.embeds; _a < _b.length; _a++) {
             var s = _b[_a];
-            // TODO generate embeds
-            // prgo(`\t${s}\n`)
+            console.log(str.name + " ==> " + s);
+            var k = cache.get(s);
+            if (k) {
+                for (var _c = 0, _d = k.fields; _c < _d.length; _c++) {
+                    var f = _d[_c];
+                    prgo(strField(f));
+                }
+            }
+            else {
+                for (var _e = 0, Structs_2 = Structs; _e < Structs_2.length; _e++) {
+                    var ks = Structs_2[_e];
+                    if (ks.name == s) {
+                        cache.set(ks.name, ks);
+                        for (var _f = 0, _g = ks.fields; _f < _g.length; _f++) {
+                            var f = _g[_f];
+                            prgo(strField(f));
+                        }
+                        break;
+                    }
+                }
+            }
         }
         if (str.fields != undefined) {
-            for (var _c = 0, _d = str.fields; _c < _d.length; _c++) {
-                var f = _d[_c];
+            for (var _h = 0, _j = str.fields; _h < _j.length; _h++) {
+                var f = _j[_h];
                 prgo(strField(f));
             }
         }
@@ -777,26 +798,10 @@ function genComments(name, maybe) {
 // Turn a Field into an output string
 function strField(f) {
     var ans = [];
-    var opt = f.optional ? '*' : '';
-    switch (f.goType.charAt(0)) {
-        case 's': // string
-        case 'b': // bool
-        case 'f': // float64
-        case 'i': // interface{}
-        case '[': // []foo
-            opt = '';
-    }
-    switch (f.goType.charAt(0)) {
-        case 'i': // interface{}
-        case '[': // []foo
-        case 'm': //map
-            //TODO handle interfaces
-            return '';
-    }
-    var stuff = (f.gostuff == undefined) ? '' : " // " + f.gostuff;
+    var opt = f.optional ? '?' : '';
     ans.push(genComments(f.goName, getComments(f.me)));
     if (f.substruct == undefined) {
-        ans.push("    " + toZigField(f.goName) + " :" + opt + f.goType + ",\n");
+        ans.push("    " + toZigField(f.goName) + " :" + opt + toZigType(f.goType) + ",\n");
     }
     else {
         var zigField = toZigField(f.goName);
@@ -809,6 +814,27 @@ function strField(f) {
         ans.push("    };\n");
     }
     return (''.concat.apply('', ans));
+}
+function toZigType(name) {
+    switch (name.charAt(0)) {
+        case 'i':
+            return 'json.Value';
+        case 'f':
+            return 'f64';
+        case 's':
+            return '[]const u8';
+        case 'm':
+            return 'json.ObjectMap';
+        default:
+            if (name.startsWith('[]')) {
+                var k = name.substr(2);
+                if (k == 'string') {
+                    return 'ArrayList([]const u8)';
+                }
+                return "ArrayList(" + k + ")";
+            }
+            return name;
+    }
 }
 function toZigField(name) {
     name = name.replace(/URI$/, 'Uri');
@@ -865,6 +891,9 @@ function emitHeader(files) {
     }
     prgo("// Package protocol contains data types for LSP jsonrpcs\n");
     prgo("// generated automatically from vscode-languageserver-node\n  //  version of " + lastDate + "\n");
+    prgo("const std =@import(\"std\");\n");
+    prgo("const json =std.json;\n");
+    prgo("const ArrayList =std.ArrayList;\n");
 }
 ;
 // ad hoc argument parsing: [-d dir] [-o outputfile], and order matters

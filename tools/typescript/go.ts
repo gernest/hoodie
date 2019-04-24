@@ -744,6 +744,7 @@ function emitTypes() {
 
 function emitStructs() {
   let seenName = new Map<string, boolean>()
+  let cache = new Map<string, Struct>()
   for (const str of Structs) {
     if (str.name == 'InitializeError') {
       // only want the consts
@@ -753,13 +754,28 @@ function emitStructs() {
       continue
     }
     seenName[str.name] = true
+    cache[str.name] = str
     prgo(genComments(str.name, getComments(str.me)))
     /* prgo(`// ${str.name} is:\n`)
     prgo(getComments(str.me))*/
     prgo(`const  ${str.name} =struct {\n`)
     for (const s of str.embeds) {
-      // TODO generate embeds
-      // prgo(`\t${s}\n`)
+      const k = cache.get(s)
+      if (k) {
+        for (const f of k.fields) {
+          prgo(strField(f))
+        }
+      } else {
+        for (const ks of Structs) {
+          if (ks.name == s) {
+            cache.set(ks.name, ks)
+            for (const f of ks.fields) {
+              prgo(strField(f))
+            }
+            break;
+          }
+        }
+      }
     }
     if (str.fields != undefined) {
       for (const f of str.fields) {
@@ -783,26 +799,10 @@ function genComments(name: string, maybe: string): string {
 // Turn a Field into an output string
 function strField(f: Field): string {
   let ans: string[] = [];
-  let opt = f.optional ? '*' : ''
-  switch (f.goType.charAt(0)) {
-    case 's':  // string
-    case 'b':  // bool
-    case 'f':  // float64
-    case 'i':  // interface{}
-    case '[':  // []foo
-      opt = ''
-  }
-  switch (f.goType.charAt(0)) {
-    case 'i':  // interface{}
-    case '[':  // []foo
-    case 'm': //map
-      //TODO handle interfaces
-      return ''
-  }
-  let stuff = (f.gostuff == undefined) ? '' : ` // ${f.gostuff}`
+  let opt = f.optional ? '?' : ''
   ans.push(genComments(f.goName, getComments(f.me)))
   if (f.substruct == undefined) {
-    ans.push(`    ${toZigField(f.goName)} :${opt}${f.goType},\n`)
+    ans.push(`    ${toZigField(f.goName)} :${opt}${toZigType(f.goType)},\n`)
   }
   else {
     const zigField = toZigField(f.goName);
@@ -816,11 +816,33 @@ function strField(f: Field): string {
   return (''.concat(...ans))
 }
 
+function toZigType(name: string): string {
+  switch (name.charAt(0)) {
+    case 'i':
+      return 'json.Value'
+    case 'f':
+      return 'f64'
+    case 's':
+      return '[]const u8'
+    case 'm':
+      return 'json.ObjectMap'
+    default:
+      if (name.startsWith('[]')) {
+        const k = name.substr(2);
+        if (k == 'string') {
+          return 'ArrayList([]const u8)'
+        }
+        return `ArrayList(${k})`
+      }
+      return name
+  }
+}
 function toZigField(name: string): string {
   name = name.replace(/URI$/, 'Uri')
   name = name.replace(/ID$/, 'Id')
   return name.split(/(?=[A-Z])/).join('_').toLowerCase();
 }
+
 
 function emitConsts() {
   // Generate modifying prefixes and suffixes to ensure consts are
@@ -872,6 +894,9 @@ function emitHeader(files: string[]) {
   prgo(`// Package protocol contains data types for LSP jsonrpcs\n`)
   prgo(`// generated automatically from vscode-languageserver-node
   //  version of ${lastDate}\n`)
+  prgo(`const std =@import("std");\n`)
+  prgo(`const json =std.json;\n`)
+  prgo(`const ArrayList =std.ArrayList;\n`)
 };
 
 // ad hoc argument parsing: [-d dir] [-o outputfile], and order matters
