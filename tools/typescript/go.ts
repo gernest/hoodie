@@ -758,7 +758,7 @@ function emitStructs() {
     prgo(genComments(str.name, getComments(str.me)))
     /* prgo(`// ${str.name} is:\n`)
     prgo(getComments(str.me))*/
-    prgo(`const  ${str.name} =struct {\n`)
+    prgo(`pub const  ${str.name} =struct {\n`)
     for (const s of str.embeds) {
       const k = cache.get(s)
       if (k) {
@@ -807,7 +807,7 @@ function strField(f: Field): string {
   else {
     const zigField = toZigField(f.goName);
     ans.push(`    ${zigField}: ${opt}${f.goName} ,\n`)
-    ans.push(`    const ${f.goName} =struct {\n`)
+    ans.push(`    pub const ${f.goName} =struct {\n`)
     for (const x of f.substruct) {
       ans.push(strField(x))
     }
