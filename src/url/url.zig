@@ -412,8 +412,8 @@ pub const URL = struct {
                 if (u.host) |h| {
                     const x = out.len();
                     const ctx = countEscape(h, encoding.host);
-                    try out.resize(x+ctx.len())
-                    try escape(out.toSlice()[x..],h,encoding.host);
+                    try out.resize(x + ctx.len());
+                    try escape(out.toSlice()[x..], h, encoding.host);
                 }
             }
         }
@@ -600,6 +600,26 @@ pub const URL = struct {
                 '-', '.', '_', ':', '~', '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=', '%', '@' => {},
                 else => {
                     return false;
+                },
+            }
+        }
+        return true;
+    }
+
+    fn validEncodedPath(s: []const u8) bool {
+        for (s) |c| {
+            switch (c) {
+                '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=', ':', '@' => {},
+                '[', ']' => {
+                    // ok - not specified in RFC 3986 but left alone by modern browsers
+                },
+                '%' => {
+                    // ok - percent encoded, will decode
+                },
+                else => {
+                    if (shouldEscape(c, encoding.path)) {
+                        return false;
+                    }
                 },
             }
         }
