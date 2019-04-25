@@ -416,6 +416,14 @@ pub const URL = struct {
                     try escape(out.toSlice()[x..], h, encoding.host);
                 }
             }
+            if (buf.len() == 0) {
+                // RFC 3986 §4.2
+                // A path segment that contains a colon character (e.g., "this:that")
+                // cannot be used as the first segment of a relative-path reference, as
+                // it would be mistaken for a scheme name. Such a segment must be
+                // preceded by a dot-segment (e.g., "./this:that") to make a relative-
+                // path reference.
+            }
         }
     }
 
@@ -604,6 +612,41 @@ pub const URL = struct {
             }
         }
         return true;
+    }
+
+    // escapedPath writes ton buf  the escaped form of u.Path.
+    // In general there are multiple possible escaped forms of any path.
+    // EscapedPath returns u.RawPath when it is a valid escaping of u.Path.
+    // Otherwise EscapedPath ignores u.RawPath and computes an escaped
+    // form on its own.
+    // The String and RequestURI methods use EscapedPath to construct
+    // their results.
+    // In general, code should call EscapedPath instead of
+    // reading u.RawPath directly.
+    fn escapedPath(u: *URL, buf: *Buffer) !void {
+        if (u.raw_path) |raw| {
+            if (validEncodedPath(raw)) {
+                if (countUneEscape(raw, encoding.path)) |ctx| {
+                    try buf.resize(ctx.len());
+                    unescape(buf.toSlice(), ctx, raw);
+                    if (u.path) |p| {
+                        if (buf.eql(p)) {
+                            try buf.resize(0);
+                            try buf.append(raw);
+                            return;
+                        }
+                    }
+                } else |_| {}
+            }
+        }
+        if (u.path) |p| {
+            if (mem.eql(p, "*")) {
+                return buf.append("*");
+            }
+            const ctx = countEscape(p, encoding.path);
+            try buf.resize(ctx.len());
+            escape(buf.toSlice(), ctx, p);
+        }
     }
 
     // validEncodedPath reports whether s is a valid encoded path.
