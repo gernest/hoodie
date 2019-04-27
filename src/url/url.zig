@@ -394,7 +394,7 @@ pub const URL = struct {
         return uri;
     }
 
-    fn dump(u: *URL, out: *Buffer) !void {
+    fn encode(u: *URL, out: *Buffer) !void {
         if (u.scheme) |scheme| {
             try out.append(scheme);
         }
@@ -416,6 +416,14 @@ pub const URL = struct {
                     try escape(out.toSlice()[x..], h, encoding.host);
                 }
             }
+            var pathBuf = try Buffer.init(buf.list.allocator, "");
+            defer pathBuf.deinit();
+            const p = pathBuf.toSlice();
+            if (p.len > 0 and p[0] == '/' and u.host != null) {
+                try buf.appendByte('/');
+            }
+
+            try escapedPath(u, pathBuf);
             if (buf.len() == 0) {
                 // RFC 3986 §4.2
                 // A path segment that contains a colon character (e.g., "this:that")
@@ -423,7 +431,29 @@ pub const URL = struct {
                 // it would be mistaken for a scheme name. Such a segment must be
                 // preceded by a dot-segment (e.g., "./this:that") to make a relative-
                 // path reference.
+                if (mem.indexOfScalar(u8, p, ':')) |idx| {
+                    const nx = mem.indexOfScalar(u8, p[0..idx], '/');
+                    if (nx == null) {
+                        try buf.append("./");
+                    }
+                }
             }
+            if (p.len > 0) {
+                try buf.append(p);
+            }
+        }
+        if (u.force_query or u.raw_query != null) {
+            try buf.appendByte('?');
+            if (u.raw_query) |rq| {
+                try buf.append(rq);
+            }
+        }
+        if (u.fragment) |f| {
+            try buf.appendByte('#');
+            const ctx = try countEscape(f, encoding.fragment);
+            const current = buf.len();
+            try buf.resize(current + ctx.len());
+            escape(buf.toSlice()[current..], ctx, f);
         }
     }
 
