@@ -3,27 +3,10 @@ const Buffer = std.Buffer;
 const json = std.json;
 const Value = json.Value;
 const testing = std.testing;
-const typeId = @import("builtin").TypeId;
+const builtin = @import("builtin");
 const warn = std.debug.warn;
-
-// Encoder is an interface for encoding zig objects to json string.
-const Encoder = struct {
-    encodeJSON: fn (self: *Encoder, buf: *Buffer) !void,
-};
-
-const Decoder = struct {
-    decodeJSON: fn (self: *Encoder, value: json.Value) !void,
-};
-
-// NativeEncoder returns a type which exposes encode field with Encoder isntance
-// capable of marshaling native values.
-fn NativeEncoder(comptime T: type, value: T) type {
-    const info = @typeInfo(T);
-    return struct {
-        encode: *Encoder,
-        fn encodeJSON(self: *Encoder, buf: *Buffer) !void {}
-    };
-}
+const Allocator = std.mem.Allocator;
+const ArenaAllocator = std.heap.ArenaAllocator;
 
 fn fmtBuffer(buf: *Buffer, comptime format: []const u8, args: ...) !void {
     const countSize = struct {
@@ -192,4 +175,70 @@ test "dumpIndent" {
         \\}
     ;
     testing.expect(buf.eql(expect));
+}
+
+// encode encodes value into a json string. The resulting string is written to buf.
+// a is used internally tor memory allocation.
+fn encode(a: *Allocator, value: var, buf: *Buffer) anyerror!void {
+    const T = @typeOf(value);
+    switch (@typeInfo(T)) {
+        builtin.TypeId.Struct => {
+            var arena = ArenaAllocator.init(a);
+            defer arena.deinit();
+            var m = try encodeValue(&arena.allocator, value);
+            if (m != null) {
+                try dump(m.?, buf);
+            }
+        },
+        else => unreachable,
+    }
+}
+
+fn encodeValue(a: *Allocator, value: var) anyerror!?Value {
+    const T = @typeOf(value);
+    switch (@typeInfo(T)) {
+        builtin.TypeId.Struct => {
+            var m = json.ObjectMap.init(a);
+            comptime var field_i = 0;
+            inline while (field_i < @memberCount(T)) : (field_i += 1) {
+                var v = try encodeValue(a, @field(value, @memberName(T, field_i)));
+                const key = @memberName(T, field_i);
+                if (v != null) {
+                    _ = try m.put(key, v.?);
+                }
+            }
+            return Value{ .Object = m };
+        },
+        builtin.TypeId.Array => |info| {
+            if (info.child == u8) {
+                return Value{ .String = value };
+            }
+        },
+        builtin.TypeId.Pointer => |ptr_info| {
+            switch (ptr_info.size) {
+                builtin.TypeInfo.Pointer.Size.Slice => {
+                    if (ptr_info.child == u8) {
+                        return Value{ .String = value };
+                    }
+                },
+                else => {},
+            }
+            return null;
+        },
+        else => {
+            return null;
+        },
+    }
+}
+
+test "encode" {
+    var buf = &try std.Buffer.init(std.debug.global_allocator, "");
+    defer buf.deinit();
+
+    const Hello = struct {
+        hello: []const u8,
+    };
+    const say = Hello{ .hello = "world" };
+    try encode(std.debug.global_allocator, say, buf);
+    warn("\n{}\n", buf.toSlice());
 }
