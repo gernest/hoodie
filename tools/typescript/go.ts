@@ -733,13 +733,30 @@ function getComments(node: ts.Node): string {
 }
 
 function emitTypes() {
-  for (const t of Types) {
-    if (t.goName == 'CodeActionKind') continue;  // consts better choice
-    let stuff = (t.stuff == undefined) ? '' : t.stuff;
-    prgo(`// ${t.goName} is a type\n`)
-    prgo(`${getComments(t.me)}`)
-    prgo(`type ${t.goName} ${t.goType}${stuff}\n`)
-  }
+  // TODO: (properly generate types)
+  // for (const t of Types) {
+  //   if (t.goName == 'CodeActionKind') continue;  // consts better choice
+  //   let stuff = (t.stuff == undefined) ? '' : t.stuff;
+  //   prgo(`// ${t.goName} is a type\n`)
+  //   prgo(`${getComments(t.me)}`)
+  //   prgo(`const ${t.goName} = ${t.goType}${stuff}\n`)
+  // }
+  const typ = `
+  // DocumentFilter is a type
+  const DocumentFilter = struct {
+      language :[]const u8,
+      scheme :?[]const u8,
+      pattern :?[]const u8,
+  };
+  
+  const DocumentSelector = ArrayList(DocumentFilter);
+
+  const DefinitionLink = LocationLink;
+
+  const DeclarationLink = LocationLink;
+  
+  `
+  prgo(typ);
 }
 
 function emitStructs() {
@@ -944,7 +961,7 @@ function main() {
   emitHeader(files)
   emitStructs()
   emitConsts()
-  // emitTypes()
+  emitTypes()
 }
 
 main()

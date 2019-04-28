@@ -1188,3 +1188,16 @@ const TextDocumentSaveReason = enum(f64) {
     AfterDelay = 2,
     FocusOut = 3,
 };
+
+// DocumentFilter is a type
+const DocumentFilter = struct {
+    language: []const u8,
+    scheme: ?[]const u8,
+    pattern: ?[]const u8,
+};
+
+const DocumentSelector = ArrayList(DocumentFilter);
+
+const DefinitionLink = LocationLink;
+
+const DeclarationLink = LocationLink;
