@@ -1,6 +1,5 @@
 const url = @import("./url.zig");
 const std = @import("std");
-const assert = std.debug.assert;
 const mem = std.mem;
 const warn = std.debug.warn;
 const Buffer = std.Buffer;
@@ -92,14 +91,12 @@ test "QueryUnEscape" {
     defer buf.deinit();
     for (unescapePassingTests()) |ts| {
         try url.queryUnescape(buf, ts.in);
-        assert(buf.eql(ts.out));
+        testing.expectEqualSlices(u8, ts.out, buf.toSlice());
         buf.shrink(0);
     }
     for (unescapeFailingTests()) |ts| {
-        if (url.queryUnescape(buf, ts.in)) {
-            @panic("{}: expected an error");
-        } else |err| {
-            assert(err == ts.err.?);
+        if (ts.err) |err| {
+            testing.expectError(err, url.queryUnescape(buf, ts.in));
         }
         buf.shrink(0);
     }
@@ -142,11 +139,11 @@ test "QueryEscape" {
     defer buf.deinit();
     for (queryEscapeTests()) |ts| {
         try url.queryEscape(buf, ts.in);
-        assert(buf.eql(ts.out));
+        testing.expectEqualSlices(u8, ts.out, buf.toSlice());
         try buf.resize(0);
 
         try url.queryUnescape(buf, ts.out);
-        assert(buf.eql(ts.in));
+        testing.expectEqualSlices(u8, ts.in, buf.toSlice());
         try buf.resize(0);
     }
 }
@@ -193,11 +190,11 @@ test "PathEscape" {
     defer buf.deinit();
     for (pathEscapeTests()) |ts| {
         try url.pathEscape(buf, ts.in);
-        assert(buf.eql(ts.out));
+        testing.expectEqualSlices(u8, ts.out, buf.toSlice());
         try buf.resize(0);
 
         try url.pathUnescape(buf, ts.out);
-        assert(buf.eql(ts.in));
+        testing.expectEqualSlices(u8, ts.in, buf.toSlice());
         try buf.resize(0);
     }
 }
