@@ -1,15 +1,11 @@
 const utf8 = @import("index.zig");
 const unicode = @import("../unicode.zig");
-const t = @import("../util/index.zig");
 const std = @import("std");
+const t = std.testing;
 
 test "init" {
-    if (utf8.max_rune != unicode.tables.max_rune) {
-        try t.terror("wrong utf8.max_rune");
-    }
-    if (utf8.rune_error != unicode.tables.replacement_char) {
-        try t.terror("wrong utf8.rune_error");
-    }
+    t.expectEqual(utf8.max_rune, unicode.tables.max_rune);
+    t.expectEqual(utf8.rune_error, unicode.tables.replacement_char);
 }
 
 const Utf8Map = struct {
@@ -72,15 +68,11 @@ const test_strings = [][]const u8{
 
 test "fullRune" {
     for (utf8_map) |m| {
-        if (!utf8.fullRune(m.str)) {
-            try t.terrorf("expected {} to be full rune\n", m.str);
-        }
+        t.expectEqual(true, utf8.fullRune(m.str));
     }
     const sample = [][]const u8{ "\xc0", "\xc1" };
     for (sample) |m| {
-        if (!utf8.fullRune(m)) {
-            try t.terrorf("expected {} to be full rune\n", m);
-        }
+        t.expectEqual(true, utf8.fullRune(m));
     }
 }
 
@@ -89,36 +81,21 @@ test "encodeRune" {
         var buf = []u8{0} ** 10;
         const n = try utf8.encodeRune(buf[0..], m.r);
         const ok = std.mem.eql(u8, buf[0..n], m.str);
-        if (!ok) {
-            try t.terrorf("\nexpected {} got {} size={} idx={}\n", m.str, buf[0..n], n, idx);
-        }
+        t.expectEqualSlices(u8, m.str, buf[0..n]);
     }
 }
 
 test "decodeRune" {
     for (utf8_map) |m| {
         const r = try utf8.decodeRune(m.str);
-        if (r.value != m.r) {
-            try t.terror("got wrong rune");
-        }
-        if (r.size != m.str.len) {
-            try t.terror("got wrong size");
-        }
+        t.expectEqual(m.r, r.value);
+        t.expectEqual(m.str.len, r.size);
     }
 }
 
 test "surrogateRune" {
     for (surrogete_map) |m| {
-        var has_error: bool = false;
-        if (utf8.decodeRune(m.str)) {} else |err| switch (err) {
-            error.RuneError => {
-                has_error = true;
-            },
-            else => unreachable,
-        }
-        if (!has_error) {
-            try t.terror("expected an error");
-        }
+        t.expectError(error.RuneError, utf8.decodeRune(m.str));
     }
 }
 
@@ -126,43 +103,25 @@ test "Iterator" {
     const source = "a,b,c";
     var iter = utf8.Iterator.init(source);
     var a = try iter.next();
-    if (a == null) {
-        try t.terror("expected a valid rune");
-    }
-    if (a.?.value != 'a') {
-        const sa = []const u8{@intCast(u8, a.?.value)};
-        try t.terrorf("expected a got {}\n", sa);
-    }
+    t.expect(a != null);
+    t.expect('a' == a.?.value);
     _ = try iter.next();
 
     a = try iter.next();
-    if (a == null) {
-        try t.terror("expected a valid rune");
-    }
-    if (a.?.value != 'b') {
-        const sa = []const u8{@intCast(u8, a.?.value)};
-        try t.terrorf("expected , got {}\n", sa);
-    }
+    t.expect(a != null);
+
+    t.expect(a != null);
+    t.expect('b' == a.?.value);
     _ = try iter.next();
     _ = try iter.next();
     a = try iter.next();
-    if (a != null) {
-        try t.terror("expected null");
-    }
+    t.expect(a == null);
 
     iter.reset(0);
     a = try iter.peek();
-    if (a == null) {
-        try t.terror("expected not null");
-    }
+    t.expect(a != null);
 
     const b = try iter.next();
-    if (b == null) {
-        try t.terror("expected not null");
-    }
-    if (a.?.value != b.?.value) {
-        const sa = []const u8{@intCast(u8, a.?.value)};
-        const sb = []const u8{@intCast(u8, b.?.value)};
-        try t.terrorf("expected {} to equal {}", sa, sb);
-    }
+    t.expect(b != null);
+    t.expectEqual(a.?.value, b.?.value);
 }
