@@ -1,6 +1,7 @@
 const tables = @import("tables.zig");
 const unicode = @import("unicode.zig");
-const warn = @import("std").debug.warn;
+const std = @import("std");
+const testing = std.testing;
 
 const test_failed = error.TestFailed;
 const notletterTest = []i32{
@@ -53,22 +54,13 @@ const notupperTest = []i32{
 };
 test "isUpper" {
     for (upper_test) |r, i| {
-        if (!unicode.isUpper(r)) {
-            warn("\nexpected {} to be upper i={}\n", r, i);
-            return test_failed;
-        }
+        testing.expect(unicode.isUpper(r));
     }
     for (notupperTest) |r, i| {
-        if (unicode.isUpper(r)) {
-            warn("\nexpected {} not to be upper i={}\n", r, i);
-            return test_failed;
-        }
+        testing.expect(!unicode.isUpper(r));
     }
     for (notletterTest) |r, i| {
-        if (unicode.isUpper(r)) {
-            warn("\nexpected {} not to be upper i={}\n", r, i);
-            return test_failed;
-        }
+        testing.expect(!unicode.isUpper(r));
     }
 }
 
@@ -197,10 +189,7 @@ test "toUpper" {
         switch (c.case) {
             tables.Case.Upper => {
                 const r = unicode.toUpper(c.in);
-                if (r != c.out) {
-                    warn("expected {} got {}\n", c.out, r);
-                    return test_failed;
-                }
+                testing.expectEqual(c.out, r);
             },
             else => {},
         }
@@ -212,10 +201,7 @@ test "toLower" {
         switch (c.case) {
             tables.Case.Lower => {
                 const r = unicode.toLower(c.in);
-                if (r != c.out) {
-                    warn("expected {} got {}\n", c.out, r);
-                    return test_failed;
-                }
+                testing.expectEqual(c.out, r);
             },
             else => {},
         }
@@ -227,10 +213,7 @@ test "toLower" {
         switch (c.case) {
             tables.Case.Title => {
                 const r = unicode.toTitle(c.in);
-                if (r != c.out) {
-                    warn("expected {} got {}\n", c.out, r);
-                    return test_failed;
-                }
+                testing.expectEqual(c.out, r);
             },
             else => {},
         }
@@ -240,10 +223,7 @@ test "toLower" {
 test "to" {
     for (case_test) |c| {
         const r = unicode.to(c.case, c.in);
-        if (r != c.out) {
-            warn("expected {} got {}\n", c.out, r);
-            return test_failed;
-        }
+        testing.expectEqual(c.out, r);
     }
 }
 
@@ -257,10 +237,7 @@ test "isControlLatin1" {
         } else if (0x7F <= i and i <= 0x9F) {
             want = true;
         }
-        if (got != want) {
-            warn("{} got {} wanted {}\n", i, got, want);
-            return test_failed;
-        }
+        testing.expectEqual(want, got);
     }
 }
 
@@ -269,10 +246,7 @@ test "isLetterLatin1" {
     while (i <= tables.max_latin1) : (i += 1) {
         const got = unicode.isLetter(i);
         const want = unicode.is(tables.Letter, i);
-        if (got != want) {
-            warn("{} got {} wanted {}\n", i, got, want);
-            return test_failed;
-        }
+        testing.expectEqual(want, got);
     }
 }
 
@@ -281,10 +255,7 @@ test "isUpperLatin1" {
     while (i <= tables.max_latin1) : (i += 1) {
         const got = unicode.isUpper(i);
         const want = unicode.is(tables.Upper, i);
-        if (got != want) {
-            warn("{} got {} wanted {}\n", i, got, want);
-            return test_failed;
-        }
+        testing.expectEqual(want, got);
     }
 }
 
@@ -293,10 +264,7 @@ test "isLowerLatin1" {
     while (i <= tables.max_latin1) : (i += 1) {
         const got = unicode.isLower(i);
         const want = unicode.is(tables.Lower, i);
-        if (got != want) {
-            warn("{} got {} wanted {}\n", i, got, want);
-            return test_failed;
-        }
+        testing.expectEqual(want, got);
     }
 }
 
@@ -305,10 +273,7 @@ test "isNumberLatin1" {
     while (i <= tables.max_latin1) : (i += 1) {
         const got = unicode.isNumber(i);
         const want = unicode.is(tables.Number, i);
-        if (got != want) {
-            warn("{} got {} wanted {}\n", i, got, want);
-            return test_failed;
-        }
+        testing.expectEqual(want, got);
     }
 }
 
@@ -320,10 +285,7 @@ test "isPrintLatin1" {
         if (i == ' ') {
             want = true;
         }
-        if (got != want) {
-            warn("{} got {} wanted {}\n", i, got, want);
-            return test_failed;
-        }
+        testing.expectEqual(want, got);
     }
 }
 
@@ -332,10 +294,7 @@ test "isGraphicLatin1" {
     while (i <= tables.max_latin1) : (i += 1) {
         const got = unicode.isGraphic(i);
         var want = unicode.in(i, unicode.graphic_ranges[0..]);
-        if (got != want) {
-            warn("{} got {} wanted {}\n", i, got, want);
-            return test_failed;
-        }
+        testing.expectEqual(want, got);
     }
 }
 
@@ -344,10 +303,7 @@ test "isPunctLatin1" {
     while (i <= tables.max_latin1) : (i += 1) {
         const got = unicode.isPunct(i);
         const want = unicode.is(tables.Punct, i);
-        if (got != want) {
-            warn("{} got {} wanted {}\n", i, got, want);
-            return test_failed;
-        }
+        testing.expectEqual(want, got);
     }
 }
 
@@ -356,10 +312,7 @@ test "isSpaceLatin1" {
     while (i <= tables.max_latin1) : (i += 1) {
         const got = unicode.isSpace(i);
         const want = unicode.is(tables.White_Space, i);
-        if (got != want) {
-            warn("{} got {} wanted {}\n", i, got, want);
-            return test_failed;
-        }
+        testing.expectEqual(want, got);
     }
 }
 
@@ -368,10 +321,7 @@ test "isSymbolLatin1" {
     while (i <= tables.max_latin1) : (i += 1) {
         const got = unicode.isSymbol(i);
         const want = unicode.is(tables.Symbol, i);
-        if (got != want) {
-            warn("{} got {} wanted {}\n", i, got, want);
-            return test_failed;
-        }
+        testing.expectEqual(want, got);
     }
 }
 
@@ -471,17 +421,11 @@ const test_letter = []i32{
 
 test "isDigit" {
     for (test_digit) |r| {
-        if (!unicode.isDigit(r)) {
-            warn("expected {} to be a digit\n", r);
-            return test_failed;
-        }
+        testing.expect(unicode.isDigit(r));
     }
 
     for (test_letter) |r| {
-        if (unicode.isDigit(r)) {
-            warn("expected {} not to be a digit\n", r);
-            return test_failed;
-        }
+        testing.expect(!unicode.isDigit(r));
     }
 }
 
@@ -490,9 +434,6 @@ test "DigitOptimization" {
     while (i <= tables.max_latin1) : (i += 1) {
         const got = unicode.isDigit(i);
         const want = unicode.is(tables.Digit, i);
-        if (got != want) {
-            warn("{} got {} wanted {}\n", i, got, want);
-            return test_failed;
-        }
+        testing.expectEqual(want, got);
     }
 }
