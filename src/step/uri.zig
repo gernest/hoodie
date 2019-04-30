@@ -8,7 +8,6 @@ const filapth = @import("../filepath/filepath.zig");
 
 const file_scheme = "file";
 
-// writes to buf the filename contained in uri.
 pub fn fileName(a: *Allocator, uri: []const u8, buf: *Buffer) anyerror!void {
     const u = try url.URL.parse(a, uri);
     defer u.deinit();
