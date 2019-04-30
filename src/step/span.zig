@@ -5,6 +5,49 @@ pub const Span = struct {
     uri: []const u8,
     start: Point,
     end: Point,
+    allocator: *mem.Allocator,
+
+    pub fn format(
+        self: Span,
+        comptime fmt: []const u8,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void {
+        const full_form = mem.eql(u8, fmt, "+");
+        const prefer_offset = mem.eql(u8, fmt, "#");
+        try output(context, self.uri);
+        if (!self.isValid() or (!full_form and self.start.isZero() and self.end.isZero())) {
+            return;
+        }
+        const print_offset = self.hasOffset() and (full_form or prefer_offset or !self.hasPosition());
+        var print_line = self.hasPosition() and (full_form or !print_offset);
+        const print_column = print_line and (full_form or (self.start.column > 1 or self.end.column > 1));
+        try output(context, ":");
+        if (print_line) {
+            try std.fmt.format(context, Errors, output, "{}", self.start.line);
+        }
+        if (print_column) {
+            try std.fmt.format(context, Errors, output, ":{}", self.start.column);
+        }
+        if (print_offset) {
+            try std.fmt.format(context, Errors, output, "#{}", self.start.offset);
+        }
+        if (self.isPoint()) {
+            return;
+        }
+        print_line = full_form or (print_line and self.end.line > self.start.line);
+        try output(context, "-");
+        if (print_line) {
+            try std.fmt.format(context, Errors, output, "{}", self.end.line);
+        }
+        if (print_column) {
+            try std.fmt.format(context, Errors, output, ":{}", self.end.column);
+        }
+        if (print_offset) {
+            try std.fmt.format(context, Errors, output, "#{}", self.end.offset);
+        }
+    }
 
     pub fn hasPosition(self: Span) bool {
         return self.start.hasPosition();
@@ -24,7 +67,7 @@ pub const Span = struct {
 
     pub fn clean(self: *Span) void {
         if (self.end.isValid() or self.end.empty()) {
-            s.end = s.start;
+            self.end = self.start;
         }
     }
 };
@@ -48,12 +91,12 @@ pub const Point = struct {
         return self.line > 0;
     }
 
-    pub fn hasOffste(self: Point) bool {
+    pub fn hasOffset(self: Point) bool {
         return self.offset > 0;
     }
 
     pub fn isValid(self: Point) bool {
-        return self.hasPosition() or self.hasOffste();
+        return self.hasPosition() or self.hasOffset();
     }
 
     pub fn isZero(self: Point) bool {
