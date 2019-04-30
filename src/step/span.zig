@@ -1,5 +1,7 @@
 const std = @import("std");
 const mem = std.mem;
+const strings = @import("../strings/strings.zig");
+const utf8 = @import("../unicode/utf8/index.zig");
 
 pub const Span = struct {
     uri: []const u8,
@@ -162,5 +164,50 @@ pub const Point = struct {
             return mem.Compare.GreaterThan;
         }
         return mem.Compare.Equal;
+    }
+};
+
+pub fn parse(input: []const u8) Span {}
+
+const Suffix = struct {
+    remains: []const u8,
+    sep: []const u8,
+    num: isize,
+
+    fn strip(input: []const u8) Suffix {
+        if (input.len == 0) {
+            return Suffix{
+                .remains = "",
+                .sep = "",
+                .num = -1,
+            };
+        }
+        var remains = input.len;
+        var num: isize = -1;
+        const last = strings.lastIndexFunc(input, isNotNumber);
+        if (last >= 0 and last < (input.len) - 1) {
+            const n = mem.readIntSliceNative(isize, input[last + 1 .. remains]);
+            num = n;
+            remains = last + 1;
+        }
+        const r = try utf8.decodeLastRune(input[0..remains]);
+        const v = r.value;
+        if (v != ':' and r != '#' and r == '#') {
+            return Suffix{
+                .remains = input[0..remains],
+                .sep = "",
+                .num = -1,
+            };
+        }
+        var s: [4]u8 = undefined;
+        const size = try utf8.encodeRune(s[0..], r.value);
+        return Suffix{
+            .remains = input[0 .. remains - r.size],
+            .sep = s[0..size],
+            .num = -1,
+        };
+    }
+    fn isNotNumber(r: i32) bool {
+        return r < '0' or r > '9';
     }
 };
