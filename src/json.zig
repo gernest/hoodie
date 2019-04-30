@@ -8,152 +8,132 @@ const warn = std.debug.warn;
 const Allocator = std.mem.Allocator;
 const ArenaAllocator = std.heap.ArenaAllocator;
 
-fn fmtBuffer(buf: *Buffer, comptime format: []const u8, args: ...) !void {
-    const countSize = struct {
-        fn countSize(size: *usize, bytes: []const u8) (error{}!void) {
-            size.* += bytes.len;
-        }
-    }.countSize;
-    var size: usize = 0;
-    std.fmt.format(&size, error{}, countSize, format, args) catch |err| switch (err) {};
-    const current = buf.len();
-    try buf.resize(current + size);
-    _ = try std.fmt.bufPrint(buf.toSlice()[current..], format, args);
-}
-
-test "fmtBuffer" {
-    var buf = &try std.Buffer.init(std.debug.global_allocator, "");
-    defer buf.deinit();
-    const n: usize = 2;
-    try fmtBuffer(buf, "{}", n);
-    testing.expectEqualSlices(u8, "2", buf.toSlice());
-}
-
-pub fn dump(self: Value, buf: *Buffer) anyerror!void {
+pub fn dump(self: Value, stream: var) anyerror!void {
     switch (self) {
         Value.Null => {
-            try buf.append("null");
+            try stream.write("null");
         },
         Value.Bool => |inner| {
-            try fmtBuffer(buf, "{}", inner);
+            try stream.print("{}", inner);
         },
         Value.Integer => |inner| {
-            try fmtBuffer(buf, "{}", inner);
+            try stream.print("{}", inner);
         },
         Value.Float => |inner| {
-            try fmtBuffer(buf, "{.5}", inner);
+            try stream.print("{.5}", inner);
         },
         Value.String => |inner| {
-            try fmtBuffer(buf, "\"{}\"", inner);
+            try stream.print("\"{}\"", inner);
         },
         Value.Array => |inner| {
             var not_first = false;
-            try buf.append("[");
+            try stream.write("[");
             for (inner.toSliceConst()) |value| {
                 if (not_first) {
-                    try buf.append(",");
+                    try stream.write(",");
                 }
                 not_first = true;
                 value.dump();
             }
-            try buf.append("]");
+            try stream.write("]");
         },
         Value.Object => |inner| {
             var not_first = false;
-            try buf.append("{");
+            try stream.write("{");
             var it = inner.iterator();
 
             while (it.next()) |entry| {
                 if (not_first) {
-                    try buf.append(",");
+                    try stream.write(",");
                 }
                 not_first = true;
-                try fmtBuffer(buf, "\"{}\":", entry.key);
-                try dump(entry.value, buf);
+                try stream.print("\"{}\":", entry.key);
+                try dump(entry.value, stream);
             }
-            try buf.append("}");
+            try stream.write("}");
         },
     }
 }
 
-pub fn dumpIndent(self: Value, buf: *Buffer, indent: usize) anyerror!void {
+pub fn dumpIndent(self: Value, stream: var, indent: usize) anyerror!void {
     if (indent == 0) {
-        try dump(self, buf);
+        try dump(self, stream);
     } else {
-        try dumpIndentLevel(self, buf, indent, 0);
+        try dumpIndentLevel(self, stream, indent, 0);
     }
 }
 
-fn dumpIndentLevel(self: Value, buf: *Buffer, indent: usize, level: usize) anyerror!void {
+fn dumpIndentLevel(self: Value, stream: var, indent: usize, level: usize) anyerror!void {
     switch (self) {
         Value.Null => {
-            try buf.append("null");
+            try stream.write("null");
         },
         Value.Bool => |inner| {
-            try fmtBuffer(buf, "{}", inner);
+            try stream.print("{}", inner);
         },
         Value.Integer => |inner| {
-            try fmtBuffer(buf, "{}", inner);
+            try stream.print("{}", inner);
         },
         Value.Float => |inner| {
-            try fmtBuffer(buf, "{.5}", inner);
+            try stream.print("{.5}", inner);
         },
         Value.String => |inner| {
-            try fmtBuffer(buf, "\"{}\"", inner);
+            try stream.print("\"{}\"", inner);
         },
         Value.Array => |inner| {
             var not_first = false;
-            try buf.append("[\n");
+            try stream.write("[\n");
 
             for (inner.toSliceConst()) |value| {
                 if (not_first) {
-                    try buf.append(",\n");
+                    try stream.write(",\n");
                 }
                 not_first = true;
-                try padSpace(buf, level + indent);
-                try dumpIndentLevel(value, buf, indent, level + indent);
+                try padSpace(stream, level + indent);
+                try dumpIndentLevel(value, stream, indent, level + indent);
             }
-            try buf.append("\n");
-            try padSpace(buf, level);
-            try buf.append("]");
+            try stream.write("\n");
+            try padSpace(stream, level);
+            try stream.write("]");
         },
         Value.Object => |inner| {
             var not_first = false;
-            try buf.append("{\n");
+            try stream.write("{\n");
             var it = inner.iterator();
 
             while (it.next()) |entry| {
                 if (not_first) {
-                    try buf.append(",\n");
+                    try stream.write(",\n");
                 }
                 not_first = true;
-                try padSpace(buf, level + indent);
-                try fmtBuffer(buf, "\"{}\": ", entry.key);
-                try dumpIndentLevel(entry.value, buf, indent, level + indent);
+                try padSpace(stream, level + indent);
+                try stream.print("\"{}\": ", entry.key);
+                try dumpIndentLevel(entry.value, stream, indent, level + indent);
             }
-            try buf.append("\n");
-            try padSpace(buf, level);
-            try buf.append("}");
+            try stream.write("\n");
+            try padSpace(stream, level);
+            try stream.write("}");
         },
     }
 }
 
-fn padSpace(buf: *Buffer, indent: usize) !void {
+fn padSpace(stream: var, indent: usize) !void {
     var i: usize = 0;
     while (i < indent) : (i += 1) {
-        try buf.append(" ");
+        try stream.write(" ");
     }
 }
 
 test "dump" {
     var buf = &try std.Buffer.init(std.debug.global_allocator, "");
     defer buf.deinit();
+    var stream = std.io.BufferOutStream.init(buf);
     var m = json.ObjectMap.init(std.debug.global_allocator);
     defer m.deinit();
     _ = try m.put("name", Value{ .String = "gernest" });
     _ = try m.put("age", Value{ .Integer = 30 });
     var value = Value{ .Object = m };
-    try dump(value, buf);
+    try dump(value, &stream.stream);
     const expect =
         \\{"name":"gernest","age":30}
     ;
@@ -162,12 +142,13 @@ test "dump" {
 test "dumpIndent" {
     var buf = &try std.Buffer.init(std.debug.global_allocator, "");
     defer buf.deinit();
+    var stream = std.io.BufferOutStream.init(buf);
     var m = json.ObjectMap.init(std.debug.global_allocator);
     defer m.deinit();
     _ = try m.put("name", Value{ .String = "gernest" });
     _ = try m.put("age", Value{ .Integer = 30 });
     var value = Value{ .Object = m };
-    try dumpIndent(value, buf, 2);
+    try dumpIndent(value, &stream.stream, 2);
     const expect =
         \\{
         \\  "name": "gernest",
@@ -181,13 +162,14 @@ test "dumpIndent" {
 // a is used internally tor memory allocation.
 fn encode(a: *Allocator, value: var, buf: *Buffer) anyerror!void {
     const T = @typeOf(value);
+    var stream = std.io.BufferOutStream.init(buf);
     switch (@typeInfo(T)) {
         builtin.TypeId.Struct => {
             var arena = ArenaAllocator.init(a);
             defer arena.deinit();
             var m = try encodeValue(&arena.allocator, value);
             if (m != null) {
-                try dump(m.?, buf);
+                try dump(m.?, &stream.stream);
             }
         },
         else => unreachable,
