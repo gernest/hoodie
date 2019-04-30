@@ -4,8 +4,8 @@ const std = @import("std");
 const mem = std.mem;
 const Allocator = mem.Allocator;
 const Buffer = std.Buffer;
-const filapth = @import("../filepath/filepath.zig");
-
+const filepath = @import("../filepath/filepath.zig");
+const warn = std.debug.warn;
 const file_scheme = "file";
 
 pub fn fileName(a: *Allocator, uri: []const u8, buf: *Buffer) anyerror!void {
@@ -37,31 +37,32 @@ pub fn isWindowsDriveURI(uri: []const u8) bool {
     return uri[0] == '/' + unicode.isLetter(@intCast(i32, path[0])) and path[1] == ':';
 }
 
-pub fn fileURI(a: *Allocator, path: []const u8, buf: *Buffer) anyerror!void {
+pub fn fileURI(path: []const u8, buf: *Buffer) anyerror!void {
+    var a = buf.list.allocator;
     if (!isWindowsDrivePath(path)) {
-        if (filapth.abs(a, path)) |abs| {
+        if (filepath.abs(a, path)) |abs| {
             if (isWindowsDrivePath(abs)) {
                 var pbuf = &try Buffer.init(a, "");
                 if (isWindowsDrivePath(abs)) {
                     try pbuf.appendByte('/');
                 }
                 defer pbuf.deinit();
-                try toSlash(abs, pbuf);
+                try filepath.toSlash(abs, pbuf);
                 var u: url.URL = undefined;
                 u.scheme = file_scheme;
                 u.path = pbuf.toSlice();
                 try url.URL.encode(&u, buf);
             }
         } else |_| {}
-        var pbuf = &try Buffer.init(a, "");
-        if (isWindowsDrivePath(path)) {
-            try pbuf.appendByte('/');
-        }
-        defer pbuf.deinit();
-        try filepath.toSlash(path, pbuf);
-        var u: url.URL = undefined;
-        u.scheme = file_scheme;
-        u.path = pbuf.toSlice();
-        try url.URL.encode(&u, buf);
     }
+    var pbuf = &try Buffer.init(a, "");
+    if (isWindowsDrivePath(path)) {
+        try pbuf.appendByte('/');
+    }
+    defer pbuf.deinit();
+    try filepath.toSlash(path, pbuf);
+    var u: url.URL = undefined;
+    u.scheme = file_scheme;
+    u.path = pbuf.toSlice();
+    try url.URL.encode(&u, buf);
 }

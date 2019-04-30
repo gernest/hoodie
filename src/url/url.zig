@@ -398,7 +398,7 @@ pub const URL = struct {
         return uri;
     }
 
-    fn encode(u: *URL, buf: *Buffer) !void {
+    pub fn encode(u: *URL, buf: *Buffer) !void {
         try buf.resize(0);
         if (u.scheme) |scheme| {
             try buf.append(scheme);
