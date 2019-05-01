@@ -2,7 +2,7 @@ const std = @import("std");
 const warn = std.debug.warn;
 const span = @import("./span.zig");
 const filepath = @import("../filepath/filepath.zig");
-const uri = @import("./uri.zig");
+const url = @import("../url/url.zig");
 const testing = std.testing;
 
 test "fileURI" {
@@ -33,6 +33,7 @@ test "fileURI" {
         try test_path.resize(0);
         try expect_path.resize(0);
         try expect_uri.resize(0);
+        try file_uri.resize(0);
 
         try filepath.fromSlash(path, test_path);
         try expect_path.append(test_path.toSlice());
@@ -51,7 +52,8 @@ test "fileURI" {
         try tmp.replaceContents("file://");
         try tmp.append(expect_uri.toSlice());
         try expect_uri.replaceContents(tmp.toSlice());
-        try span.URI.fileURI(test_path.toSlice(), file_uri);
-        testing.expect(expect_uri.eql(file_uri.toSlice()));
+        var got_uri = try span.URI.fromFile(a, test_path.toSlice());
+        testing.expect(expect_uri.eql(got_uri.data));
+        got_uri.deinit();
     }
 }

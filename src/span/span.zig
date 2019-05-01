@@ -246,12 +246,41 @@ const Suffix = struct {
 };
 
 pub const URI = struct {
+    allocator: *Allocator,
+    data: []const u8,
+
     const file_scheme = "file";
 
+    pub fn deinit(self: URI) void {
+        self.allocator.free(self.data);
+    }
+
+    pub fn init(a: *Allocator, uri: []const u8) anyerror!URI {
+        var buf = &try Buffer.init(a, "");
+        if (url.pathUnescape(buf, uri)) {
+            if (buf.startsWith(file_scheme ++ "://")) {
+                return URI{ .allocator = a, .data = buf.toOwnedSlice() };
+            }
+            return fromFile(a, uri);
+        } else |_| {
+            const with = file_scheme ++ "://";
+            const start = if (uri.len < with.len) false else mem.eql(u8, uri[0..with.len], with);
+            if (start) {
+                const data = try mem.dupe(u8, uri);
+                return URI{ .allocator = a, .data = data };
+            }
+            return fromFile(a, uri);
+        }
+    }
+
+    pub fn name(self: URI, buf: *Buffer) anyerror!void {
+        try fileName(self.allocator, self.data, buf);
+    }
+
     pub fn fileName(a: *Allocator, uri: []const u8, buf: *Buffer) anyerror!void {
-        const u = try url.URL.parse(a, uri);
+        var u = try url.URL.parse(a, uri);
         defer u.deinit();
-        if (u.schems == null or !mem.eql(u8, u.schems.?, file_scheme)) {
+        if (u.scheme == null or !mem.eql(u8, u.scheme.?, file_scheme)) {
             return error.NotFileScheme;
         }
         if (u.path) |path| {
@@ -274,10 +303,16 @@ pub const URI = struct {
         if (uri.len < 4) {
             return false;
         }
-        return uri[0] == '/' + unicode.isLetter(@intCast(i32, path[0])) and path[1] == ':';
+        return uri[0] == '/' and unicode.isLetter(@intCast(i32, uri[0])) and uri[1] == ':';
     }
 
-    pub fn fileURI(path: []const u8, buf: *Buffer) anyerror!void {
+    pub fn fromFile(a: *Allocator, uri: []const u8) anyerror!URI {
+        var buf = &try Buffer.init(a, "");
+        try fileURI(uri, buf);
+        return URI{ .allocator = a, .data = buf.toOwnedSlice() };
+    }
+
+    fn fileURI(path: []const u8, buf: *Buffer) anyerror!void {
         var a = buf.list.allocator;
         if (!isWindowsDrivePath(path)) {
             if (filepath.abs(a, path)) |abs| {
