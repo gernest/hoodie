@@ -2,6 +2,7 @@ const std = @import("std");
 const mem = std.mem;
 const strings = @import("../strings/strings.zig");
 const utf8 = @import("../unicode/utf8/index.zig");
+const utf16 = @import("../unicode/utf16/index.zig");
 const url = @import("../url/url.zig");
 const unicode = @import("../unicode/index.zig");
 const Allocator = mem.Allocator;
@@ -96,9 +97,9 @@ pub const Position = struct {
 };
 
 pub const Point = struct {
-    line: isize,
-    column: isize,
-    offset: isize,
+    line: ?usize,
+    column: ?usize,
+    offset: ?usize,
 
     pub fn init(line: isize, column: isize, offset: isize) Point {
         var p = Point{ .line = line, .column = column, .offset = offset };
@@ -127,10 +128,10 @@ pub const Point = struct {
     }
 
     pub fn clean(self: *Point) void {
-        if (self.line < 0) {
+        if (self.line == null) {
             self.line = 0;
         }
-        if (self.column <= 0) {
+        if (self.column == null) {
             if (self.line > 0) {
                 self.column = 1;
             } else {
