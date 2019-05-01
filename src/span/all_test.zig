@@ -1,3 +1,3 @@
-test "step" {
-    _ = @import("./uri_test.zig");
+test "span" {
+    _ = @import("./span_test.zig");
 }
