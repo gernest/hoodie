@@ -7,7 +7,12 @@ pub const Span = struct {
     uri: []const u8,
     start: Point,
     end: Point,
-    allocator: *mem.Allocator,
+
+    pub fn init(uri: []const u8, start: Point, end: Point) Span {
+        var s = Span{ .uri = uri, .start = .start, .end = end };
+        clean(&s);
+        return s;
+    }
 
     pub fn format(
         self: Span,
@@ -89,6 +94,12 @@ pub const Point = struct {
     column: isize,
     offset: isize,
 
+    pub fn init(line: isize, column: isize, offset: isize) Point {
+        var p = Point{ .line = line, .column = column, .offset = offset };
+        clean(&p);
+        return p;
+    }
+
     pub fn hasPosition(self: Point) bool {
         return self.line > 0;
     }
@@ -167,7 +178,23 @@ pub const Point = struct {
     }
 };
 
-pub fn parse(input: []const u8) Span {}
+pub fn parse(input: []const u8) anyerror!Span {
+    var valid: []const u8 = input;
+    var hold: isize = 0;
+    var offset: isize = 0;
+    var had_col: bool = false;
+    var suf = try Suffix.strip(input);
+    if (mem.eql(u8, suf.sep, "#")) {
+        offset = suf.num;
+        suf = try Suffix.strip(suf.remains);
+    }
+    if (mem.eql(u8, suf.sep, ":")) {
+        valid = suf.remains;
+        hold = suf.num;
+        had_col = true;
+        suf = try Suffix.strip(suf.remains);
+    }
+}
 
 const Suffix = struct {
     remains: []const u8,
