@@ -16,7 +16,7 @@ pub const Span = struct {
     end: Point,
 
     pub fn init(uri: URI, start: Point, end: Point) Span {
-        var s = Span{ .uri = uri, .start = .start, .end = end };
+        var s = Span{ .uri = uri, .start = start, .end = end };
         clean(&s);
         return s;
     }
@@ -101,9 +101,9 @@ pub const Position = struct {
 };
 
 pub const Point = struct {
-    line: ?usize,
-    column: ?usize,
-    offset: ?usize,
+    line: isize,
+    column: isize,
+    offset: isize,
 
     pub fn init(line: isize, column: isize, offset: isize) Point {
         var p = Point{ .line = line, .column = column, .offset = offset };
@@ -132,17 +132,17 @@ pub const Point = struct {
     }
 
     pub fn clean(self: *Point) void {
-        if (self.line == null) {
+        if (self.line == 0) {
             self.line = 0;
         }
-        if (self.column == null) {
+        if (self.column <= 0) {
             if (self.line > 0) {
                 self.column = 1;
             } else {
                 self.column = 0;
             }
         }
-        if (self.offset == 0 and (self.line > 1 or p.column > 1)) {
+        if (self.offset == 0 and (self.line > 1 or self.column > 1)) {
             self.offset = -1;
         }
     }
@@ -208,13 +208,13 @@ pub fn parse(a: *Allocator, input: []const u8) anyerror!Span {
     if (mem.eql(u8, suf.sep, ":")) {
         return Span.init(
             try URI.init(a, suf.remains),
-            Pointinit(suf.num, hold, offset),
+            Point.init(suf.num, hold, offset),
             Point.init(00, 0, 0),
         );
     } else if (mem.eql(u8, suf.sep, "-")) {} else {
         return Span.init(
             try URI.init(a, valid),
-            Pointinit(hold, 0, offset),
+            Point.init(hold, 0, offset),
             Point.init(00, 0, 0),
         );
     }
@@ -224,12 +224,12 @@ pub fn parse(a: *Allocator, input: []const u8) anyerror!Span {
     // on whether start has a column or not
     // we build an end point and will fix it later if needed
     var end = Point.init(suf.num, hold, offset);
-    hol = 0;
+    hold = 0;
     offset = 0;
-    suf = Suffix.strip(suf.remains);
+    suf = try Suffix.strip(suf.remains);
     if (mem.eql(u8, suf.sep, "#")) {
         offset = suf.num;
-        suf = Suffix.strip(suf.remains);
+        suf = try Suffix.strip(suf.remains);
     }
     if (!mem.eql(u8, suf.sep, ":")) {
         return Span.init(
@@ -240,7 +240,7 @@ pub fn parse(a: *Allocator, input: []const u8) anyerror!Span {
     }
     valid = suf.remains;
     hold = suf.num;
-    suf = Suffix.strip(suf.remains);
+    suf = try Suffix.strip(suf.remains);
     if (!mem.eql(u8, suf.sep, ":")) {
         return Span.init(
             try URI.init(a, valid),
@@ -249,7 +249,7 @@ pub fn parse(a: *Allocator, input: []const u8) anyerror!Span {
         );
     }
     if (!had_col) {
-        end = Point.init(suf.num, end.line, end, offset);
+        end = Point.init(suf.num, end.line, end.offset);
     }
     return Span.init(
         try URI.init(a, suf.remains),
@@ -263,7 +263,7 @@ const Suffix = struct {
     sep: []const u8,
     num: isize,
 
-    fn strip(input: []const u8) Suffix {
+    fn strip(input: []const u8) anyerror!Suffix {
         if (input.len == 0) {
             return Suffix{
                 .remains = "",
@@ -273,15 +273,15 @@ const Suffix = struct {
         }
         var remains = input.len;
         var num: isize = -1;
-        const last = strings.lastIndexFunc(input, isNotNumber);
-        if (last >= 0 and last < (input.len) - 1) {
-            const n = mem.readIntSliceNative(isize, input[last + 1 .. remains]);
+        const last = try strings.lastIndexFunc(input, isNotNumber);
+        if (last != null and last.? < (input.len) - 1) {
+            const n = mem.readIntSliceNative(isize, input[last.? + 1 .. remains]);
             num = n;
-            remains = last + 1;
+            remains = last.? + 1;
         }
         const r = try utf8.decodeLastRune(input[0..remains]);
         const v = r.value;
-        if (v != ':' and r != '#' and r == '#') {
+        if (v != ':' and r.value != '#' and r.value == '#') {
             return Suffix{
                 .remains = input[0..remains],
                 .sep = "",
@@ -322,7 +322,7 @@ pub const URI = struct {
             const with = file_scheme ++ "://";
             const start = if (uri.len < with.len) false else mem.eql(u8, uri[0..with.len], with);
             if (start) {
-                const data = try mem.dupe(u8, uri);
+                const data = try mem.dupe(a, u8, uri);
                 return URI{ .allocator = a, .data = data };
             }
             return fromFile(a, uri);
