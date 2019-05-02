@@ -201,7 +201,7 @@ pub fn decodeLastRune(p: []const u8) !Rune {
         return error.RuneError;
     }
     var start = end - 1;
-    const r = @intCast(u32, p[start]);
+    const r = @intCast(i32, p[start]);
     if (r < rune_self) {
         return Rune{
             .value = r,
