@@ -11,14 +11,18 @@ const filepath = @import("../filepath/filepath.zig");
 const warn = std.debug.warn;
 
 pub const Span = struct {
-    uri: []const u8,
+    uri: URI,
     start: Point,
     end: Point,
 
-    pub fn init(uri: []const u8, start: Point, end: Point) Span {
+    pub fn init(uri: URI, start: Point, end: Point) Span {
         var s = Span{ .uri = uri, .start = .start, .end = end };
         clean(&s);
         return s;
+    }
+
+    fn deinit(self: Span) void {
+        self.uri.deinit();
     }
 
     pub fn format(
@@ -30,7 +34,7 @@ pub const Span = struct {
     ) Errors!void {
         const full_form = mem.eql(u8, fmt, "+");
         const prefer_offset = mem.eql(u8, fmt, "#");
-        try output(context, self.uri);
+        try output(context, self.uri.data);
         if (!self.isValid() or (!full_form and self.start.isZero() and self.end.isZero())) {
             return;
         }
@@ -185,7 +189,7 @@ pub const Point = struct {
     }
 };
 
-pub fn parse(input: []const u8) anyerror!Span {
+pub fn parse(a: *Allocator, input: []const u8) anyerror!Span {
     var valid: []const u8 = input;
     var hold: isize = 0;
     var offset: isize = 0;
@@ -201,6 +205,57 @@ pub fn parse(input: []const u8) anyerror!Span {
         had_col = true;
         suf = try Suffix.strip(suf.remains);
     }
+    if (mem.eql(u8, suf.sep, ":")) {
+        return Span.init(
+            try URI.init(a, suf.remains),
+            Pointinit(suf.num, hold, offset),
+            Point.init(00, 0, 0),
+        );
+    } else if (mem.eql(u8, suf.sep, "-")) {} else {
+        return Span.init(
+            try URI.init(a, valid),
+            Pointinit(hold, 0, offset),
+            Point.init(00, 0, 0),
+        );
+    }
+    // only the span form can get here
+    // at this point we still don't know what the numbers we have mean
+    // if have not yet seen a : then we might have either a line or a column depending
+    // on whether start has a column or not
+    // we build an end point and will fix it later if needed
+    var end = Point.init(suf.num, hold, offset);
+    hol = 0;
+    offset = 0;
+    suf = Suffix.strip(suf.remains);
+    if (mem.eql(u8, suf.sep, "#")) {
+        offset = suf.num;
+        suf = Suffix.strip(suf.remains);
+    }
+    if (!mem.eql(u8, suf.sep, ":")) {
+        return Span.init(
+            try URI.init(a, valid),
+            end,
+            Point.init(0, 0, 0),
+        );
+    }
+    valid = suf.remains;
+    hold = suf.num;
+    suf = Suffix.strip(suf.remains);
+    if (!mem.eql(u8, suf.sep, ":")) {
+        return Span.init(
+            try URI.init(a, valid),
+            Point.init(hold, 0, offset),
+            end,
+        );
+    }
+    if (!had_col) {
+        end = Point.init(suf.num, end.line, end, offset);
+    }
+    return Span.init(
+        try URI.init(a, suf.remains),
+        Point.init(suf.num, hold, offset),
+        end,
+    );
 }
 
 const Suffix = struct {
