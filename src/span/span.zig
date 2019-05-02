@@ -206,6 +206,7 @@ pub fn parse(a: *Allocator, input: []const u8) anyerror!Span {
         suf = try Suffix.strip(suf.remains);
     }
     if (mem.eql(u8, suf.sep, ":")) {
+        // warn("{} {} {}\n", suf, hold, offset);
         return Span.init(
             try URI.init(a, suf.remains),
             Point.init(suf.num, hold, offset),
@@ -275,9 +276,11 @@ const Suffix = struct {
         var num: isize = -1;
         const last = try strings.lastIndexFunc(input, isNotNumber);
         if (last != null and last.? < (input.len) - 1) {
-            const n = mem.readIntSliceNative(isize, input[last.? + 1 .. remains]);
-            num = n;
-            remains = last.? + 1;
+            const x = input[last.? + 1 .. remains];
+            if (std.fmt.parseInt(usize, x, 10)) |n| {
+                num = @intCast(isize, n);
+                remains = last.? + 1;
+            } else |_| {}
         }
         const r = try utf8.decodeLastRune(input[0..remains]);
         const v = r.value;
@@ -293,7 +296,7 @@ const Suffix = struct {
         return Suffix{
             .remains = input[0 .. remains - r.size],
             .sep = s[0..size],
-            .num = -1,
+            .num = num,
         };
     }
     fn isNotNumber(r: i32) bool {

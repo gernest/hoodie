@@ -69,9 +69,10 @@ test "parse" {
         [][]const u8{ "C:/file_g:3:7-8", "C:/file_g:#26-#27", "file:///C:/file_g:3:7#26-3:8#27" },
         [][]const u8{ "C:/file_h:3:7-4:8", "C:/file_h:#26-#37", "file:///C:/file_h:3:7#26-4:8#37" },
     };
+    const formats = [][]const u8{ "{}", "{#}", "{+}" };
     var a = std.debug.global_allocator;
     for (sample) |ts| {
-        for (ts) |ti| {
+        for (ts) |ti, idx| {
             var s = try span.parse(a, ti);
             s.deinit();
         }
