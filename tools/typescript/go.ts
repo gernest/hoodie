@@ -854,10 +854,12 @@ function toZigType(name: string): string {
       return name
   }
 }
-function toZigField(name: string): string {
-  name = name.replace(/URI$/, 'Uri')
-  name = name.replace(/ID$/, 'Id')
-  return name.split(/(?=[A-Z])/).join('_').toLowerCase();
+function toZigField(s: string): string {
+  let ans = s
+  ans = s.substring(0, 1).toLowerCase() + s.substring(1)
+  ans = ans.replace(/URI$/, 'Uri')
+  ans = ans.replace(/ID$/, 'Id')
+  return ans
 }
 
 
