@@ -44,6 +44,14 @@ pub const ImplementationClientCapabilities = struct {
 
 pub const ImplementationServerCapabilities = struct {
     implementationProvider: ?bool,
+
+    fn encode(self: *const ImplementationServerCapabilities, a: *Allocator) !json.Value {
+        var m = json.ObjectMap.init(a);
+        if (self.implementationProvider) |value| {
+            _ = try m.put("implementationProvider", json.Value{ .Bool = value });
+        }
+        return json.Value{ .Object = m };
+    }
 };
 
 pub const TypeDefinitionClientCapabilities = struct {
