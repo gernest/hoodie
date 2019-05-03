@@ -4,16 +4,42 @@
 const std = @import("std");
 const json = std.json;
 const ArrayList = std.ArrayList;
+const Allocator = std.mem.Allocator;
 
 pub const ImplementationClientCapabilities = struct {
-    textDocument: ?TextDocument,
-    pub const TextDocument = struct {
+    textDocument: ?TextDocumentImpl,
+    pub const TextDocumentImpl = struct {
         implementation: ?Implementation,
         pub const Implementation = struct {
             dynamicRegistration: ?bool,
             linkSupport: ?bool,
+
+            pub fn encode(self: *const Implementation, a: *Allocator) !json.Value {
+                var m = json.ObjectMap.init(a);
+                if (self.dynamicRegistration) |value| {
+                    _ = try m.put("dynamicRegistration", json.Value{ .Bool = value });
+                }
+                if (self.linkSupport) |value| {
+                    _ = try m.put("linkSupport", json.Value{ .Bool = value });
+                }
+                return json.Value{ .Object = m };
+            }
         };
+        pub fn encode(self: *const TextDocumentImpl, a: *Allocator) !json.Value {
+            var m = json.ObjectMap.init(a);
+            if (self.implementation) |*value| {
+                _ = try m.put("implementation", try value.encode(a));
+            }
+            return json.Value{ .Object = m };
+        }
     };
+    pub fn encode(self: *const ImplementationClientCapabilities, a: *Allocator) !json.Value {
+        var m = json.ObjectMap.init(a);
+        if (self.textDocument) |*value| {
+            _ = try m.put("textDocument", try value.encode(a));
+        }
+        return json.Value{ .Object = m };
+    }
 };
 
 pub const ImplementationServerCapabilities = struct {
