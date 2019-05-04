@@ -170,6 +170,7 @@ pub const Replacer = struct {
 
     pub fn deinit(self: *Replacer) void {
         for (self.finders.toSlice()) |f| {
+            (&f.find).deinit();
             self.a.destroy(f);
         }
         self.finders.deinit();
