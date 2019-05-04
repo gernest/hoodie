@@ -2,7 +2,7 @@ const strings = @import("strings.zig");
 const std = @import("std");
 const testing = std.testing;
 
-test "next" {
+test "StringFinder.next" {
     var a = std.debug.global_allocator;
     const TestCase = struct {
         pattern: []const u8,
@@ -45,7 +45,7 @@ test "next" {
     }
 }
 
-test "init" {
+test "StringFinder.init" {
     var a = std.debug.global_allocator;
     const TestCase = struct {
         pattern: []const u8,
