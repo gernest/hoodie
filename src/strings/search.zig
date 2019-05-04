@@ -2,6 +2,7 @@ const std = @import("std");
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
 const warn = std.debug.warn;
+const testing = std.testing;
 // stringFinder efficiently finds strings in a source text. It's implemented
 // using the Boyer-Moore string search algorithm:
 // https://en.wikipedia.org/wiki/Boyer-Moore_string_search_algorithm
@@ -9,7 +10,7 @@ const warn = std.debug.warn;
 // document uses 1-based indexing)
 pub const StringFinder = struct {
     pattern: []const u8,
-    bad_char_skip: [255]usize,
+    bad_char_skip: [256]usize,
     good_suffix_skip: []usize,
     const Self = @This();
     a: *Allocator,
@@ -36,7 +37,7 @@ pub const StringFinder = struct {
         // that it is not in the last position.
         var i: usize = 0;
         while (i < last) : (i += 1) {
-            s.bad_char_skip[@intCast(usize, pattern[i])] = last - 1;
+            s.bad_char_skip[@intCast(usize, pattern[i])] = last - i;
         }
 
         // Build good suffix table.
@@ -49,7 +50,7 @@ pub const StringFinder = struct {
                 last_prefix = i + 1;
             }
             // lastPrefix is the shift, and (last-i) is len(suffix).
-            s.good_suffix_skip[i] = last_prefix + last + 1;
+            s.good_suffix_skip[i] = last_prefix + last - 1;
             if (i == 0) {
                 break;
             }
@@ -73,21 +74,21 @@ pub const StringFinder = struct {
     }
 
     fn next(self: *Self, text: []const u8) ?usize {
-        if (self.pattern.len == 0) {
-            return 0;
-        }
-        var i = self.pattern.len - 1;
         const size = self.pattern.len;
-        while (i < text.len) {
+        var i = @intCast(isize, size) - 1;
+        while (i < @intCast(isize, text.len)) {
             var j: isize = @intCast(isize, size) - 1;
-            while (j >= 0 and text[i] == self.pattern[@intCast(usize, j)]) {
+            while (j >= 0 and (text[@intCast(usize, i)] == self.pattern[@intCast(usize, j)])) {
                 i -= 1;
                 j -= 1;
             }
             if (j < 0) {
-                return i + 1;
+                return @intCast(usize, i + 1);
             }
-            i += max(self.bad_char_skip[@intCast(usize, text[i])], self.good_suffix_skip[@intCast(usize, j)]);
+            i += @intCast(isize, max(
+                self.bad_char_skip[@intCast(usize, text[@intCast(usize, i)])],
+                self.good_suffix_skip[@intCast(usize, j)],
+            ));
         }
         return null;
     }
@@ -165,3 +166,76 @@ test "next" {
         std.testing.expectEqual(ts.index, idx);
     }
 }
+
+test "init" {
+    var a = std.debug.global_allocator;
+    const TestCase = struct {
+        pattern: []const u8,
+        bad: [256]usize,
+        suf: []const usize,
+        const Self = @This();
+
+        fn init(pattern: []const u8, bad: [256]usize, suf: []const usize) Self {
+            return Self{
+                .pattern = pattern,
+                .bad = bad,
+                .suf = suf,
+            };
+        }
+    };
+
+    const sample = []TestCase{
+        TestCase.init("abc", bad1, []usize{ 5, 4, 1 }),
+        TestCase.init("mississi", bad2, []usize{ 5, 14, 13, 7, 11, 10, 7, 1 }),
+        TestCase.init("abcxxxabc", bad3, []usize{ 14, 13, 12, 11, 10, 9, 11, 10, 1 }),
+        TestCase.init("abyxcdeyx", bad4, []usize{ 7, 16, 15, 14, 13, 12, 7, 10, 1 }),
+    };
+    for (sample) |ts, idx| {
+        var f = &try StringFinder.init(a, ts.pattern);
+        for (f.bad_char_skip) |c, i| {
+            var want = ts.bad[i];
+            if (want == 0) {
+                want = ts.pattern.len;
+            }
+            testing.expectEqual(c, want);
+        }
+        f.deinit();
+    }
+}
+
+const bad1 = blk: {
+    var a: [256]usize = undefined;
+    a['a'] = 2;
+    a['b'] = 1;
+    a['c'] = 3;
+    break :blk a;
+};
+
+const bad2 = blk: {
+    var a: [256]usize = undefined;
+    a['i'] = 3;
+    a['m'] = 7;
+    a['s'] = 1;
+    break :blk a;
+};
+
+const bad3 = blk: {
+    var a: [256]usize = undefined;
+    a['a'] = 2;
+    a['b'] = 1;
+    a['c'] = 6;
+    a['x'] = 3;
+    break :blk a;
+};
+
+const bad4 = blk: {
+    var a: [256]usize = undefined;
+    a['a'] = 8;
+    a['b'] = 7;
+    a['c'] = 4;
+    a['d'] = 3;
+    a['e'] = 2;
+    a['y'] = 1;
+    a['x'] = 5;
+    break :blk a;
+};
