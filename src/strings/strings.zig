@@ -140,3 +140,41 @@ fn longestCommonSuffix(a: []const u8, b: []const u8) usize {
     }
     return i;
 }
+
+pub const Replacer = struct {
+    old: []const u8,
+    new: []const u8,
+    finde: StringFinder,
+
+    pub fn init(a: *Allocator, old: []const u8, new: []const u8) !Replacer {
+        return Replacer{
+            .old = old,
+            .new = new,
+            .find = try StringFinder.init(a),
+        };
+    }
+
+    pub fn deinit(self: *Replacer) void {
+        self.find.deinit();
+    }
+
+    pub fn replace(self: *Replacer, s: []const u8, buf: *std.Buffer) !void {
+        var i: usize = 0;
+        var matched = false;
+        while (true) {
+            if (self.find.next(s[i..])) |match| {
+                matched = true;
+                try buf.append(s[i .. i + match]);
+                try buf.append(self.new);
+                i += match + self.find.pattern.len;
+                continue;
+            }
+            break;
+        }
+        if (!matched) {
+            try buf.append(s);
+        } else {
+            try buf.append(s[i..]);
+        }
+    }
+};
