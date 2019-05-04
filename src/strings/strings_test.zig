@@ -1,5 +1,6 @@
 const strings = @import("strings.zig");
 const std = @import("std");
+const warn = std.debug.warn;
 const testing = std.testing;
 
 test "StringFinder.next" {
@@ -117,3 +118,29 @@ const bad4 = blk: {
     a['x'] = 5;
     break :blk a;
 };
+
+test "Replacer" {
+    var a = std.debug.global_allocator;
+    var html_escaper = &strings.Replacer.init(a);
+    try html_escaper.add("&", "&amp;");
+    try html_escaper.add("<", "&lt;");
+    try html_escaper.add(">", "&gt;");
+    try html_escaper.add(
+        \\"
+    , "&quot;");
+    try html_escaper.add("''", "&apos;");
+    defer html_escaper.deinit();
+    var buf = &try std.Buffer.init(a, "");
+    defer buf.deinit();
+
+    try testReplacer(buf, html_escaper, "No changes", "No changes");
+    try testReplacer(buf, html_escaper, "I <3 escaping & stuff", "I <3 escaping &amp; stuff");
+    try testReplacer(buf, html_escaper, "&&&", "&amp;&amp;&amp;");
+    try testReplacer(buf, html_escaper, "", "");
+}
+
+fn testReplacer(buf: *std.Buffer, r: *strings.Replacer, text: []const u8, final: []const u8) !void {
+    try buf.resize(0);
+    try r.replace(text, buf);
+    testing.expect(buf.eql(final));
+}
