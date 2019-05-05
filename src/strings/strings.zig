@@ -225,4 +225,39 @@ pub const StringReplacer = struct {
     }
 };
 
+pub const ByteReplacer = struct {
+    matrix: [256]usize,
+    replacer: Replacer,
+
+    pub fn init(old_new: [][]const u8) ByteReplacer {
+        var r: [256]u8 = undefined;
+        for (r) |*v, i| {
+            v.* = @intCast(u8, i);
+        }
+        var i = old_new.len - 2;
+        while (i > 0) {
+            const o = old_new[i][0];
+            const n = old_new[i + 1][0];
+            r[o] = n;
+        }
+        return ByteReplacer{
+            .matrix = r,
+            .replacer = Replacer{ .replaceFn = replaceFn },
+        };
+    }
+
+    pub fn replaceFn(replace_ctx: *Replacer, s: []const u8, buf: *std.Buffer) anyerror!void {
+        const self = @fieldParentPtr(SingleReplacer, "replacer", replace_ctx);
+        var i: usize = 0;
+        while (i < s.len) : (i += 1) {
+            const b = s[i];
+            if (self.matrix[b] != b) {
+                try buf.appendByte(self.matrix[b]);
+            } else {
+                try buf.appendByte(b);
+            }
+        }
+    }
+};
+
 pub const GenericReplacer = struct {};
