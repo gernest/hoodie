@@ -119,16 +119,29 @@ const bad4 = blk: {
     break :blk a;
 };
 
-test "Replacer" {
+// test "Replacer" {
+//     var a = std.debug.global_allocator;
+//     var html_escaper = &strings.Replacer.init(a);
+//     try html_escaper.add("&", "&amp;");
+//     try html_escaper.add("<", "&lt;");
+//     try html_escaper.add(">", "&gt;");
+//     try html_escaper.add(
+//         \\"
+//     , "&quot;");
+//     try html_escaper.add("''", "&apos;");
+//     defer html_escaper.deinit();
+//     var buf = &try std.Buffer.init(a, "");
+//     defer buf.deinit();
+
+//     try testReplacer(buf, html_escaper, "No changes", "No changes");
+//     try testReplacer(buf, html_escaper, "I <3 escaping & stuff", "I <3 escaping &amp; stuff");
+//     try testReplacer(buf, html_escaper, "&&&", "&amp;&amp;&amp;");
+//     try testReplacer(buf, html_escaper, "", "");
+// }
+
+test "SingleReplacer" {
     var a = std.debug.global_allocator;
-    var html_escaper = &strings.Replacer.init(a);
-    try html_escaper.add("&", "&amp;");
-    try html_escaper.add("<", "&lt;");
-    try html_escaper.add(">", "&gt;");
-    try html_escaper.add(
-        \\"
-    , "&quot;");
-    try html_escaper.add("''", "&apos;");
+    var html_escaper = &try strings.SingleReplacer.init(a, "&", "&amp;");
     defer html_escaper.deinit();
     var buf = &try std.Buffer.init(a, "");
     defer buf.deinit();
@@ -139,7 +152,7 @@ test "Replacer" {
     try testReplacer(buf, html_escaper, "", "");
 }
 
-fn testReplacer(buf: *std.Buffer, r: *strings.Replacer, text: []const u8, final: []const u8) !void {
+fn testReplacer(buf: *std.Buffer, r: *strings.SingleReplacer, text: []const u8, final: []const u8) !void {
     try buf.resize(0);
     try r.replace(text, buf);
     testing.expect(buf.eql(final));

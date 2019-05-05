@@ -141,53 +141,33 @@ fn longestCommonSuffix(a: []const u8, b: []const u8) usize {
     return i;
 }
 
-pub const Replacer = struct {
-    finders: ArrayList(*Item),
-    a: *Allocator,
+pub const SingleReplacer = struct {
+    find: StringFinder,
+    old: []const u8,
+    new: []const u8,
 
-    const Item = struct {
-        old: []const u8,
-        new: []const u8,
-        find: StringFinder,
-    };
-
-    pub fn init(a: *Allocator) Replacer {
-        return Replacer{
-            .finders = ArrayList(*Item).init(a),
-            .a = a,
-        };
-    }
-
-    pub fn add(self: *Replacer, old: []const u8, new: []const u8) !void {
-        var i = try self.a.create(Item);
-        i.* = Item{
+    pub fn init(a: *Allocator, old: []const u8, new: []const u8) !SingleReplacer {
+        return SingleReplacer{
             .old = old,
             .new = new,
-            .find = try StringFinder.init(self.a, old),
+            .find = try StringFinder.init(a, old),
         };
-        try self.finders.append(i);
     }
 
-    pub fn deinit(self: *Replacer) void {
-        for (self.finders.toSlice()) |f| {
-            (&f.find).deinit();
-            self.a.destroy(f);
-        }
-        self.finders.deinit();
+    pub fn deinit(self: *SingleReplacer) void {
+        self.find.deinit();
     }
 
-    pub fn replace(self: *Replacer, s: []const u8, buf: *std.Buffer) !void {
+    pub fn replace(self: *SingleReplacer, s: []const u8, buf: *std.Buffer) !void {
         var i: usize = 0;
         var matched = false;
         top: while (true) {
-            for (self.finders.toSlice()) |item| {
-                if ((&item.find).next(s[i..])) |match| {
-                    matched = true;
-                    try buf.append(s[i .. i + match]);
-                    try buf.append(item.new);
-                    i += match + item.old.len;
-                    continue :top;
-                }
+            if ((&self.find).next(s[i..])) |match| {
+                matched = true;
+                try buf.append(s[i .. i + match]);
+                try buf.append(self.new);
+                i += match + self.old.len;
+                continue :top;
             }
             break;
         }
