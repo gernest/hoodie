@@ -145,14 +145,15 @@ test "SingleReplacer" {
     defer html_escaper.deinit();
     var buf = &try std.Buffer.init(a, "");
     defer buf.deinit();
+    var rep = &html_escaper.replacer;
 
-    try testReplacer(buf, html_escaper, "No changes", "No changes");
-    try testReplacer(buf, html_escaper, "I <3 escaping & stuff", "I <3 escaping &amp; stuff");
-    try testReplacer(buf, html_escaper, "&&&", "&amp;&amp;&amp;");
-    try testReplacer(buf, html_escaper, "", "");
+    try testReplacer(buf, rep, "No changes", "No changes");
+    try testReplacer(buf, rep, "I <3 escaping & stuff", "I <3 escaping &amp; stuff");
+    try testReplacer(buf, rep, "&&&", "&amp;&amp;&amp;");
+    try testReplacer(buf, rep, "", "");
 }
 
-fn testReplacer(buf: *std.Buffer, r: *strings.SingleReplacer, text: []const u8, final: []const u8) !void {
+fn testReplacer(buf: *std.Buffer, r: *strings.Replacer, text: []const u8, final: []const u8) !void {
     try buf.resize(0);
     try r.replace(text, buf);
     testing.expect(buf.eql(final));

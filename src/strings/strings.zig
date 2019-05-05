@@ -146,11 +146,14 @@ pub const SingleReplacer = struct {
     old: []const u8,
     new: []const u8,
 
+    replacer: Replacer,
+
     pub fn init(a: *Allocator, old: []const u8, new: []const u8) !SingleReplacer {
         return SingleReplacer{
             .old = old,
             .new = new,
             .find = try StringFinder.init(a, old),
+            .replacer = Replacer{ .replaceFn = replaceFn },
         };
     }
 
@@ -158,7 +161,8 @@ pub const SingleReplacer = struct {
         self.find.deinit();
     }
 
-    pub fn replace(self: *SingleReplacer, s: []const u8, buf: *std.Buffer) !void {
+    pub fn replaceFn(replace_ctx: *Replacer, s: []const u8, buf: *std.Buffer) anyerror!void {
+        const self = @fieldParentPtr(SingleReplacer, "replacer", replace_ctx);
         var i: usize = 0;
         var matched = false;
         top: while (true) {
@@ -178,3 +182,47 @@ pub const SingleReplacer = struct {
         }
     }
 };
+
+pub const Replacer = struct {
+    replaceFn: fn (*Replacer, []const u8, *std.Buffer) anyerror!void,
+
+    pub fn replace(self: *Replacer, s: []const u8, out: *std.Buffer) anyerror!void {
+        return self.replaceFn(self, s, out);
+    }
+};
+
+pub const StringReplacer = struct {
+    impl: ReplaceImpl,
+
+    const ReplaceImpl = union {
+        Single: SingleReplacer,
+        Generic: GenericReplacer,
+    };
+
+    pub fn init(a: *Allocator, old_new: [][]const u8) !StringReplacer {
+        if (old_new.len == 2 and old_new[0].len > 1) {
+            return StringReplacer{
+                .impl = ReplaceImpl{
+                    .Single = try SingleReplacer.init(a, old_new[0], old_new[1]),
+                },
+            };
+        }
+        return error.NotImplemenedYet;
+    }
+
+    fn replace(self: *StringReplacer, s: []const u8, out: *std.Buffer) anyerror!void {
+        switch (self.impl) {
+            ReplaceImpl.Single => |*value| {
+                const r = &value.replacer;
+                return try r.replace(s, out);
+            },
+            ReplaceImpl.Generic => |*value| {
+                const r = &value.replacer;
+                return try r.replace(s, out);
+            },
+            else => unreachable,
+        }
+    }
+};
+
+pub const GenericReplacer = struct {};
