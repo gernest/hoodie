@@ -158,3 +158,9 @@ fn testReplacer(buf: *std.Buffer, r: *strings.Replacer, text: []const u8, final:
     try r.replace(text, buf);
     testing.expect(buf.eql(final));
 }
+
+test "generic" {
+    var a = std.debug.global_allocator;
+
+    var g = strings.GenericReplacer.init(a, [][]const u8{ "aa", "==" });
+}
