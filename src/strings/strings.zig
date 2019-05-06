@@ -247,7 +247,7 @@ pub const ByteReplacer = struct {
     }
 
     pub fn replaceFn(replace_ctx: *Replacer, s: []const u8, buf: *std.Buffer) anyerror!void {
-        const self = @fieldParentPtr(SingleReplacer, "replacer", replace_ctx);
+        const self = @fieldParentPtr(ByteReplacer, "replacer", replace_ctx);
         var i: usize = 0;
         while (i < s.len) : (i += 1) {
             const b = s[i];
