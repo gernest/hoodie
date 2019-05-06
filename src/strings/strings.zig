@@ -1,7 +1,6 @@
 const std = @import("std");
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
-
 const utf8 = @import("../unicode/utf8/index.zig");
 
 pub fn lastIndexFunc(input: []const u8, f: fn (rune: i32) bool) anyerror!?usize {
@@ -255,6 +254,59 @@ pub const ByteReplacer = struct {
                 try buf.appendByte(self.matrix[b]);
             } else {
                 try buf.appendByte(b);
+            }
+        }
+    }
+};
+
+pub const ByteStringReplacer = struct {
+    replacements: [256]?[]const u8,
+    replacer: Replacer,
+
+    pub fn init(old_new: [][]const u8) ByteStringReplacer {
+        var r: [356]?[]const u8 = undefined;
+        var i = old_new.len - 2;
+        while (i >= 0) {
+            const o = old_new[i][0];
+            r[o] = old_new[i + 1];
+            if (i != 0) {
+                i -= 1;
+            }
+        }
+
+        return ByteStringReplacer{
+            .replacements = r,
+            .replacer = Replacer{ .replaceFn = replaceFn },
+        };
+    }
+
+    pub fn replaceFn(replace_ctx: *Replacer, s: []const u8, buf: *std.Buffer) anyerror!void {
+        const self = @fieldParentPtr(ByteReplacer, "replacer", replace_ctx);
+        var new_size = s.len;
+        var any_changes = false;
+        var i: usize = 0;
+        while (i < s.len) : (i += 1) {
+            const b = s[i];
+            if (self.replacements[b]) |value| {
+                new_size += value.len - 1;
+                any_changes = true;
+            }
+        }
+        if (!any_changes) {
+            return buf.append(s);
+        }
+        try buf.resize(new_size);
+        var out = buf.toSlice();
+        var j: usize = 0;
+        i = 0;
+        while (i < s.len) : (i += 1) {
+            const b = s[i];
+            if (self.replacements[b]) |value| {
+                mem.copy(u8, out[j..], value);
+                j += value.len;
+            } else {
+                out[j] = b;
+                j += 1;
             }
         }
     }
