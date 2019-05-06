@@ -312,4 +312,94 @@ pub const ByteStringReplacer = struct {
     }
 };
 
-pub const GenericReplacer = struct {};
+pub const GenericReplacer = struct {
+    root: TrieNode,
+    table_size: usize,
+    mapping: [256]usize,
+    a: *Allocator,
+
+    pub fn init(a: *Allocator, old_new: [][]const u8) GenericReplacer {}
+
+    const TrieNode = struct {
+        value: []const u8,
+        priority: usize,
+        prefix: []const u8,
+        next: ?*TrieNode,
+        table: Table,
+        const Table = ArrayList(*TrieNode);
+
+        fn add(self: *TrieNode, key: []const u8, value: []const u8, r: *GenericReplacer) !void {
+            if (key.len == 0) {
+                if (self.priority == 0) {
+                    self.value = value;
+                    self.priority = priority;
+                }
+                return;
+            }
+            if (self.prefix.len > 0) {
+                const p = self.prefix;
+                var n: usize = 0;
+                while (n < p.len and n < key.len) : (n += 1) {
+                    if (p[n] != key[n]) {
+                        break;
+                    }
+                }
+                if (n == p.len) {
+                    try self.next.add(key[n..], value, priority);
+                } else if (n == 0) {
+                    var prefix_node: *TrieNode = undefined;
+                    if (p.len == 1) {
+                        prefix_node = self.next;
+                    } else {
+                        prefix_node = r.createNode();
+                        prefix_node.prefix = p[1..];
+                        prefix_node.next = self.next;
+                    }
+                    var key_node = r.createNode();
+                    self.table = Table.init(r.a);
+                    var ta = &self.table;
+                    try ta.resize(r.table_size);
+                    try ta.set(r.mapping[p[0]], prefix_node);
+                    try ta.set(r.mapping[key[0]], key_node);
+                    self.prefix = "";
+                    self.next = null;
+                    try key_node.add(key[1..], value, priority, r);
+                } else {
+                    const nxt = r.createNode();
+                    nxt.prefix = p[n..];
+                    nxt.next = self.next;
+                    self.prefix = p[n..];
+                    self.next = nxt;
+                    try nxt.add(key[n..], value, priority, r);
+                }
+            } else if (self.table != null) {
+                var ta = &self.table.?;
+                const m = r.mapping[key[0]];
+                var n: *TrieNode = undefined;
+                if (ta.toSlice()[m] == undefined) {
+                    n = r.createNode();
+                    a.set(m, n);
+                } else {
+                    n = ta.toSlice()[m];
+                }
+                try n.add(key[1..], value, priority, r);
+            } else {
+                self.prefix = key;
+                self.next = r.createNode();
+                try self.next.add("", value, priority, r);
+            }
+        }
+    };
+
+    fn createNode(self: *GenericReplacer) !TrieNode {
+        var n = self.a.createNode(TrieNode);
+        n.* = TrieNode{
+            .prefix = null,
+            .next = undefined,
+            .priority = undefined,
+            .value = undefined,
+            .table = null,
+        };
+        return n;
+    }
+};
