@@ -317,9 +317,11 @@ pub const GenericReplacer = struct {
     table_size: usize,
     mapping: [256]usize,
     a: *Allocator,
+    nodes_list: ArrayList(*TrieNode),
 
     pub fn init(a: *Allocator, old_new: []const []const u8) !GenericReplacer {
         var g: GenericReplacer = undefined;
+        g.node_list = ArrayList(*TrieNode).init(a);
         g.mapping = []usize{0} ** 256;
         var i: usize = 0;
         while (i < old_new.len) : (i += 2) {
@@ -443,6 +445,58 @@ pub const GenericReplacer = struct {
             .value = undefined,
             .table = null,
         };
+        try (&self.nodes_list).append(n);
         return n;
+    }
+
+    fn deinit(self: *GenericReplacer) void {
+        for (self.node_list) |value| {
+            self.a.destroy(value);
+        }
+        (&self.node_list).deinit();
+    }
+
+    const LookupRes = struct {
+        value: []const u8,
+        key_len: usize,
+        found: bool,
+    };
+
+    fn lookup(self: *GenericReplacer, src: []const u8, ignore_root: bool) !LookupRes {
+        var best_priority: usize = 0;
+        var current_node: ?*TrieNode = &self.root;
+        var n: usize = 0;
+        var result = LookupRes{
+            .value = "",
+            .key_len = 0,
+            .found = false,
+        };
+        var s = src;
+        while (current_node) |node| {
+            if (node.priority > best_priority and !(ignore_root and node == &self.root)) {
+                best_priority = node.priority;
+                result.value = node.value;
+                result.key_len = n;
+            }
+            if (mem.eql(u8, s, "")) {
+                break;
+            }
+            if (node.table) |table| {
+                const index = self.mapping[s[0]];
+                if (index == self.table_size) {
+                    break;
+                }
+                current_node = table.toSlice()[index];
+                s = s[1..];
+                n += 1;
+            } else if (!mem.eql(u8, node.prefix, "") and hasPrefix(s, node.prefix)) {
+                n += node.prefix.len;
+                s = s[node.prefix.len..];
+                current_node = node.next;
+            } else {
+                break;
+            }
+        }
+        return result;
     }
 };
