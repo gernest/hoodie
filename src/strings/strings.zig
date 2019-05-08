@@ -3,6 +3,7 @@ const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
 const utf8 = @import("../unicode/utf8/index.zig");
 const mem = std.mem;
+const warn = std.debug.warn;
 
 pub fn lastIndexFunc(input: []const u8, f: fn (rune: i32) bool) anyerror!?usize {
     return lastIndexFuncInternal(input, f, true);
@@ -194,14 +195,14 @@ pub const Replacer = struct {
 pub const StringReplacer = struct {
     impl: ReplaceImpl,
 
-    const ReplaceImpl = union {
+    const ReplaceImpl = union(enum) {
         Single: SingleReplacer,
         Generic: GenericReplacer,
         Byte: ByteReplacer,
         ByteString: ByteStringReplacer,
     };
 
-    pub fn init(a: *Allocator, old_new: [][]const u8) !StringReplacer {
+    pub fn init(a: *Allocator, old_new: []const []const u8) !StringReplacer {
         if (old_new.len == 2 and old_new[0].len > 1) {
             return StringReplacer{
                 .impl = ReplaceImpl{
@@ -232,7 +233,7 @@ pub const StringReplacer = struct {
         }
         return StringReplacer{
             .impl = ReplaceImpl{
-                .Byte = ByteReplacer.init(old_new),
+                .ByteString = ByteStringReplacer.init(old_new),
             },
         };
     }
@@ -268,19 +269,17 @@ pub const StringReplacer = struct {
                 value.deinit();
             },
             ReplaceImpl.Byte => {},
-            ReplaceImpl.ByteString => |*value| {
-                value.deinit();
-            },
+            ReplaceImpl.ByteString => {},
             else => unreachable,
         }
     }
 };
 
 pub const ByteReplacer = struct {
-    matrix: [256]usize,
+    matrix: [256]u8,
     replacer: Replacer,
 
-    pub fn init(old_new: [][]const u8) ByteReplacer {
+    pub fn init(old_new: []const []const u8) ByteReplacer {
         var r: [256]u8 = undefined;
         for (r) |*v, i| {
             v.* = @intCast(u8, i);
@@ -290,6 +289,10 @@ pub const ByteReplacer = struct {
             const o = old_new[i][0];
             const n = old_new[i + 1][0];
             r[o] = n;
+            if (i == 0) {
+                break;
+            }
+            i -= 2;
         }
         return ByteReplacer{
             .matrix = r,
@@ -315,15 +318,16 @@ pub const ByteStringReplacer = struct {
     replacements: [256]?[]const u8,
     replacer: Replacer,
 
-    pub fn init(old_new: [][]const u8) ByteStringReplacer {
-        var r: [356]?[]const u8 = undefined;
+    pub fn init(old_new: []const []const u8) ByteStringReplacer {
+        var r: [256]?[]const u8 = undefined;
         var i = old_new.len - 2;
         while (i >= 0) {
             const o = old_new[i][0];
             r[o] = old_new[i + 1];
-            if (i != 0) {
-                i -= 1;
+            if (i == 0) {
+                break;
             }
+            i -= 2;
         }
 
         return ByteStringReplacer{
@@ -375,6 +379,7 @@ pub const GenericReplacer = struct {
         var g: GenericReplacer = undefined;
         g.nodes_list = ArrayList(*TrieNode).init(a);
         g.mapping = []usize{0} ** 256;
+        g.table_size = 0;
         g.replacer = Replacer{ .replaceFn = replaceFn };
         var i: usize = 0;
         while (i < old_new.len) : (i += 2) {
@@ -384,7 +389,7 @@ pub const GenericReplacer = struct {
                 g.mapping[key[j]] = 1;
             }
         }
-        for (g.mapping) |value| {
+        for (g.mapping) |value, idx| {
             g.table_size += value;
         }
         var index: usize = 0;
@@ -426,6 +431,12 @@ pub const GenericReplacer = struct {
         table: ?Table,
         const Table = ArrayList(?*TrieNode);
 
+        fn padd(size: usize) void {
+            var i: usize = 0;
+            while (i < size) : (i += 1) {
+                warn(" ");
+            }
+        }
         fn add(self: *TrieNode, key: []const u8, value: []const u8, priority: usize, r: *GenericReplacer) anyerror!void {
             if (key.len == 0) {
                 if (self.priority == 0) {
@@ -503,10 +514,10 @@ pub const GenericReplacer = struct {
     }
 
     fn deinit(self: *GenericReplacer) void {
-        for (self.node_list) |value| {
+        for (self.nodes_list.toSlice()) |value| {
             self.a.destroy(value);
         }
-        (&self.node_list).deinit();
+        (&self.nodes_list).deinit();
     }
 
     const LookupRes = struct {

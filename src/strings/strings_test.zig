@@ -139,28 +139,33 @@ const bad4 = blk: {
 //     try testReplacer(buf, html_escaper, "", "");
 // }
 
-test "SingleReplacer" {
-    var a = std.debug.global_allocator;
-    var html_escaper = &try strings.SingleReplacer.init(a, "&", "&amp;");
-    defer html_escaper.deinit();
-    var buf = &try std.Buffer.init(a, "");
-    defer buf.deinit();
-    var rep = &html_escaper.replacer;
-
-    try testReplacer(buf, rep, "No changes", "No changes");
-    try testReplacer(buf, rep, "I <3 escaping & stuff", "I <3 escaping &amp; stuff");
-    try testReplacer(buf, rep, "&&&", "&amp;&amp;&amp;");
-    try testReplacer(buf, rep, "", "");
-}
-
-fn testReplacer(buf: *std.Buffer, r: *strings.Replacer, text: []const u8, final: []const u8) !void {
+fn testReplacer(buf: *std.Buffer, r: *strings.StringReplacer, text: []const u8, final: []const u8) !void {
     try buf.resize(0);
     try r.replace(text, buf);
     testing.expect(buf.eql(final));
+    // if (!buf.eql(final)) {
+    //     warn("expectt {} got {}\n", final, buf.toSlice());
+    // }
 }
 
-test "generic" {
-    var a = std.debug.global_allocator;
+test "Replacer" {
+    var da = std.heap.DirectAllocator.init();
+    defer da.deinit();
+    var a = &da.allocator;
 
-    var g = strings.GenericReplacer.init(a, [][]const u8{ "aa", "==" });
+    var html_escaper = &try strings.StringReplacer.init(a, [][]const u8{
+        "&",  "&amp;",
+        "<",  "&lt;",
+        ">",  "&gt;",
+        "\"", "&quot;",
+        "'",  "&apos;",
+    });
+    defer html_escaper.deinit();
+    var buf = &try std.Buffer.init(a, "");
+    defer buf.deinit();
+
+    try testReplacer(buf, html_escaper, "No changes", "No changes");
+    try testReplacer(buf, html_escaper, "I <3 escaping & stuff", "I &lt;3 escaping &amp; stuff");
+    try testReplacer(buf, html_escaper, "&&&", "&amp;&amp;&amp;");
+    try testReplacer(buf, html_escaper, "", "");
 }
