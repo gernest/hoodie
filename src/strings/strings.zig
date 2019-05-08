@@ -281,7 +281,7 @@ pub const ByteStringReplacer = struct {
     }
 
     pub fn replaceFn(replace_ctx: *Replacer, s: []const u8, buf: *std.Buffer) anyerror!void {
-        const self = @fieldParentPtr(ByteReplacer, "replacer", replace_ctx);
+        const self = @fieldParentPtr(ByteStringReplacer, "replacer", replace_ctx);
         var new_size = s.len;
         var any_changes = false;
         var i: usize = 0;
@@ -318,11 +318,12 @@ pub const GenericReplacer = struct {
     mapping: [256]usize,
     a: *Allocator,
     nodes_list: ArrayList(*TrieNode),
-
+    replacer: Replacer,
     pub fn init(a: *Allocator, old_new: []const []const u8) !GenericReplacer {
         var g: GenericReplacer = undefined;
         g.node_list = ArrayList(*TrieNode).init(a);
         g.mapping = []usize{0} ** 256;
+        g.replacer = Replacer{ .replaceFn = replaceFn };
         var i: usize = 0;
         while (i < old_new.len) : (i += 2) {
             var j: usize = 0;
@@ -498,5 +499,35 @@ pub const GenericReplacer = struct {
             }
         }
         return result;
+    }
+
+    pub fn replaceFn(replace_ctx: *Replacer, s: []const u8, buf: *std.Buffer) anyerror!void {
+        const self = @fieldParentPtr(GenericReplacer, "replacer", replace_ctx);
+        var last: usize = 0;
+        var sw: usize = 0;
+        var prev_match_empty = false;
+        var i: usize = 0;
+        while (i < s.len) {
+            if (i != s.len and r.toot.priority == 0) {
+                const index = self.mapping[s[i]];
+                if (index == self.table_size or self.root.?.table.at(index) == null) {
+                    i += 1;
+                    continue;
+                }
+                const lk = try self.lookup(s[i..], prev_match_empty);
+                prev_match_empty = lk.match and lk.key_len == 0;
+                if (lk.match) {
+                    try buf.append(s[last..i]);
+                    try buf.append(lk.value);
+                    i += lk.key_len;
+                    last = i;
+                    continue;
+                }
+                i += 1;
+            }
+        }
+        if (last != s.len) {
+            try buf.append(s[last..]);
+        }
     }
 };
