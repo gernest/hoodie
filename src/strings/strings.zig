@@ -258,6 +258,22 @@ pub const StringReplacer = struct {
             else => unreachable,
         }
     }
+
+    pub fn deinit(self: *StringReplacer) void {
+        switch (self.impl) {
+            ReplaceImpl.Single => |*value| {
+                value.deinit();
+            },
+            ReplaceImpl.Generic => |*value| {
+                value.deinit();
+            },
+            ReplaceImpl.Byte => {},
+            ReplaceImpl.ByteString => |*value| {
+                value.deinit();
+            },
+            else => unreachable,
+        }
+    }
 };
 
 pub const ByteReplacer = struct {
