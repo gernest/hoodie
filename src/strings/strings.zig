@@ -2,6 +2,7 @@ const std = @import("std");
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
 const utf8 = @import("../unicode/utf8/index.zig");
+const mem = std.mem;
 
 pub fn lastIndexFunc(input: []const u8, f: fn (rune: i32) bool) anyerror!?usize {
     return lastIndexFuncInternal(input, f, true);
@@ -196,6 +197,8 @@ pub const StringReplacer = struct {
     const ReplaceImpl = union {
         Single: SingleReplacer,
         Generic: GenericReplacer,
+        Byte: ByteReplacer,
+        ByteString: ByteStringReplacer,
     };
 
     pub fn init(a: *Allocator, old_new: [][]const u8) !StringReplacer {
@@ -206,7 +209,32 @@ pub const StringReplacer = struct {
                 },
             };
         }
-        return error.NotImplemenedYet;
+        var all_new_bytes = true;
+        var i: usize = 0;
+        while (i < old_new.len) : (i += 2) {
+            if (old_new[i].len != 1) {
+                return StringReplacer{
+                    .impl = ReplaceImpl{
+                        .Generic = try GenericReplacer.init(a, old_new),
+                    },
+                };
+            }
+            if (old_new[i + 1].len != 1) {
+                all_new_bytes = false;
+            }
+        }
+        if (all_new_bytes) {
+            return StringReplacer{
+                .impl = ReplaceImpl{
+                    .Byte = ByteReplacer.init(old_new),
+                },
+            };
+        }
+        return StringReplacer{
+            .impl = ReplaceImpl{
+                .Byte = ByteReplacer.init(old_new),
+            },
+        };
     }
 
     fn replace(self: *StringReplacer, s: []const u8, out: *std.Buffer) anyerror!void {
@@ -216,6 +244,14 @@ pub const StringReplacer = struct {
                 return try r.replace(s, out);
             },
             ReplaceImpl.Generic => |*value| {
+                const r = &value.replacer;
+                return try r.replace(s, out);
+            },
+            ReplaceImpl.Byte => |*value| {
+                const r = &value.replacer;
+                return try r.replace(s, out);
+            },
+            ReplaceImpl.ByteString => |*value| {
                 const r = &value.replacer;
                 return try r.replace(s, out);
             },
@@ -321,7 +357,7 @@ pub const GenericReplacer = struct {
     replacer: Replacer,
     pub fn init(a: *Allocator, old_new: []const []const u8) !GenericReplacer {
         var g: GenericReplacer = undefined;
-        g.node_list = ArrayList(*TrieNode).init(a);
+        g.nodes_list = ArrayList(*TrieNode).init(a);
         g.mapping = []usize{0} ** 256;
         g.replacer = Replacer{ .replaceFn = replaceFn };
         var i: usize = 0;
@@ -463,9 +499,9 @@ pub const GenericReplacer = struct {
         found: bool,
     };
 
-    fn lookup(self: *GenericReplacer, src: []const u8, ignore_root: bool) !LookupRes {
+    fn lookup(self: *GenericReplacer, src: []const u8, ignore_root: bool) anyerror!LookupRes {
         var best_priority: usize = 0;
-        var current_node: ?*TrieNode = &self.root;
+        var current_node: ?*TrieNode = self.root;
         var n: usize = 0;
         var result = LookupRes{
             .value = "",
@@ -474,7 +510,7 @@ pub const GenericReplacer = struct {
         };
         var s = src;
         while (current_node) |node| {
-            if (node.priority > best_priority and !(ignore_root and node == &self.root)) {
+            if (node.priority > best_priority and !(ignore_root and node == self.root)) {
                 best_priority = node.priority;
                 result.value = node.value;
                 result.key_len = n;
@@ -508,15 +544,15 @@ pub const GenericReplacer = struct {
         var prev_match_empty = false;
         var i: usize = 0;
         while (i < s.len) {
-            if (i != s.len and r.toot.priority == 0) {
+            if (i != s.len and self.root.priority == 0) {
                 const index = self.mapping[s[i]];
-                if (index == self.table_size or self.root.?.table.at(index) == null) {
+                if (index == self.table_size or self.root.table.?.at(index) == null) {
                     i += 1;
                     continue;
                 }
                 const lk = try self.lookup(s[i..], prev_match_empty);
-                prev_match_empty = lk.match and lk.key_len == 0;
-                if (lk.match) {
+                prev_match_empty = lk.found and lk.key_len == 0;
+                if (lk.found) {
                     try buf.append(s[last..i]);
                     try buf.append(lk.value);
                     i += lk.key_len;
