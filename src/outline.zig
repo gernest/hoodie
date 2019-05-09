@@ -122,6 +122,21 @@ fn collect(
             };
             try ls.append(decl_ptr);
         },
+        ast.Node.Id.FnProto => {
+            const fn_decl = @fieldParentPtr(ast.Node.FnProto, "base", decl);
+            if (fn_decl.name_token) |idx| {
+                const fn_name = tree.tokenSlice(idx);
+                var decl_ptr = try ls.allocator.create(Declaration);
+                decl_ptr.* = Declaration{
+                    .start = first_token.start,
+                    .end = last_token.end,
+                    .typ = Declaration.Type.Fn,
+                    .label = fn_name,
+                    .children = Declaration.List.init(ls.allocator),
+                };
+                try ls.append(decl_ptr);
+            }
+        },
         else => {},
     }
 }
@@ -155,7 +170,7 @@ fn testOutline(
     // if (!buf.eql(expected)) {
     //     warn("{}", buf.toSlice());
     // }
-    // testing.expect(buf.eql(expected));
+    testing.expect(buf.eql(expected));
 }
 
 test "outline" {
@@ -176,5 +191,11 @@ test "outline" {
         \\test "outline2" {}
     ,
         \\[{"end":17,"label":"outline","type":"test","start":0},{"end":36,"label":"outline2","type":"test","start":18}]
+    );
+    try testOutline(a, buf,
+        \\fn outline()void{}
+        \\fn outline2()void{}
+    ,
+        \\[{"end":18,"label":"outline","type":"function","start":0},{"end":38,"label":"outline2","type":"function","start":19}]
     );
 }
