@@ -33,7 +33,7 @@ pub fn dump(self: Value, stream: var) anyerror!void {
                     try stream.write(",");
                 }
                 not_first = true;
-                value.dump();
+                try dump(value, stream);
             }
             try stream.write("]");
         },
