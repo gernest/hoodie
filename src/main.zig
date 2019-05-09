@@ -2,6 +2,7 @@ const std = @import("std");
 const debug = std.debug;
 const mem = std.mem;
 const os = std.os;
+const io = std.io;
 const heap = std.heap;
 const builtin = @import("builtin");
 
@@ -34,6 +35,10 @@ pub const OsIterator = struct {
     }
 };
 
+var stdout_file: os.File = undefined;
+var stdout_file_out_stream: os.File.OutStream = undefined;
+var stdout_stream: ?*io.OutStream(os.File.WriteError) = null;
+
 pub fn main() anyerror!void {
     var direct_allocator = std.heap.DirectAllocator.init();
     const allocator = &direct_allocator.allocator;
@@ -47,11 +52,8 @@ pub fn main() anyerror!void {
             if (try iter.next()) |file_name| {
                 if (std.io.readFileAlloc(allocator, file_name)) |data| {
                     defer allocator.free(data);
-                    var buf = &try std.Buffer.init(allocator, "");
-                    defer buf.deinit();
-                    var stream = &std.io.BufferOutStream.init(buf).stream;
-                    try outline(allocator, data, stream);
-                    debug.warn("{}", buf.toSlice());
+                    const stdout = try getStdoutStream();
+                    try outline(allocator, data, stdout);
                 } else |err| {
                     std.debug.warn("{}\n", err);
                     os.exit(1);
@@ -71,3 +73,15 @@ const outline_help_missing_filename =
     \\hoodie outline [FILENAME]
     \\  FILENAME is absolute or relatime path to the zig source file.
 ;
+
+pub fn getStdoutStream() !*io.OutStream(os.File.WriteError) {
+    if (stdout_stream) |st| {
+        return st;
+    } else {
+        stdout_file = try io.getStdOut();
+        stdout_file_out_stream = stdout_file.outStream();
+        const st = &stdout_file_out_stream.stream;
+        stdout_stream = st;
+        return st;
+    }
+}
