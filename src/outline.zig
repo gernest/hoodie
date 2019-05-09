@@ -53,7 +53,7 @@ const Declaration = struct {
     }
 };
 
-fn outline(a: *Allocator, src: []const u8, stream: var) anyerror!void {
+pub fn outline(a: *Allocator, src: []const u8, stream: var) anyerror!void {
     var tree = try parse(a, src);
     defer tree.deinit();
     var arena = std.heap.ArenaAllocator.init(a);
