@@ -1,0 +1,3 @@
+[submodule "lib/clap"]
+	path = lib/clap
+	url = git@github.com:Hejsil/zig-clap.git
