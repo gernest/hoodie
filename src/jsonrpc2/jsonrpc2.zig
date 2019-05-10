@@ -1,5 +1,13 @@
 const std = @import("std");
 const json = std.json;
+const Allocator = std.mem.Allocator;
+const io = std.io;
+const event = std.event;
+const mem = std.mem;
+const warn = std.debug.warn;
+pub const json_rpc_version = "2.0";
+const content_length = "Content-Length";
+const default_message_size: usize = 8192;
 
 pub const Error = struct {
     code: i64,
@@ -52,4 +60,106 @@ pub const RPC = struct {
         err: ?Error,
         id: ?ID,
     };
+
+    pub const Context = struct {
+        request: *Request,
+        response: *Response,
+        arena: std.heap.ArenaAllocator,
+
+        pub fn init(a: *Allocator) !Context {
+            var self: Context = undefined;
+            self.arena = std.heap.ArenaAllocator.init(a);
+            var alloc = &self.arena.allocator;
+            self.request = alloc.create(Request);
+            self.response = alloc.create(Response);
+            return self;
+        }
+
+        pub fn write(self: *Context, value: ?json.Value) void {
+            self.response.result = value;
+        }
+
+        pub fn writeError(self: *Context, value: ?Error) void {
+            self.response.err = value;
+        }
+    };
+
+    pub const Handler = struct {
+        handleFn: fn (*Context) anyerror!void,
+    };
+
+    pub const Conn = struct {
+        const ReadError = std.os.File.ReadError || error{};
+        const WriteError = std.os.File.WriteError || error{OutOfMemory} || error{};
+
+        const channel_buffer_size = 10;
+
+        pub const InStream = io.InStream(ReadError);
+        pub const OutStream = *io.OutStream(WriteError);
+
+        a: *Allocator,
+        in: *InStream,
+        out: *OutStream,
+        requests_channel: *ContextChannel,
+        responses_channel: *ContextChannel,
+
+        const ContextChannel = event.Channel(*Context);
+
+        pub fn init(
+            a: *Allocator,
+            in_stream: *InStream.Stream,
+            out_stream: *OutStream.Stream,
+        ) Conn {
+            return Conn{
+                .a = a,
+                .in = in_stream,
+                .out = out_stream,
+                .requests_channel = undefined,
+                .responses_channel = undefined,
+            };
+        }
+
+        pub fn serve(self: *Conn, loop: *event.Loop) anyerror!void {
+            self.requests_channel = try ContextChannel.create(loop, channel_buffer_size);
+            self.responses_channel = try ContextChannel.create(loop, channel_buffer_size);
+        }
+
+        async fn read(self: *Conn, loop: *event.Loop) !void {
+            while (true) {
+                var ctx = try self.a.create(Context);
+            }
+        }
+
+        pub fn readRequestData(buf: *std.Buffer, stream: var) !void {
+            var length: usize = 0;
+            while (true) {
+                try stream.readUntilDelimiterBuffer(
+                    buf,
+                    '\n',
+                    default_message_size,
+                );
+                const line = trimSpace(buf.toSlice());
+                if (line.len == 0) {
+                    break;
+                }
+                const colon = mem.indexOfScalar(u8, line, ':') orelse return error.InvalidHeader;
+                const name = line[0..colon];
+                const value = trimSpace(line[colon + 1 ..]);
+                if (mem.eql(u8, name, content_length)) {
+                    length = try std.fmt.parseInt(usize, value, 10);
+                }
+            }
+            if (length == 0) {
+                return error.MissingContentLengthHeader;
+            }
+            try buf.resize(length);
+            const n = try stream.read(buf.toSlice());
+            std.debug.assert(n == length);
+        }
+    };
 };
+
+// simple adhoc way for removing starting and trailing whitespace.
+fn trimSpace(s: []const u8) []const u8 {
+    return mem.trim(u8, s, []const u8{ ' ', '\n', '\r' });
+}
