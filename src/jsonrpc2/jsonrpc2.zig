@@ -61,10 +61,18 @@ pub const RPC = struct {
         id: ?ID,
     };
 
+    // Context is a rpc call lifecycle object. Contains the rpc request and the
+    // reponse of serving the request.
     pub const Context = struct {
         request: *Request,
         response: *Response,
         arena: std.heap.ArenaAllocator,
+
+        // The requestParams might contain a json.Value object. The memory
+        // allocated on that object is in scope with this tree, so we keep this
+        // reference here to ensure all memory used in the duration of this
+        // context is properly freed when destorying the context.
+        tree: json.ValueTree,
 
         pub fn init(a: *Allocator) !Context {
             var self: Context = undefined;
@@ -72,7 +80,13 @@ pub const RPC = struct {
             var alloc = &self.arena.allocator;
             self.request = alloc.create(Request);
             self.response = alloc.create(Response);
+            self.tree = undefined;
             return self;
+        }
+
+        pub fn deinit(self: *Context) void {
+            (&self.tree).deinit();
+            (&self.arena).deinit();
         }
 
         pub fn write(self: *Context, value: ?json.Value) void {
@@ -125,8 +139,36 @@ pub const RPC = struct {
         }
 
         async fn read(self: *Conn, loop: *event.Loop) !void {
+            var buf = &try std.Buffer.init(self.a, "");
+            defer buf.deinit();
+            try self.readRequestData(buf, self.in_stream);
+            var p = &json.Parser.init(self.a, true);
+            defer p.deinit();
             while (true) {
                 var ctx = try self.a.create(Context);
+                try buf.resize(0);
+                p.reset();
+
+                var v = try p.parse(buf.toSlice());
+                switch (v.root) {
+                    json.Value.Object => |*m| {
+                        var req: Request = undefined;
+                        ctx.tree = v;
+                        ctx.request.* = req;
+                    },
+                    else => return error.InvalidRPCPayload,
+                }
+                v.deinit();
+            }
+        }
+
+        async fn write(self: *Conn, loop: *event.Loop) !void {
+            while (true) {
+                const ctx = await (try async self.responses_channel.get());
+
+                // cleanup all memory allocated during the lifetime of the
+                // context.
+                ctx.deinit();
             }
         }
 
