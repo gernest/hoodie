@@ -7,6 +7,7 @@ const heap = std.heap;
 const builtin = @import("builtin");
 
 const outline = @import("outline.zig").outline;
+const format = @import("fmt.zig").format;
 
 // taken from https://github.com/Hejsil/zig-clap
 pub const OsIterator = struct {
@@ -63,6 +64,9 @@ pub fn main() anyerror!void {
                 os.exit(1);
             }
             return;
+        } else if (mem.eql(u8, param, "fmt")) {
+            const stdout = try getStdoutStream();
+            return format(allocator, stdout);
         }
     }
 }
