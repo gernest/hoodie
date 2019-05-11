@@ -132,18 +132,20 @@ fn renderRoot(
 
         try renderTopLevelDecl(allocator, stream, tree, 0, &start_col, decl);
         if (it.peek()) |next_decl| {
-            try renderExtraNewline(tree, stream, &start_col, next_decl.*);
+            try renderExtraNewline(tree, stream, &start_col, decl, next_decl.*);
         }
     }
 }
 
-fn renderExtraNewline(tree: *ast.Tree, stream: var, start_col: *usize, node: *ast.Node) @typeOf(stream).Child.Error!void {
+fn renderExtraNewline(tree: *ast.Tree, stream: var, start_col: *usize, prev: *ast.Node, node: *ast.Node) @typeOf(stream).Child.Error!void {
     const first_token = node.firstToken();
     var prev_token = first_token;
     while (tree.tokens.at(prev_token - 1).id == Token.Id.DocComment) {
         prev_token -= 1;
     }
-    const prev_token_end = tree.tokens.at(prev_token - 1).end;
+    const x = tree.tokens.at(prev_token - 1);
+    std.debug.warn("{} {}\n", x, tree.tokens.at(first_token));
+    const prev_token_end = x.end;
     const loc = tree.tokenLocation(prev_token_end, first_token);
     if (loc.line >= 2) {
         try stream.writeByte('\n');
@@ -295,7 +297,7 @@ fn renderExpression(
                     try renderStatement(allocator, stream, tree, block_indent, start_col, statement.*);
 
                     if (it.peek()) |next_statement| {
-                        try renderExtraNewline(tree, stream, start_col, next_statement.*);
+                        try renderExtraNewline(tree, stream, start_col, statement.*, next_statement.*);
                     }
                 }
 
@@ -528,7 +530,7 @@ fn renderExpression(
                                 try renderExpression(allocator, stream, tree, param_node_new_indent, start_col, param_node.*, Space.None);
                                 const comma = tree.nextToken(param_node.*.lastToken());
                                 try renderToken(tree, stream, comma, new_indent, start_col, Space.Newline); // ,
-                                try renderExtraNewline(tree, stream, start_col, next_node.*);
+                                try renderExtraNewline(tree, stream, start_col, param_node.*, next_node.*);
                             } else {
                                 try renderExpression(allocator, stream, tree, param_node_new_indent, start_col, param_node.*, Space.Comma);
                                 try stream.writeByteNTimes(' ', indent);
@@ -673,7 +675,7 @@ fn renderExpression(
                             const comma = tree.nextToken(field_init.*.lastToken());
                             try renderToken(tree, stream, comma, new_indent, start_col, Space.Newline);
 
-                            try renderExtraNewline(tree, stream, start_col, next_field_init.*);
+                            try renderExtraNewline(tree, stream, start_col, field_init.*, next_field_init.*);
                         } else {
                             try renderExpression(allocator, stream, tree, new_indent, start_col, field_init.*, Space.Comma);
                         }
@@ -785,7 +787,7 @@ fn renderExpression(
 
                                 try renderToken(tree, stream, comma, new_indent, start_col, Space.Newline); // ,
 
-                                try renderExtraNewline(tree, stream, start_col, next_expr.*);
+                                try renderExtraNewline(tree, stream, start_col, expr.*, next_expr.*);
                                 try stream.writeByteNTimes(' ', new_indent);
                             } else {
                                 try renderExpression(allocator, stream, tree, new_indent, start_col, expr.*, Space.Comma); // ,
@@ -1005,7 +1007,7 @@ fn renderExpression(
                     try renderTopLevelDecl(allocator, stream, tree, new_indent, start_col, decl.*);
 
                     if (it.peek()) |next_decl| {
-                        try renderExtraNewline(tree, stream, start_col, next_decl.*);
+                        try renderExtraNewline(tree, stream, start_col, decl.*, next_decl.*);
                     }
                 }
 
@@ -1054,7 +1056,7 @@ fn renderExpression(
                     try renderExpression(allocator, stream, tree, new_indent, start_col, node.*, Space.None);
                     try renderToken(tree, stream, tree.nextToken(node.*.lastToken()), new_indent, start_col, Space.Newline); // ,
 
-                    try renderExtraNewline(tree, stream, start_col, next_node.*);
+                    try renderExtraNewline(tree, stream, start_col, node.*, next_node.*);
                 } else {
                     try renderExpression(allocator, stream, tree, new_indent, start_col, node.*, Space.Comma);
                 }
@@ -1263,7 +1265,7 @@ fn renderExpression(
                 try renderExpression(allocator, stream, tree, new_indent, start_col, node.*, Space.Comma);
 
                 if (it.peek()) |next_node| {
-                    try renderExtraNewline(tree, stream, start_col, next_node.*);
+                    try renderExtraNewline(tree, stream, start_col, node.*, next_node.*);
                 }
             }
 
@@ -1289,7 +1291,7 @@ fn renderExpression(
 
                         const comma_token = tree.nextToken(node.*.lastToken());
                         try renderToken(tree, stream, comma_token, indent, start_col, Space.Space); // ,
-                        try renderExtraNewline(tree, stream, start_col, next_node.*);
+                        try renderExtraNewline(tree, stream, start_col, node.*, next_node.*);
                     } else {
                         try renderExpression(allocator, stream, tree, indent, start_col, node.*, Space.Space);
                     }
@@ -1303,7 +1305,7 @@ fn renderExpression(
 
                         const comma_token = tree.nextToken(node.*.lastToken());
                         try renderToken(tree, stream, comma_token, indent, start_col, Space.Newline); // ,
-                        try renderExtraNewline(tree, stream, start_col, next_node.*);
+                        try renderExtraNewline(tree, stream, start_col, node.*, next_node.*);
                         try stream.writeByteNTimes(' ', indent);
                     } else {
                         try renderExpression(allocator, stream, tree, indent, start_col, node.*, Space.Comma);
@@ -1612,7 +1614,7 @@ fn renderExpression(
 
                         const comma = tree.prevToken(next_asm_output.*.firstToken());
                         try renderToken(tree, stream, comma, indent_extra, start_col, Space.Newline); // ,
-                        try renderExtraNewline(tree, stream, start_col, next_node);
+                        try renderExtraNewline(tree, stream, start_col, node, next_node);
 
                         try stream.writeByteNTimes(' ', indent_extra);
                     } else if (asm_node.inputs.len == 0 and asm_node.clobbers.len == 0) {
@@ -1650,7 +1652,7 @@ fn renderExpression(
 
                         const comma = tree.prevToken(next_asm_input.*.firstToken());
                         try renderToken(tree, stream, comma, indent_extra, start_col, Space.Newline); // ,
-                        try renderExtraNewline(tree, stream, start_col, next_node);
+                        try renderExtraNewline(tree, stream, start_col, node, next_node);
 
                         try stream.writeByteNTimes(' ', indent_extra);
                     } else if (asm_node.clobbers.len == 0) {
