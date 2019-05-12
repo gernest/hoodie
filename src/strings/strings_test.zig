@@ -124,7 +124,7 @@ fn testReplacer(buf: *std.Buffer, r: *strings.StringReplacer, text: []const u8, 
     try buf.resize(0);
     try r.replace(text, buf);
     if (!buf.eql(final)) {
-        warn("expectt {x} got {x}\n", final, buf.toSlice());
+        warn("expectt {} got {}\n", final, buf.toSlice());
     }
     testing.expect(buf.eql(final));
 }
@@ -142,6 +142,15 @@ test "Replacer" {
         "'",  "&apos;",
     });
     defer html_escaper.deinit();
+
+    var html_unescaper = &try strings.StringReplacer.init(a, [][]const u8{
+        "&amp;",  "&",
+        "&lt;",   "<",
+        "&gt;",   ">",
+        "&quot;", "\"",
+        "&apos;", "'",
+    });
+    defer html_unescaper.deinit();
 
     var capital_letters = &try strings.StringReplacer.init(a, [][]const u8{
         "a", "A",
@@ -365,4 +374,6 @@ test "Replacer" {
     try testReplacer(buf, repeat, "", "");
 
     try testReplacer(buf, simple2, "brad", "br11d");
+
+    try testReplacer(buf, html_unescaper, "&amp;amp;", "&amp;");
 }
