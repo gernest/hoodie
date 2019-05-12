@@ -138,14 +138,24 @@ fn renderRoot(
 }
 
 fn renderExtraNewline(tree: *ast.Tree, stream: var, start_col: *usize, prev: *ast.Node, node: *ast.Node) @typeOf(stream).Child.Error!void {
+    switch (prev.id) {
+        ast.Node.Id.FnProto => {
+            // for functions definitions that are next to each other we add a
+            // new line to separate them.
+            if (prev.id == node.id) {
+                try stream.writeByte('\n');
+                start_col.* = 0;
+                return;
+            }
+        },
+        else => {},
+    }
     const first_token = node.firstToken();
     var prev_token = first_token;
     while (tree.tokens.at(prev_token - 1).id == Token.Id.DocComment) {
         prev_token -= 1;
     }
-    const x = tree.tokens.at(prev_token - 1);
-    std.debug.warn("{} {}\n", x, tree.tokens.at(first_token));
-    const prev_token_end = x.end;
+    const prev_token_end = tree.tokens.at(prev_token - 1).end;
     const loc = tree.tokenLocation(prev_token_end, first_token);
     if (loc.line >= 2) {
         try stream.writeByte('\n');
