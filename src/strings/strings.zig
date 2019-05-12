@@ -373,11 +373,12 @@ pub const GenericReplacer = struct {
     table_size: usize,
     mapping: [256]usize,
     a: *Allocator,
-    nodes_list: ArrayList(*TrieNode),
     replacer: Replacer,
+    arena: std.heap.ArenaAllocator,
+
     pub fn init(a: *Allocator, old_new: []const []const u8) !GenericReplacer {
         var g: GenericReplacer = undefined;
-        g.nodes_list = ArrayList(*TrieNode).init(a);
+        g.arena = std.heap.ArenaAllocator.init(a);
         g.mapping = []usize{0} ** 256;
         g.table_size = 0;
         g.replacer = Replacer{ .replaceFn = replaceFn };
@@ -401,20 +402,9 @@ pub const GenericReplacer = struct {
                 index += 1;
             }
         }
-        g.a = a;
+        g.a = &g.arena.allocator;
         g.root = try g.createNode();
-        g.root.table = ArrayList(?*TrieNode).init(a);
-        try (&g.root.table.?).resize(g.table_size);
-
-        // We need to be able to check if the index has a value set yet. So we
-        // set all values of the initialized array to null.
-        //
-        // This allows us to do table[i]==null to check if there is a tie node
-        // there, I havent mastered pointer magic yet so no idea if there is a
-        // mbetter way that wont necessarity reqire using a hash table.
-        for ((&g.root.table.?).toSlice()) |*value| {
-            value.* = null;
-        }
+        g.root.table = try g.createTable(g.table_size);
 
         i = 0;
         while (i < old_new.len) : (i += 2) {
@@ -428,7 +418,8 @@ pub const GenericReplacer = struct {
         priority: usize,
         prefix: []const u8,
         next: ?*TrieNode,
-        table: ?Table,
+        table: ?*Table,
+
         const Table = ArrayList(?*TrieNode);
 
         fn padd(size: usize) void {
@@ -437,6 +428,7 @@ pub const GenericReplacer = struct {
                 warn(" ");
             }
         }
+
         fn add(self: *TrieNode, key: []const u8, value: []const u8, priority: usize, r: *GenericReplacer) anyerror!void {
             if (key.len == 0) {
                 if (self.priority == 0) {
@@ -445,7 +437,7 @@ pub const GenericReplacer = struct {
                 }
                 return;
             }
-            if (self.prefix.len > 0) {
+            if (!mem.eql(u8, self.prefix, "")) {
                 const p = self.prefix;
                 var n: usize = 0;
                 while (n < p.len and n < key.len) : (n += 1) {
@@ -465,8 +457,8 @@ pub const GenericReplacer = struct {
                         prefix_node.?.next = self.next;
                     }
                     var key_node = try r.createNode();
-                    self.table = Table.init(r.a);
-                    var ta = &self.table.?;
+                    self.table = try r.createTable(r.table_size);
+                    var ta = self.table.?;
                     try ta.resize(r.table_size);
                     ta.set(r.mapping[p[0]], prefix_node.?);
                     ta.set(r.mapping[key[0]], key_node);
@@ -482,7 +474,7 @@ pub const GenericReplacer = struct {
                     try nxt.add(key[n..], value, priority, r);
                 }
             } else if (self.table != null) {
-                var ta = &self.table.?;
+                var ta = self.table.?;
                 const m = r.mapping[key[0]];
                 var n: *TrieNode = undefined;
                 if (ta.toSlice()[m] == null) {
@@ -505,19 +497,31 @@ pub const GenericReplacer = struct {
         n.* = TrieNode{
             .prefix = "",
             .next = undefined,
-            .priority = undefined,
-            .value = undefined,
+            .priority = 0,
+            .value = "",
             .table = null,
         };
-        try (&self.nodes_list).append(n);
+        return n;
+    }
+
+    fn createTable(self: *GenericReplacer, size: usize) !*TrieNode.Table {
+        var n = try self.a.create(TrieNode.Table);
+        n.* = TrieNode.Table.init(self.a);
+        try n.resize(size);
+        // We need to be able to check if the index has a value set yet. So we
+        // set all values of the initialized array to null.
+        //
+        // This allows us to do table[i]==null to check if there is a tie node
+        // there, I havent mastered pointer magic yet so no idea if there is a
+        // mbetter way that wont necessarity reqire using a hash table.
+        for (n.toSlice()) |*value| {
+            value.* = null;
+        }
         return n;
     }
 
     fn deinit(self: *GenericReplacer) void {
-        for (self.nodes_list.toSlice()) |value| {
-            self.a.destroy(value);
-        }
-        (&self.nodes_list).deinit();
+        self.arena.deinit();
     }
 
     const LookupRes = struct {
