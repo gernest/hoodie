@@ -12,6 +12,156 @@ pub const Error = error{
     OutOfMemory,
 };
 
+const NodeList = struct {
+    list: std.ArrayList(Item),
+
+    const Item = struct {
+        name: []const u8,
+        node: *ast.Node,
+        kind: Type,
+    };
+
+    const Type = enum {
+        Import,
+        Const,
+        Fn,
+        Meta,
+        Test,
+
+        fn less(self: Type, n: Type) bool {
+            return @enumToInt(self) < @enumToInt(n);
+        }
+    };
+
+    fn init(a: *mem.Allocator) NodeList {
+        return NodeList{
+            .list = std.ArrayList(Item).init(a),
+        };
+    }
+
+    const Iterator = struct {
+        ls: *const NodeList,
+        index: usize,
+
+        fn next(self: *Iterator) ?*ast.Node {
+            if (self.index < self.ls.list.len) {
+                var n = self.ls.list.at(self.index);
+                self.index += 1;
+                return n.node;
+            }
+            return null;
+        }
+
+        fn peek(self: *Iterator) ?*ast.Node {
+            if (self.index < self.ls.list.len) {
+                var n = self.ls.list.at(self.index);
+                return n.node;
+            }
+            return null;
+        }
+    };
+
+    fn iterator(self: *const NodeList) Iterator {
+        return Iterator{
+            .ls = self,
+            .index = 0,
+        };
+    }
+
+    fn deinit(self: *NodeList) void {
+        self.list.deinit();
+    }
+
+    fn loadRootDecl(self: *NodeList, tree: *ast.Tree) !void {
+        var it = tree.root_node.decls.iterator(0);
+        while (true) {
+            var decl = (it.next() orelse return).*;
+            switch (decl.id) {
+                ast.Node.Id.VarDecl => {
+                    const var_decl = @fieldParentPtr(ast.Node.VarDecl, "base", decl);
+                    const decl_name = tree.tokenSlice(var_decl.name_token);
+                    if (var_decl.init_node) |node| {
+                        switch (node.id) {
+                            ast.Node.Id.BuiltinCall => {
+                                const builtin_decl = @fieldParentPtr(ast.Node.BuiltinCall, "base", node);
+                                const call_name = tree.tokenSlice(builtin_decl.builtin_token);
+                                if (mem.eql(u8, call_name, "@import")) {
+                                    try self.list.append(Item{
+                                        .kind = Type.Import,
+                                        .name = decl_name,
+                                        .node = decl,
+                                    });
+                                }
+                            },
+                            ast.Node.Id.InfixOp => {
+                                try self.list.append(Item{
+                                    .kind = Type.Const,
+                                    .name = decl_name,
+                                    .node = decl,
+                                });
+                            },
+                            else => {
+                                try self.list.append(Item{
+                                    .kind = Type.Meta,
+                                    .name = "",
+                                    .node = decl,
+                                });
+                            },
+                        }
+                    } else {
+                        try self.list.append(Item{
+                            .kind = Type.Meta,
+                            .name = "",
+                            .node = decl,
+                        });
+                    }
+                },
+                ast.Node.Id.FnProto => {
+                    const fn_decl = @fieldParentPtr(ast.Node.FnProto, "base", decl);
+                    if (fn_decl.name_token) |idx| {
+                        const fn_name = tree.tokenSlice(idx);
+                        try self.list.append(Item{
+                            .kind = Type.Fn,
+                            .name = fn_name,
+                            .node = decl,
+                        });
+                    }
+                },
+                ast.Node.Id.TestDecl => {
+                    const fn_decl = @fieldParentPtr(ast.Node.FnProto, "base", decl);
+                    const test_decl = @fieldParentPtr(ast.Node.TestDecl, "base", decl);
+                    const name_decl = @fieldParentPtr(ast.Node.StringLiteral, "base", test_decl.name);
+                    const test_name = tree.tokenSlice(name_decl.token);
+                    try self.list.append(Item{
+                        .kind = Type.Test,
+                        .name = test_name,
+                        .node = decl,
+                    });
+                },
+                else => {},
+            }
+        }
+    }
+
+    fn sort(self: *NodeList) void {
+        std.sort.sort(Item, self.list.toSlice(), less);
+    }
+
+    fn less(lhs: Item, rhs: Item) bool {
+        if (lhs.kind == rhs.kind) {
+            if (lhs.kind == Type.Meta and rhs.kind == Type.Meta) {
+                return true;
+            }
+            return lessString(lhs.name, rhs.name);
+        }
+        return lhs.kind.less(rhs.kind);
+    }
+
+    fn lessString(a: []const u8, b: []const u8) bool {
+        return mem.compare(u8, a, b) == mem.Compare.LessThan;
+    }
+};
+
 /// Returns whether anything changed
 pub fn render(allocator: *mem.Allocator, stream: var, tree: *ast.Tree) (@typeOf(stream).Child.Error || Error)!bool {
     comptime assert(@typeId(@typeOf(stream)) == builtin.TypeId.Pointer);
@@ -90,10 +240,17 @@ fn renderRoot(
         }
     }
 
+    var imports_list = &NodeList.init(allocator);
+    defer imports_list.deinit();
+
+    try imports_list.loadRootDecl(tree);
+    imports_list.sort();
+
     var start_col: usize = 0;
-    var it = tree.root_node.decls.iterator(0);
+    var it = imports_list.iterator();
+
     while (true) {
-        var decl = (it.next() orelse return).*;
+        var decl = (it.next() orelse return);
         // look for zig fmt: off comment
         var start_token_index = decl.firstToken();
         zig_fmt_loop: while (start_token_index != 0) {
@@ -122,7 +279,7 @@ fn renderRoot(
                         const start = tree.tokens.at(start_token_index + 1).start;
                         try stream.print("{}\n", tree.source[start..end_token.end]);
                         while (tree.tokens.at(decl.firstToken()).start < end_token.end) {
-                            decl = (it.next() orelse return).*;
+                            decl = (it.next() orelse return);
                         }
                         break :zig_fmt_loop;
                     }
@@ -132,25 +289,14 @@ fn renderRoot(
 
         try renderTopLevelDecl(allocator, stream, tree, 0, &start_col, decl);
         if (it.peek()) |next_decl| {
-            try renderExtraNewline(tree, stream, &start_col, decl, next_decl.*);
+            try renderExtraNewline(tree, stream, &start_col, next_decl);
         }
     }
 }
 
-fn renderExtraNewline(tree: *ast.Tree, stream: var, start_col: *usize, prev: *ast.Node, node: *ast.Node) @typeOf(stream).Child.Error!void {
-    switch (prev.id) {
-        ast.Node.Id.FnProto => {
-            // for functions definitions that are next to each other we add a
-            // new line to separate them.
-            if (prev.id == node.id) {
-                try stream.writeByte('\n');
-                start_col.* = 0;
-                return;
-            }
-        },
-        else => {},
-    }
+fn renderExtraNewline(tree: *ast.Tree, stream: var, start_col: *usize, node: *ast.Node) @typeOf(stream).Child.Error!void {
     const first_token = node.firstToken();
+    if (first_token == 0) return;
     var prev_token = first_token;
     while (tree.tokens.at(prev_token - 1).id == Token.Id.DocComment) {
         prev_token -= 1;
@@ -307,7 +453,7 @@ fn renderExpression(
                     try renderStatement(allocator, stream, tree, block_indent, start_col, statement.*);
 
                     if (it.peek()) |next_statement| {
-                        try renderExtraNewline(tree, stream, start_col, statement.*, next_statement.*);
+                        try renderExtraNewline(tree, stream, start_col, next_statement.*);
                     }
                 }
 
@@ -540,7 +686,7 @@ fn renderExpression(
                                 try renderExpression(allocator, stream, tree, param_node_new_indent, start_col, param_node.*, Space.None);
                                 const comma = tree.nextToken(param_node.*.lastToken());
                                 try renderToken(tree, stream, comma, new_indent, start_col, Space.Newline); // ,
-                                try renderExtraNewline(tree, stream, start_col, param_node.*, next_node.*);
+                                try renderExtraNewline(tree, stream, start_col, next_node.*);
                             } else {
                                 try renderExpression(allocator, stream, tree, param_node_new_indent, start_col, param_node.*, Space.Comma);
                                 try stream.writeByteNTimes(' ', indent);
@@ -685,7 +831,7 @@ fn renderExpression(
                             const comma = tree.nextToken(field_init.*.lastToken());
                             try renderToken(tree, stream, comma, new_indent, start_col, Space.Newline);
 
-                            try renderExtraNewline(tree, stream, start_col, field_init.*, next_field_init.*);
+                            try renderExtraNewline(tree, stream, start_col, next_field_init.*);
                         } else {
                             try renderExpression(allocator, stream, tree, new_indent, start_col, field_init.*, Space.Comma);
                         }
@@ -797,7 +943,7 @@ fn renderExpression(
 
                                 try renderToken(tree, stream, comma, new_indent, start_col, Space.Newline); // ,
 
-                                try renderExtraNewline(tree, stream, start_col, expr.*, next_expr.*);
+                                try renderExtraNewline(tree, stream, start_col, next_expr.*);
                                 try stream.writeByteNTimes(' ', new_indent);
                             } else {
                                 try renderExpression(allocator, stream, tree, new_indent, start_col, expr.*, Space.Comma); // ,
@@ -1017,7 +1163,7 @@ fn renderExpression(
                     try renderTopLevelDecl(allocator, stream, tree, new_indent, start_col, decl.*);
 
                     if (it.peek()) |next_decl| {
-                        try renderExtraNewline(tree, stream, start_col, decl.*, next_decl.*);
+                        try renderExtraNewline(tree, stream, start_col, next_decl.*);
                     }
                 }
 
@@ -1066,7 +1212,7 @@ fn renderExpression(
                     try renderExpression(allocator, stream, tree, new_indent, start_col, node.*, Space.None);
                     try renderToken(tree, stream, tree.nextToken(node.*.lastToken()), new_indent, start_col, Space.Newline); // ,
 
-                    try renderExtraNewline(tree, stream, start_col, node.*, next_node.*);
+                    try renderExtraNewline(tree, stream, start_col, next_node.*);
                 } else {
                     try renderExpression(allocator, stream, tree, new_indent, start_col, node.*, Space.Comma);
                 }
@@ -1275,7 +1421,7 @@ fn renderExpression(
                 try renderExpression(allocator, stream, tree, new_indent, start_col, node.*, Space.Comma);
 
                 if (it.peek()) |next_node| {
-                    try renderExtraNewline(tree, stream, start_col, node.*, next_node.*);
+                    try renderExtraNewline(tree, stream, start_col, next_node.*);
                 }
             }
 
@@ -1301,7 +1447,7 @@ fn renderExpression(
 
                         const comma_token = tree.nextToken(node.*.lastToken());
                         try renderToken(tree, stream, comma_token, indent, start_col, Space.Space); // ,
-                        try renderExtraNewline(tree, stream, start_col, node.*, next_node.*);
+                        try renderExtraNewline(tree, stream, start_col, next_node.*);
                     } else {
                         try renderExpression(allocator, stream, tree, indent, start_col, node.*, Space.Space);
                     }
@@ -1315,7 +1461,7 @@ fn renderExpression(
 
                         const comma_token = tree.nextToken(node.*.lastToken());
                         try renderToken(tree, stream, comma_token, indent, start_col, Space.Newline); // ,
-                        try renderExtraNewline(tree, stream, start_col, node.*, next_node.*);
+                        try renderExtraNewline(tree, stream, start_col, next_node.*);
                         try stream.writeByteNTimes(' ', indent);
                     } else {
                         try renderExpression(allocator, stream, tree, indent, start_col, node.*, Space.Comma);
@@ -1624,7 +1770,7 @@ fn renderExpression(
 
                         const comma = tree.prevToken(next_asm_output.*.firstToken());
                         try renderToken(tree, stream, comma, indent_extra, start_col, Space.Newline); // ,
-                        try renderExtraNewline(tree, stream, start_col, node, next_node);
+                        try renderExtraNewline(tree, stream, start_col, next_node);
 
                         try stream.writeByteNTimes(' ', indent_extra);
                     } else if (asm_node.inputs.len == 0 and asm_node.clobbers.len == 0) {
@@ -1662,7 +1808,7 @@ fn renderExpression(
 
                         const comma = tree.prevToken(next_asm_input.*.firstToken());
                         try renderToken(tree, stream, comma, indent_extra, start_col, Space.Newline); // ,
-                        try renderExtraNewline(tree, stream, start_col, node, next_node);
+                        try renderExtraNewline(tree, stream, start_col, next_node);
 
                         try stream.writeByteNTimes(' ', indent_extra);
                     } else if (asm_node.clobbers.len == 0) {
