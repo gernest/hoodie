@@ -336,6 +336,16 @@ test "Replacer" {
     });
     defer simple.deinit();
 
+    var simple2 = &try strings.StringReplacer.init(a, [][]const u8{
+        "a", "11",
+        "a", "22",
+    });
+    defer simple2.deinit();
+
+    const s2 = @import("sample.zig").sample;
+    var repeat = &try strings.StringReplacer.init(a, s2);
+    defer repeat.deinit();
+
     try testReplacer(buf, html_escaper, "No changes", "No changes");
     try testReplacer(buf, html_escaper, "I <3 escaping & stuff", "I &lt;3 escaping &amp; stuff");
     try testReplacer(buf, html_escaper, "&&&", "&amp;&amp;&amp;");
@@ -349,4 +359,10 @@ test "Replacer" {
     try testReplacer(buf, incl, "", "");
 
     try testReplacer(buf, simple, "brad", "br1d");
+
+    try testReplacer(buf, repeat, "brad", "bbrrrrrrrrrrrrrrrrrradddd");
+    try testReplacer(buf, repeat, "abba", "abbbba");
+    try testReplacer(buf, repeat, "", "");
+
+    try testReplacer(buf, simple2, "brad", "br11d");
 }
