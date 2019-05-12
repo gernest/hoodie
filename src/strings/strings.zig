@@ -285,7 +285,7 @@ pub const ByteReplacer = struct {
             v.* = @intCast(u8, i);
         }
         var i = old_new.len - 2;
-        while (i > 0) {
+        while (i >= 0) {
             const o = old_new[i][0];
             const n = old_new[i + 1][0];
             r[o] = n;
