@@ -328,8 +328,13 @@ test "Replacer" {
     };
 
     var incl = &try strings.StringReplacer.init(a, s);
-
     defer incl.deinit();
+
+    var simple = &try strings.StringReplacer.init(a, [][]const u8{
+        "a", "1",
+        "a", "2",
+    });
+    defer simple.deinit();
 
     try testReplacer(buf, html_escaper, "No changes", "No changes");
     try testReplacer(buf, html_escaper, "I <3 escaping & stuff", "I &lt;3 escaping &amp; stuff");
@@ -342,4 +347,6 @@ test "Replacer" {
     try testReplacer(buf, incl, "brad", "csbe");
     try testReplacer(buf, incl, "\x00\xff", "\x01\x00");
     try testReplacer(buf, incl, "", "");
+
+    try testReplacer(buf, simple, "brad", "br1d");
 }
