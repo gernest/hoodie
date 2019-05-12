@@ -32,4 +32,19 @@ test "fmt" {
         \\fn b() void {}
         \\
     );
+
+    // break down all blank lines to only one for functions defined next to each
+    // other
+    try testFmt(buf,
+        \\fn a()void{}
+        \\
+        \\
+        \\
+        \\fn b()void{}
+    ,
+        \\fn a() void {}
+        \\
+        \\fn b() void {}
+        \\
+    );
 }
