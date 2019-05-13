@@ -4,29 +4,37 @@ const warn = std.debug.warn;
 
 pub const Builder = struct {
     buf: *std.Buffer,
-    replacer: strings.Replacer,
-    choice_replacer: strings.Replacer,
+    replacer: strings.StringReplacer,
+    choice_replacer: strings.StringReplacer,
     a: *std.mem.Allocator,
     current_tab_stop: usize,
 
     pub fn init(a: *std.mem.Allocator, buf: *std.Buffer) !Builder {
         var b = Builder{
             .buf = buf,
-            .replacer = strings.Replacer.init(a),
-            .choice_replacer = strings.Replacer.init(a),
+            .replacer = try strings.StringReplacer.init(
+                a,
+                [][]const u8{
+                    []const u8{0x5c}, []const u8{ 0x5c, 0x5c },
+                    []const u8{0x7d}, []const u8{ 0x5c, 0x7d },
+                    []const u8{0x24}, []const u8{ 0x5c, 0x24 },
+                    []const u8{0x7c}, []const u8{ 0x5c, 0x7c },
+                    []const u8{0x2c}, []const u8{ 0x5c, 0x2c },
+                },
+            ),
+            .choice_replacer = try strings.StringReplacer.init(
+                a,
+                [][]const u8{
+                    []const u8{0x5c}, []const u8{ 0x5c, 0x5c },
+                    []const u8{0x7d}, []const u8{ 0x5c, 0x7d },
+                    []const u8{0x24}, []const u8{ 0x5c, 0x24 },
+                    []const u8{0x7c}, []const u8{ 0x5c, 0x7c },
+                    []const u8{0x2c}, []const u8{ 0x5c, 0x2c },
+                },
+            ),
             .a = a,
             .current_tab_stop = 0,
         };
-        try (&b.replacer).add([]const u8{0x5c}, []const u8{ 0x5c, 0x5c });
-        try (&b.replacer).add([]const u8{0x7d}, []const u8{ 0x5c, 0x7d });
-        try (&b.replacer).add([]const u8{0x24}, []const u8{ 0x5c, 0x24 });
-
-        try (&b.choice_replacer).add([]const u8{0x5c}, []const u8{ 0x5c, 0x5c });
-        try (&b.choice_replacer).add([]const u8{0x7d}, []const u8{ 0x5c, 0x7d });
-        try (&b.choice_replacer).add([]const u8{0x24}, []const u8{ 0x5c, 0x24 });
-        try (&b.choice_replacer).add([]const u8{0x7c}, []const u8{ 0x5c, 0x7c });
-        try (&b.choice_replacer).add([]const u8{0x2c}, []const u8{ 0x5c, 0x2c });
-        return b;
     }
 
     pub fn writeChoice(self: *Builder, choices: [][]const u8) !void {
