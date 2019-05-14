@@ -1,4 +1,6 @@
 const std = @import("std");
+const heap = std.heap;
+const Allocator = std.mem.Allocator;
 
 pub const Position = struct {
     filename: []const u8,
@@ -41,7 +43,11 @@ pub const File = struct {
     base: usize,
     size: usize,
     mutex: std.Mutex,
-    lines: std.ArrayList(usize),
+    lines: LineList,
+    infos: LineInfoList,
+
+    pub const LineList = std.ArrayList(usize);
+    pub const LineInfoList = std.ArrayList(LineInfo);
 
     const LineInfo = struct {
         offset: usize,
@@ -50,13 +56,46 @@ pub const File = struct {
         column: usize,
     };
 
+    pub fn init(a: *Allocator, set: *FileSet, name: []const u8, base: usize, size: usize) File {
+        return File{
+            .set = set,
+            .name = name,
+            .base = base,
+            .size = size,
+            .mutex = std.Mutex.init(),
+            .lines = LineList.init(a),
+        };
+    }
+
     pub const FileSet = struct {
         mutex: std.Mutex,
         base: usize,
         files: FileList,
-        last: *File,
+        last: ?*File,
 
         pub const FileList = std.ArrayList(*File);
+
+        pub fn init(a: *Allocator) FileSet {
+            return FileSet{
+                .mutex = std.Mutex.init(),
+                .base = 1,
+                .files = FileList.init(a),
+                .arena = heap.ArenaAllocator.init(a),
+                .last = null,
+            };
+        }
+
+        pub fn addFile(self: *FileSet, base: usize, size: usize) !*File {
+            if (base < self.base) {
+                return error.IllegalBase;
+            }
+            var a = &self.arena.allocator;
+            var f = try a.create(File);
+            f.* = File.init();
+            try (&self.files).append(f);
+            self.last = f;
+            return f;
+        }
     };
 
     fn lineCount(self: *File) usize {
