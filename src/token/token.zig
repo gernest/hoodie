@@ -36,7 +36,7 @@ pub const Position = struct {
 };
 
 pub const File = struct {
-    set: *FIleSet,
+    set: *FileSet,
     name: []const u8,
     base: usize,
     size: usize,
