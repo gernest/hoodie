@@ -50,7 +50,14 @@ pub const File = struct {
         column: usize,
     };
 
-    pub const FIleSet = struct {};
+    pub const FileSet = struct {
+        mutex: std.Mutex,
+        base: usize,
+        files: FileList,
+        last: *File,
+
+        pub const FileList = std.ArrayList(*File);
+    };
 
     fn lineCount(self: *File) usize {
         const held = self.mutex.acquire();
