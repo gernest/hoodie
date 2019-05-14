@@ -35,14 +35,14 @@ pub const Builder = struct {
         };
     }
 
-    pub fn writeChoice(self: *Builder, choices: [][]const u8) !void {
-        var stream = &std.io.BufferOutStream.init(&self.buf).stream;
+    pub fn writeChoice(self: *Builder, choices: []const []const u8) !void {
+        var stream = &std.io.BufferOutStream.init(self.buf).stream;
         try stream.write("${");
         try stream.print("{}|", self.nextTabStop());
         var tmp = &try std.Buffer.init(self.a, "");
         defer tmp.deinit();
         for (choices) |choice, i| {
-            if (i == 0) {
+            if (i != 0) {
                 try stream.writeByte(',');
             }
             try tmp.resize(0);
@@ -66,6 +66,7 @@ pub const Builder = struct {
 
     fn reset(self: *Builder) !void {
         try self.buf.resize(0);
+        self.current_tab_stop = 0;
     }
 
     fn writePlaceholder(self: *Builder, cb: ?fn (*Builder) anyerror!void) !void {

@@ -14,6 +14,38 @@ test "Builder" {
         fn case2(self: *snippet.Builder) anyerror!void {
             try self.writePlaceholder(null);
         }
+        fn case3(self: *snippet.Builder) anyerror!void {
+            try self.writeText("hi ");
+            try self.writePlaceholder(case3Part);
+        }
+
+        fn case3Part(self: *snippet.Builder) anyerror!void {
+            try self.writeText("there");
+        }
+
+        fn case4(self: *snippet.Builder) anyerror!void {
+            try self.writePlaceholder(case4id);
+        }
+
+        fn case4id(self: *snippet.Builder) anyerror!void {
+            try self.writeText("id=");
+            try self.writePlaceholder(case4nest);
+        }
+
+        fn case4nest(self: *snippet.Builder) anyerror!void {
+            try self.writeText("{your id}");
+        }
+
+        fn case5(self: *snippet.Builder) anyerror!void {
+            try self.writeChoice(
+                [][]const u8{
+                    "one",                    
+                        \\{ } $ | " , / \
+                    ,
+                    "three",
+                },
+            );
+        }
     };
 
     var a = std.debug.global_allocator;
@@ -34,6 +66,24 @@ test "Builder" {
         \\${1}
     ,
         fixture.case2,
+    );
+    try expect(
+        b,
+        \\hi ${1:there}
+    ,
+        fixture.case3,
+    );
+    try expect(
+        b,
+        \\${1:id=${2:{your id\}}}
+    ,
+        fixture.case4,
+    );
+    try expect(
+        b,
+        \\${1|one,{ \} \$ \| " \, / \\,three|}
+    ,
+        fixture.case5,
     );
 }
 
