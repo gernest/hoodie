@@ -1,5 +1,5 @@
 const std = @import("std");
-const strings = @import("strings/strings.zig");
+const strings = @import("../strings/strings.zig");
 const warn = std.debug.warn;
 
 pub const Builder = struct {
@@ -10,7 +10,7 @@ pub const Builder = struct {
     current_tab_stop: usize,
 
     pub fn init(a: *std.mem.Allocator, buf: *std.Buffer) !Builder {
-        var b = Builder{
+        return Builder{
             .buf = buf,
             .replacer = try strings.StringReplacer.init(
                 a,
@@ -18,8 +18,6 @@ pub const Builder = struct {
                     []const u8{0x5c}, []const u8{ 0x5c, 0x5c },
                     []const u8{0x7d}, []const u8{ 0x5c, 0x7d },
                     []const u8{0x24}, []const u8{ 0x5c, 0x24 },
-                    []const u8{0x7c}, []const u8{ 0x5c, 0x7c },
-                    []const u8{0x2c}, []const u8{ 0x5c, 0x2c },
                 },
             ),
             .choice_replacer = try strings.StringReplacer.init(
@@ -70,13 +68,13 @@ pub const Builder = struct {
         try self.buf.resize(0);
     }
 
-    fn writePlaceholder(self: *Builder, cb: ?fn (*Builder) !void) !void {
-        var stream = &std.io.BufferOutStream.init(&self.buf).stream;
+    fn writePlaceholder(self: *Builder, cb: ?fn (*Builder) anyerror!void) !void {
+        var stream = &std.io.BufferOutStream.init(self.buf).stream;
         try stream.write("${");
         try stream.print("{}", self.nextTabStop());
-        if (self.cb) |f| {
+        if (cb) |f| {
             try stream.writeByte(':');
-            try cb(self);
+            try f(self);
         }
         try stream.writeByte('}');
     }
@@ -85,35 +83,3 @@ pub const Builder = struct {
         return self.buf.toSliceConst();
     }
 };
-
-fn expect(b: *Builder, expected: []const u8, cb: fn (*Builder) anyerror!void) !void {
-    try b.reset();
-    try cb(b);
-    if (!b.buf.eql(expected)) {
-        warn("expected {} got {}\n", expected, b.toSliceConst());
-    }
-}
-
-test "Builder" {
-    const fixture = struct {
-        fn case0(self: *Builder) anyerror!void {}
-        fn case1(self: *Builder) anyerror!void {
-            try self.writeText(
-                \\hi { } $ | " , / \
-            );
-        }
-    };
-
-    var a = std.debug.global_allocator;
-    var buf = &try std.Buffer.init(a, "");
-    defer buf.deinit();
-
-    var b = &try Builder.init(a, buf);
-
-    try expect(b, "", fixture.case0);
-    // try ts.expect(
-    //     \\hi { \} \$ | " , / \\
-    // ,
-    //     fixture.case1,
-    // );
-}
