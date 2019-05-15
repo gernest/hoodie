@@ -724,12 +724,11 @@ function generate(files: string[], options: ts.CompilerOptions): void {
 }
 
 function getComments(node: ts.Node): string {
-  // const sf = node.getSourceFile();
-  // const start = node.getStart(sf, false)
-  // const starta = node.getStart(sf, true)
-  // const x = sf.text.substring(starta, start)
-  // return x
-  return ''
+  const sf = node.getSourceFile();
+  const start = node.getStart(sf, false)
+  const starta = node.getStart(sf, true)
+  const x = sf.text.substring(starta, start)
+  return x
 }
 
 function emitTypes() {
@@ -773,8 +772,8 @@ function emitStructs() {
     seenName[str.name] = true
     cache[str.name] = str
     prgo(genComments(str.name, getComments(str.me)))
-    /* prgo(`// ${str.name} is:\n`)
-    prgo(getComments(str.me))*/
+    //* prgo(`// ${str.name} is:\n`)
+    prgo(getComments(str.me))
     prgo(`\npub const  ${str.name} =struct {\n`)
     for (const s of str.embeds) {
       const k = cache.get(s)
@@ -885,16 +884,12 @@ function emitConsts() {
     const typ = value[0].goType
     prgo(`const ${key} =enum${enumTyp(typ)}{\n`)
     for (const c of value) {
-      // TODO fix comments
-      // prgo(genComments(x, getComments(c.me)))
       prgo(`    ${c.name}${enumVal(c.goType, c.value)},\n`)
     }
     if (typ == 'string') {
       prgo(`    pub fn toString(self: ${key}) []const u8{\n`)
       prgo(`        return switch(self){\n`)
       for (const c of value) {
-        // TODO fix comments
-        // prgo(genComments(x, getComments(c.me)))
         prgo(`             ${key}.${c.name}=>${c.value},\n`)
       }
       prgo(`             else=>"",\n`)
@@ -961,9 +956,9 @@ function main() {
   generate(
     files, { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.CommonJS });
   emitHeader(files)
-  emitStructs()
+  // emitStructs()
   emitConsts()
-  emitTypes()
+  // emitTypes()
 }
 
 main()
