@@ -49,7 +49,9 @@ pub const Diff = struct {
         edits: Edits,
         offser: usize,
         arena: std.ArenaAllocator,
-
+        allocator: *Allocator,
+        edits: Edits,
+        snakes: Edits,
         const Edits = std.ArrayList([]usize);
 
         fn init(a: *Allocator) Sequence {
@@ -101,6 +103,42 @@ pub const Diff = struct {
 
         fn deinit(self: *Sequence) void {
             self.arena.deinit();
+        }
+
+        fn backtrack(self: *Sequence, out: *Edits, x: usize, y: usize, offtes: usize) !void {
+            try out.resize(self.edits.len);
+            var snakes = out.toSlice();
+            const trace = self.edits.toSlice();
+
+            var alloc = &self.arena.allocator;
+
+            var d = self.edits.len - 1;
+            while (x > 0 and y > 0 and d > 0) : (d -= 1) {
+                const v = trace[d];
+                if (v.len == 0) {
+                    continue;
+                }
+                var value = try alloc.alloc(u8, 2);
+                value[0] = x;
+                value[1] = y;
+                snakes[d] = value;
+                const k = x - y;
+                var k_prev: usize = 0;
+                if (k == -d or (k != d and v[k - 1 + offset] < v[k + 1 + offset])) {
+                    k_prev = k + 1;
+                } else {
+                    k_prev = k - 1;
+                }
+                x = v[k_prev + offset];
+                y = x - k_prev;
+            }
+            if (x < 0 or y < 0) {
+                return;
+            }
+            var value = try alloc.alloc(u8, 2);
+            value[0] = x;
+            value[1] = y;
+            snakes[d] = value;
         }
     };
 };
