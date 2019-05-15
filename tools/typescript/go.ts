@@ -729,6 +729,9 @@ function getComments(node: ts.Node): string {
   const starta = node.getStart(sf, true)
   const x = sf.text.substring(starta, start)
   return x
+    .split('\n')
+    .filter(v => v.length != 0)
+    .map(v => '/// ' + v.replace(/\t/g, '  ')).join('\n');
 }
 
 function emitTypes() {
@@ -956,9 +959,9 @@ function main() {
   generate(
     files, { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.CommonJS });
   emitHeader(files)
-  // emitStructs()
+  emitStructs()
   emitConsts()
-  // emitTypes()
+  emitTypes()
 }
 
 main()
