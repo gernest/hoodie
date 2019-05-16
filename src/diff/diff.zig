@@ -2,13 +2,14 @@ const std = @import("std");
 
 pub const Diff = struct {
     list: OpList,
+    arena: std.heap.ArenaAllocator,
     pub const OpList = std.ArrayList(*Op);
     pub const Lines = std.ArrayList([]const u8);
     pub const Op = struct {
         kind: Kind,
         content: []const u8,
-        i1: usize,
-        i2: usize,
+        i_1: usize,
+        i_2: usize,
         j2: usize,
 
         pub const Kind = enum {
@@ -17,6 +18,12 @@ pub const Diff = struct {
             Equal,
         };
     };
+
+    fn init(a: *Allocator) Diff {
+        return Diff{
+            .list = OpList.init(a),
+        };
+    }
 
     pub fn applyEdits(lines: *Lines, a: [][]const u8, operations: []Op) !void {
         var prev12: usize = 0;
@@ -43,7 +50,87 @@ pub const Diff = struct {
         }
     }
 
-    pub fn operations(ops: *OpList, a: [][]const u8, b: [][]const u8) !void {}
+    pub fn Operations(allocator: *Allocator, a: [][]const u8, b: [][]const u8) !Diff {
+        var ops = init(allocator);
+        var seq = &Sequence.init(allocator);
+        defer seq.deinit();
+        try seq.process();
+        try ops.list.resize(a.len + b.len);
+        var i: usize = 0;
+        var solution = ops.list.toSlice();
+
+        var x: usize = 0;
+        var y: usize = 0;
+        for (seq.snakes.toSlice()) |snake| {
+            if (snake.len < 2) {
+                continue;
+            }
+            var op: ?*Op = null;
+            while (snake[0] - snake[1] > x - y) {
+                if (op == null) {
+                    op = try ops.newOp();
+                    op.?.* = Op{
+                        .kind = Kind.Delete,
+                        .i_1 = x,
+                        .j1 = y,
+                        .j2 = 0,
+                    };
+                }
+                x += 1;
+                if (x == a.len) {
+                    break;
+                }
+            }
+            add(solution, b, &i, op, x, y);
+            op = null;
+            while (snake[0] - snake[1] > x - y) {
+                if (op == null) {
+                    op = try ops.newOp();
+                    op.?.* = Op{
+                        .kind = Kind.Insert,
+                        .i_1 = x,
+                        .j1 = y,
+                        .j2 = 0,
+                    };
+                }
+                y += 1;
+            }
+            add(solution, b, &i, op, x, y);
+            op = null;
+            while (x < snake[0]) {
+                x += 1;
+                y += 1;
+            }
+            if (x >= a.len and y >= b.len) {
+                break;
+            }
+        }
+        try (&ops.list).shrink(i);
+    }
+
+    fn add(
+        solution: []*Op,
+        b: [][]const u8,
+        i: *usize,
+        op: ?*Op,
+        i_2: usize,
+        j2: usize,
+    ) void {
+        if (op == null) {
+            return;
+        }
+        op.i_2 = i_2;
+        if (op.kind == Kin.Insert) {
+            op.content = b[op.j1..j2];
+        }
+        solution[i.*] = op;
+        i.* = i.* + 1;
+    }
+
+    fn newOp(self: *Diff) !*Op {
+        var a = &self.arena.allocator;
+        return a.create(Op);
+    }
 
     const Sequence = struct {
         edits: Edits,
@@ -105,7 +192,12 @@ pub const Diff = struct {
             self.arena.deinit();
         }
 
-        fn backtrack(self: *Sequence, out: *Edits, x: usize, y: usize, offtes: usize) !void {
+        fn process(self: *Sequence, a: []const 8, b: []const u8) !void {
+            try self.shortestEdit(a, b);
+            try self.backtrack(a.len, b.len);
+        }
+
+        fn backtrack(self: *Sequence, x: usize, y: usize) !void {
             try out.resize(self.edits.len);
             var snakes = out.toSlice();
             const trace = self.edits.toSlice();
