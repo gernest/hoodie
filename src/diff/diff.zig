@@ -234,3 +234,20 @@ pub const Diff = struct {
         }
     };
 };
+
+pub fn splitLines(a: *Allocator, text: []const u8) !Diff.Lines {
+    var lines = Diff.Lines.init(a);
+    var arr = &lines;
+    var start: usize = 0;
+    for (text) |ch, i| {
+        if (ch == '\n') {
+            try arr.append(text[start..i]);
+            start = i;
+        }
+    }
+    if (start < text.len) {
+        try arr.append(text[start..]);
+    }
+
+    return lines;
+}
