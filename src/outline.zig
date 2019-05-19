@@ -22,6 +22,7 @@ const Declaration = struct {
 
     const Type = enum {
         Import,
+        Struct,
         Fn,
         Test,
 
@@ -29,6 +30,7 @@ const Declaration = struct {
             return json.Value{
                 .String = switch (self) {
                     .Import => "import",
+                    .Struct => "struct",
                     .Fn => "function",
                     .Test => "test",
                     else => return error.UnknownType,
@@ -104,7 +106,30 @@ fn collect(
                             try ls.append(decl_ptr);
                         }
                     },
-                    else => {},
+                    ast.Node.Id.ContainerDecl => {
+                        const container_decl = @fieldParentPtr(ast.Node.ContainerDecl, "base", init_node);
+                        const container_kind = tree.tokenSlice(container_decl.kind_token);
+                        if (mem.eql(u8, container_kind, "struct")) {
+                            var decl_ptr = try ls.allocator.create(Declaration);
+                            decl_ptr.* = Declaration{
+                                .start = first_token.start,
+                                .end = last_token.end,
+                                .typ = Declaration.Type.Struct,
+                                .label = decl_name,
+                                .children = Declaration.List.init(ls.allocator),
+                            };
+                            try ls.append(decl_ptr);
+                        }
+                        switch (container_decl.init_arg_expr) {
+                            ast.Node.ContainerDecl.InitArg.Type => |type_expr| {
+                                type_expr.dump(0);
+                            },
+                            else => {},
+                        }
+                    },
+                    else => {
+                        // init_node.dump(0);
+                    },
                 }
             }
         },
@@ -167,9 +192,10 @@ fn testOutline(
     try buf.resize(0);
     var stream = &std.io.BufferOutStream.init(buf).stream;
     try outline(a, src, stream);
-    // if (!buf.eql(expected)) {
-    //     warn("{}", buf.toSlice());
-    // }
+    if (!buf.eql(expected)) {
+        warn("{}", buf.toSlice());
+        return;
+    }
     testing.expect(buf.eql(expected));
 }
 
@@ -197,5 +223,10 @@ test "outline" {
         \\fn outline2()void{}
     ,
         \\[{"end":18,"label":"outline","type":"function","start":0},{"end":38,"label":"outline2","type":"function","start":19}]
+    );
+    try testOutline(a, buf,
+        \\const container=struct{};
+    ,
+        \\[{"end":25,"label":"container","type":"struct","start":0}]
     );
 }
