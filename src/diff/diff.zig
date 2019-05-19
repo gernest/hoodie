@@ -1,5 +1,7 @@
 const std = @import("std");
-
+const mem = std.mem;
+const warn = std.debug.warn;
+const Allocator = mem.Allocator;
 pub const Diff = struct {
     list: OpList,
     arena: std.heap.ArenaAllocator,
@@ -242,12 +244,12 @@ pub fn splitLines(a: *Allocator, text: []const u8) !Diff.Lines {
     for (text) |ch, i| {
         if (ch == '\n') {
             try arr.append(text[start..i]);
-            start = i;
+            start = i + 1;
         }
     }
-    if (start < text.len) {
+    // ignoring the last line if it only ends with with
+    if (start < text.len and start != (text.len - 1)) {
         try arr.append(text[start..]);
     }
-
     return lines;
 }
