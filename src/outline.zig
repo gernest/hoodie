@@ -23,6 +23,8 @@ const Declaration = struct {
     const Type = enum {
         Import,
         Struct,
+        Enum,
+        Union,
         Fn,
         Test,
 
@@ -31,6 +33,8 @@ const Declaration = struct {
                 .String = switch (self) {
                     .Import => "import",
                     .Struct => "struct",
+                    .Enum => "enum",
+                    .Union => "union",
                     .Fn => "function",
                     .Test => "test",
                     else => return error.UnknownType,
@@ -109,6 +113,7 @@ fn collect(
                     ast.Node.Id.ContainerDecl => {
                         const container_decl = @fieldParentPtr(ast.Node.ContainerDecl, "base", init_node);
                         const container_kind = tree.tokenSlice(container_decl.kind_token);
+                        // warn("{}\n", container_kind);
                         if (mem.eql(u8, container_kind, "struct")) {
                             var decl_ptr = try ls.allocator.create(Declaration);
                             decl_ptr.* = Declaration{
@@ -120,16 +125,30 @@ fn collect(
                             };
                             try ls.append(decl_ptr);
                         }
-                        switch (container_decl.init_arg_expr) {
-                            ast.Node.ContainerDecl.InitArg.Type => |type_expr| {
-                                type_expr.dump(0);
-                            },
-                            else => {},
+                        if (mem.eql(u8, container_kind, "enum")) {
+                            var decl_ptr = try ls.allocator.create(Declaration);
+                            decl_ptr.* = Declaration{
+                                .start = first_token.start,
+                                .end = last_token.end,
+                                .typ = Declaration.Type.Enum,
+                                .label = decl_name,
+                                .children = Declaration.List.init(ls.allocator),
+                            };
+                            try ls.append(decl_ptr);
+                        }
+                        if (mem.eql(u8, container_kind, "union")) {
+                            var decl_ptr = try ls.allocator.create(Declaration);
+                            decl_ptr.* = Declaration{
+                                .start = first_token.start,
+                                .end = last_token.end,
+                                .typ = Declaration.Type.Union,
+                                .label = decl_name,
+                                .children = Declaration.List.init(ls.allocator),
+                            };
+                            try ls.append(decl_ptr);
                         }
                     },
-                    else => {
-                        // init_node.dump(0);
-                    },
+                    else => {},
                 }
             }
         },
@@ -228,5 +247,15 @@ test "outline" {
         \\const container=struct{};
     ,
         \\[{"end":25,"label":"container","type":"struct","start":0}]
+    );
+    try testOutline(a, buf,
+        \\const container=enum{};
+    ,
+        \\[{"end":23,"label":"container","type":"enum","start":0}]
+    );
+    try testOutline(a, buf,
+        \\const container=union{};
+    ,
+        \\[{"end":24,"label":"container","type":"union","start":0}]
     );
 }
