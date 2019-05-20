@@ -9,7 +9,7 @@ const ast = std.zig.ast;
 const parse = std.zig.parse;
 const warn = std.debug.warn;
 const ArrayList = std.ArrayList;
-const dump = @import("json/json.zig").dump;
+const Dump = @import("json/json.zig").Dump;
 const testing = std.testing;
 const Declaration = struct {
     label: []const u8,
@@ -191,6 +191,7 @@ fn unquote(s: []const u8) []const u8 {
     }
     return s[1 .. s.len - 1];
 }
+
 fn render(a: *Allocator, ls: *Declaration.List, stream: var) !void {
     var values = ArrayList(json.Value).init(a);
     defer values.deinit();
@@ -199,7 +200,9 @@ fn render(a: *Allocator, ls: *Declaration.List, stream: var) !void {
         try values.append(v);
     }
     var v = json.Value{ .Array = values };
-    try dump(v, stream);
+    var dump = &try Dump.init(a);
+    defer dump.deinit();
+    try dump.dump(v, stream);
 }
 
 fn testOutline(
