@@ -8,6 +8,7 @@ const builtin = @import("builtin");
 
 const outline = @import("outline.zig").outline;
 const format = @import("fmt.zig").format;
+const max_src_size = 2 * 1024 * 1024 * 1024; // 2 GiB
 
 // taken from https://github.com/Hejsil/zig-clap
 pub const OsIterator = struct {
@@ -44,6 +45,8 @@ pub fn main() anyerror!void {
     var direct_allocator = std.heap.DirectAllocator.init();
     const allocator = &direct_allocator.allocator;
     defer direct_allocator.deinit();
+    var stdin_file = try io.getStdIn();
+    var stdin = stdin_file.inStream();
 
     var iter = OsIterator.init(allocator);
     defer iter.deinit();
@@ -51,10 +54,15 @@ pub fn main() anyerror!void {
     while (try iter.next()) |param| {
         if (mem.eql(u8, param, "outline")) {
             if (try iter.next()) |file_name| {
+                const stdout = try getStdoutStream();
+                if (mem.eql(u8, file_name, "-modified")) {
+                    const source_code = try stdin.stream.readAllAlloc(allocator, max_src_size);
+                    defer allocator.free(source_code);
+                    return outline(allocator, source_code, stdout);
+                }
                 if (std.io.readFileAlloc(allocator, file_name)) |data| {
                     defer allocator.free(data);
-                    const stdout = try getStdoutStream();
-                    try outline(allocator, data, stdout);
+                    return outline(allocator, data, stdout);
                 } else |err| {
                     std.debug.warn("{}\n", err);
                     os.exit(1);
