@@ -22,6 +22,7 @@ const Declaration = struct {
 
     const Type = enum {
         Import,
+        Const,
         Struct,
         Enum,
         Union,
@@ -32,6 +33,7 @@ const Declaration = struct {
             return json.Value{
                 .String = switch (self) {
                     .Import => "import",
+                    .Const => "const",
                     .Struct => "struct",
                     .Enum => "enum",
                     .Union => "union",
@@ -148,7 +150,17 @@ fn collect(
                             try ls.append(decl_ptr);
                         }
                     },
-                    else => {},
+                    else => {
+                        var decl_ptr = try ls.allocator.create(Declaration);
+                        decl_ptr.* = Declaration{
+                            .start = first_token.start,
+                            .end = last_token.end,
+                            .typ = Declaration.Type.Const,
+                            .label = decl_name,
+                            .children = Declaration.List.init(ls.allocator),
+                        };
+                        try ls.append(decl_ptr);
+                    },
                 }
             }
         },
@@ -232,6 +244,13 @@ test "outline" {
         \\ const a=@import("a");
     ,
         \\[{"end":22,"label":"c","type":"import","start":1},{"end":46,"label":"a","type":"import","start":25}]
+    );
+    try testOutline(a, buf,
+        \\ const c=@import("c").d;
+        \\
+        \\ const a=@import("a").b.c;
+    ,
+        \\[{"end":24,"label":"c","type":"const","start":1},{"end":52,"label":"a","type":"const","start":27}]
     );
 
     try testOutline(a, buf,
