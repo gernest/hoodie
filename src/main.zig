@@ -8,6 +8,7 @@ const builtin = @import("builtin");
 
 const outline = @import("outline.zig").outline;
 const format = @import("fmt.zig").format;
+const lsp = @import("lsp.zig").run;
 const max_src_size = 2 * 1024 * 1024 * 1024; // 2 GiB
 
 // taken from https://github.com/Hejsil/zig-clap
@@ -46,7 +47,8 @@ pub fn main() anyerror!void {
     const allocator = &direct_allocator.allocator;
     defer direct_allocator.deinit();
     var stdin_file = try io.getStdIn();
-    var stdin = stdin_file.inStream();
+    var stdin = &stdin_file.inStream().stream;
+    const stdout = try getStdoutStream();
 
     var iter = OsIterator.init(allocator);
     defer iter.deinit();
@@ -54,9 +56,8 @@ pub fn main() anyerror!void {
     while (try iter.next()) |param| {
         if (mem.eql(u8, param, "outline")) {
             if (try iter.next()) |file_name| {
-                const stdout = try getStdoutStream();
                 if (mem.eql(u8, file_name, "-modified")) {
-                    const source_code = try stdin.stream.readAllAlloc(allocator, max_src_size);
+                    const source_code = try stdin.readAllAlloc(allocator, max_src_size);
                     defer allocator.free(source_code);
                     return outline(allocator, source_code, stdout);
                 }
@@ -73,8 +74,9 @@ pub fn main() anyerror!void {
             }
             return;
         } else if (mem.eql(u8, param, "fmt")) {
-            const stdout = try getStdoutStream();
             return format(allocator, stdout);
+        } else if (mem.eql(u8, param, "lsp")) {
+            try lsp(allocator, stdin, stdout);
         }
     }
 }

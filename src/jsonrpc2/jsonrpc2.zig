@@ -5,7 +5,7 @@ const io = std.io;
 const event = std.event;
 const mem = std.mem;
 const warn = std.debug.warn;
-
+const Dump = @import("../json/json.zig").Dump;
 pub const json_rpc_version = "2.0";
 const content_length = "Content-Length";
 const default_message_size: usize = 8192;
@@ -91,11 +91,12 @@ pub const Response = struct {
             _ = try m.put("result", self.result.?);
         }
         if (self.err) |*v| {
-            _ = try m.put("error", try v.encode(a));
+            // _ = try m.put("error", try v.encode(a));
         }
         if (self.id) |v| {
             _ = try m.put("id", v.encode(a));
         }
+        return json.Value{ .Object = m };
     }
 };
 
@@ -136,74 +137,93 @@ pub const Context = struct {
     }
 };
 
-pub const Handler = struct {
-    handleFn: fn (*Context) anyerror!void,
-};
-
 pub const Conn = struct {
-    const ReadError = std.os.File.ReadError || error{};
-    const WriteError = std.os.File.WriteError || error{OutOfMemory} || error{};
-
     const channel_buffer_size = 10;
-
-    pub const InStream = io.InStream(ReadError);
-    pub const OutStream = *io.OutStream(WriteError);
-
     a: *Allocator,
-    in: *InStream,
-    out: *OutStream,
     requests_channel: *ContextChannel,
     responses_channel: *ContextChannel,
+    handler: *const Handler,
 
     const ContextChannel = event.Channel(*Context);
 
+    pub const Handler = struct {
+        handleFn: fn (*const Handler, *Context) anyerror!void,
+
+        pub fn serve(self: *const Handler, ctx: *Context) anyerror!void {
+            return self.handleFn(self, ctx);
+        }
+    };
+
     pub fn init(
         a: *Allocator,
-        in_stream: *InStream.Stream,
-        out_stream: *OutStream.Stream,
+        handler: *const Handler,
     ) Conn {
         return Conn{
             .a = a,
-            .in = in_stream,
-            .out = out_stream,
             .requests_channel = undefined,
             .responses_channel = undefined,
+            .handler = handler,
         };
     }
 
-    pub fn serve(self: *Conn, loop: *event.Loop) anyerror!void {
+    pub fn serve(self: *Conn, loop: *event.Loop, in: var, out: var) anyerror!void {
         self.requests_channel = try ContextChannel.create(loop, channel_buffer_size);
         self.responses_channel = try ContextChannel.create(loop, channel_buffer_size);
+
+        const reader = try loop.call(read, in, self);
+        const writer = try loop.call(write, out, self);
+
+        defer cancel reader;
+        defer cancel writer;
+        loop.run();
     }
 
-    async fn read(self: *Conn, loop: *event.Loop) !void {
-        var buf = &try std.Buffer.init(self.a, "");
+    async fn read(
+        in: *std.os.File.InStream.Stream,
+        self: *Conn,
+    ) void {
+        var buffer = std.Buffer.init(self.a, "") catch |_| return;
+        var buf = &buffer;
         defer buf.deinit();
-        try self.readRequestData(buf, self.in_stream);
+        readRequestData(buf, in) catch |_| return;
         var p = &json.Parser.init(self.a, true);
         defer p.deinit();
         while (true) {
-            var ctx = try self.a.create(Context);
-            try buf.resize(0);
+            var ctx = self.a.create(Context) catch |err| {
+                return;
+            };
+            buf.resize(0) catch |_| return;
             p.reset();
 
-            var v = try p.parse(buf.toSlice());
+            var v = p.parse(buf.toSlice()) catch |err| {
+                return;
+            };
             switch (v.root) {
                 json.Value.Object => |*m| {
                     var req: Request = undefined;
                     ctx.tree = v;
                     ctx.request.* = req;
                 },
-                else => return error.InvalidRPCPayload,
+                else => {},
             }
             v.deinit();
         }
     }
 
-    async fn write(self: *Conn, loop: *event.Loop) !void {
+    async fn write(
+        out: *std.os.File.OutStream.Stream,
+        self: *Conn,
+    ) void {
         while (true) {
-            const ctx = await (try async self.responses_channel.get());
-
+            var ctx = await (async self.responses_channel.get() catch |err| {
+                return;
+            });
+            self.handler.serve(ctx) catch |err| {
+                return;
+            };
+            writeResponseData(ctx, out) catch |err| {
+                return;
+            };
             // cleanup all memory allocated during the lifetime of the
             // context.
             ctx.deinit();
@@ -235,6 +255,16 @@ pub const Conn = struct {
         try buf.resize(length);
         const n = try stream.read(buf.toSlice());
         std.debug.assert(n == length);
+    }
+
+    pub fn writeResponseData(ctx: *Context, stream: var) !void {
+        var a = &ctx.arena.allocator;
+        var buf = &try std.Buffer.init(a, "");
+        var buf_stream = &std.io.BufferOutStream.init(buf).stream;
+        var dump = &try Dump.init(a);
+        try dump.dump(try ctx.response.encode(a), buf_stream);
+        try stream.print("Content-Length: {}\r\n\r\n", buf.len());
+        try stream.write(buf.toSlice());
     }
 };
 
