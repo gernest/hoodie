@@ -56,6 +56,10 @@ func proxyCmd(ctx context.Context, name string, args ...string) error {
 	if err != nil {
 		return err
 	}
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
 	stream := jsonrpc2.NewHeaderStream(stdout, stdin)
 	go handle(ctx, stream)
 	return cmd.Wait()
