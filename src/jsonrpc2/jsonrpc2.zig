@@ -47,6 +47,35 @@ pub const Request = struct {
     method: []const u8,
     params: ?json.Value,
     id: ?ID,
+
+    pub fn init(m: *const json.ObjectMap) !Request {
+        var req: Request = undefined;
+        if (m.get("jsorpc")) |kv| {
+            req.jsonrpc = kv.value.String;
+        }
+        if (m.get("method")) |kv| {
+            req.method = kv.value.String;
+        }
+        if (m.get("params")) |kv| {
+            req.params = kv.value;
+        } else {
+            req.params = null;
+        }
+        if (m.get("id")) |kv| {
+            switch (kv.value) {
+                .String => |v| {
+                    req.id = ID{ .Name = v };
+                },
+                .Integer => |v| {
+                    req.id = ID{ .Number = v };
+                },
+                else => return error.WrongIDValue,
+            }
+        } else {
+            req.id = null;
+        }
+        return req;
+    }
 };
 
 pub const ID = union(enum) {
@@ -117,8 +146,8 @@ pub const Context = struct {
         var self: Context = undefined;
         self.arena = std.heap.ArenaAllocator.init(a);
         var alloc = &self.arena.allocator;
-        self.request = alloc.create(Request);
-        self.response = alloc.create(Response);
+        self.request = try alloc.create(Request);
+        self.response = try alloc.create(Response);
         self.tree = undefined;
         return self;
     }
@@ -140,8 +169,7 @@ pub const Context = struct {
 pub const Conn = struct {
     const channel_buffer_size = 10;
     a: *Allocator,
-    requests_channel: *ContextChannel,
-    responses_channel: *ContextChannel,
+    context_channel: *ContextChannel,
     handler: *const Handler,
 
     const ContextChannel = event.Channel(*Context);
@@ -160,16 +188,13 @@ pub const Conn = struct {
     ) Conn {
         return Conn{
             .a = a,
-            .requests_channel = undefined,
-            .responses_channel = undefined,
+            .context_channel = undefined,
             .handler = handler,
         };
     }
 
     pub fn serve(self: *Conn, loop: *event.Loop, in: var, out: var) anyerror!void {
-        self.requests_channel = try ContextChannel.create(loop, channel_buffer_size);
-        self.responses_channel = try ContextChannel.create(loop, channel_buffer_size);
-
+        self.context_channel = try ContextChannel.create(loop, channel_buffer_size);
         const reader = try loop.call(read, in, self);
         const writer = try loop.call(write, out, self);
 
@@ -182,18 +207,27 @@ pub const Conn = struct {
         in: *std.os.File.InStream.Stream,
         self: *Conn,
     ) void {
-        var buffer = std.Buffer.init(self.a, "") catch |_| return;
+        var buffer = std.Buffer.init(self.a, "") catch |err| {
+            std.debug.warn("{} \n", err);
+            return;
+        };
         var buf = &buffer;
         defer buf.deinit();
-        readRequestData(buf, in) catch |_| return;
         var p = &json.Parser.init(self.a, true);
         defer p.deinit();
         while (true) {
             var ctx = self.a.create(Context) catch |err| {
                 return;
             };
+            ctx.* = Context.init(self.a) catch |err| {
+                return;
+            };
             buf.resize(0) catch |_| return;
             p.reset();
+            readRequestData(buf, in) catch |err| {
+                std.debug.warn("{} \n", err);
+                return;
+            };
 
             var v = p.parse(buf.toSlice()) catch |err| {
                 return;
@@ -202,11 +236,14 @@ pub const Conn = struct {
                 json.Value.Object => |*m| {
                     var req: Request = undefined;
                     ctx.tree = v;
-                    ctx.request.* = req;
+                    ctx.request.* = Request.init(m) catch |err| {
+                        std.debug.warn("{} \n", err);
+                        return;
+                    };
                 },
-                else => {},
+                else => unreachable,
             }
-            v.deinit();
+            await (async self.context_channel.put(ctx) catch @panic("out of memory"));
         }
     }
 
@@ -215,9 +252,14 @@ pub const Conn = struct {
         self: *Conn,
     ) void {
         while (true) {
-            var ctx = await (async self.responses_channel.get() catch |err| {
+            var active_ctx = await (async self.context_channel.getOrNull() catch |err| {
+                std.debug.warn("{}\n", err);
                 return;
             });
+            if (active_ctx == null) {
+                continue;
+            }
+            var ctx = active_ctx.?;
             self.handler.serve(ctx) catch |err| {
                 return;
             };
