@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -56,10 +57,18 @@ func proxyCmd(ctx context.Context, name string, args ...string) error {
 	if err != nil {
 		return err
 	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return err
+	}
 	err = cmd.Start()
 	if err != nil {
 		return err
 	}
+	go func() {
+		io.Copy(os.Stderr, stderr)
+	}()
+
 	stream := jsonrpc2.NewHeaderStream(stdout, stdin)
 	go handle(ctx, stream)
 	return cmd.Wait()
@@ -76,6 +85,7 @@ func handle(ctx context.Context, stream jsonrpc2.Stream) error {
 			return nil
 		case <-ticker.C:
 			var result json.RawMessage
+			fmt.Println("echo ", id)
 			err := conn.Call(ctx, "echo", []int{id}, &result)
 			if err != nil {
 				fmt.Fprintf(os.Stdout, "Error :%v\n", err)
