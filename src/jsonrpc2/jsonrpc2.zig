@@ -51,7 +51,6 @@ pub const Request = struct {
     pub fn init(m: *const json.ObjectMap) !Request {
         var req: Request = undefined;
         if (m.get("jsonrpc")) |kv| {
-            std.debug.warn("counting {}\n", m.count());
             req.jsonrpc = kv.value.String;
         }
         if (m.get("method")) |kv| {
@@ -179,10 +178,9 @@ pub const Context = struct {
 pub const Conn = struct {
     const channel_buffer_size = 10;
     a: *Allocator,
-    context_channel: *ContextChannel,
     handler: *const Handler,
 
-    const ContextChannel = std.atomic.Queue(*Context);
+    const ContextChannel = std.event.Channel(*Context);
     pub const Handler = struct {
         handleFn: fn (*const Handler, *Context) anyerror!void,
 
@@ -194,33 +192,31 @@ pub const Conn = struct {
     pub fn init(
         a: *Allocator,
         handler: *const Handler,
-    ) !Conn {
+    ) Conn {
         var conn = Conn{
             .a = a,
-            .context_channel = try a.create(ContextChannel),
             .handler = handler,
         };
-        conn.context_channel.* = ContextChannel.init();
         return conn;
     }
 
     pub fn serve(self: *Conn, loop: *event.Loop, in: var, out: var) anyerror!void {
-        const reader = try async<loop.allocator> read(in, self);
-        const writer = try async<loop.allocator> write(out, self);
+        var context_channel = try ContextChannel.create(loop, 1);
+        const reader = try async<loop.allocator> read(context_channel, in, self);
+        const writer = try async<loop.allocator> write(context_channel, out, self);
         defer {
             cancel reader;
             cancel writer;
+            context_channel.destroy();
         }
         loop.run();
     }
 
     async fn read(
+        context_channel: *ContextChannel,
         in: *std.fs.File.InStream.Stream,
         self: *Conn,
     ) void {
-        suspend {
-            resume @handle();
-        }
         var buffer = std.Buffer.init(self.a, "") catch |err| {
             std.debug.warn("{} \n", err);
             return;
@@ -230,74 +226,64 @@ pub const Conn = struct {
         var p = &json.Parser.init(self.a, true);
         defer p.deinit();
         while (true) {
-            suspend {
-                std.debug.warn("reading..\n");
-                var ctx = self.a.create(Context) catch |err| {
-                    return;
-                };
-                ctx.* = Context.init(self.a) catch |err| {
-                    return;
-                };
-                buf.resize(0) catch |_| return;
-                p.reset();
-                readRequestData(buf, in) catch |err| {
-                    std.debug.warn("{} \n", err);
-                    return;
-                };
+            var ctx = self.a.create(Context) catch |err| {
+                return;
+            };
+            ctx.* = Context.init(self.a) catch |err| {
+                return;
+            };
+            buf.resize(0) catch |_| return;
+            p.reset();
+            readRequestData(buf, in) catch |err| {
+                std.debug.warn(" err {} \n", err);
+                return;
+            };
+            std.debug.warn("reading stuff\n");
 
-                var v = p.parse(buf.toSlice()) catch |err| {
-                    return;
-                };
-                switch (v.root) {
-                    json.Value.Object => |*m| {
-                        var req: Request = undefined;
-                        ctx.tree = v;
-                        ctx.request.* = Request.init(m) catch |err| {
-                            std.debug.warn("{} \n", err);
-                            return;
-                        };
-                        ctx.response.* = Response.init(ctx.request);
-                    },
-                    else => unreachable,
-                }
-                var node = self.a.create(ContextChannel.Node) catch |err| {
-                    std.debug.warn("{} \n", err);
-                    return;
-                };
-                node.* = ContextChannel.Node.init(ctx);
-                self.context_channel.put(node);
-                std.debug.warn("{} \n", buf.toSlice());
+            var v = p.parse(buf.toSlice()) catch |err| {
+                return;
+            };
+            switch (v.root) {
+                json.Value.Object => |*m| {
+                    var req: Request = undefined;
+                    ctx.tree = v;
+                    ctx.request.* = Request.init(m) catch |err| {
+                        std.debug.warn("{} \n", err);
+                        return;
+                    };
+                    ctx.response.* = Response.init(ctx.request);
+                },
+                else => unreachable,
             }
+            // await (async context_channel.put(ctx) catch @panic("out of memory"));
+            // std.debug.warn("sent to channel  {} \n", context_channel.put_count);
         }
     }
 
     async fn write(
+        context_channel: *ContextChannel,
         out: *std.fs.File.OutStream.Stream,
         self: *Conn,
     ) void {
-        while (true) {
-            suspend {
-                handleWrite(out, self) catch |err| {
-                    std.debug.warn("{} \n", err);
-                    return;
-                };
-                resume @handle();
-            }
-        }
+        // while (true) {
+        //     const h = async context_channel.get() catch @panic("out of memory");
+        //     var ctx = await h;
+        //     std.debug.warn("writing\n");
+        //     handleWrite(ctx, out, self) catch |err| {
+        //         std.debug.warn("{} \n", err);
+        //         return;
+        //     };
+        // }
     }
 
     fn handleWrite(
+        ctx: *Context,
         out: *std.fs.File.OutStream.Stream,
         self: *Conn,
     ) !void {
-        var active_ctx = self.context_channel.get();
-        if (active_ctx == null) {
-            return;
-        }
-        var ctx = active_ctx.?.data;
         defer {
             ctx.deinit();
-            self.a.destroy(active_ctx);
+            self.a.destroy(ctx);
         }
         try self.handler.serve(ctx);
         try writeResponseData(ctx, out);
