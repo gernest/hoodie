@@ -18,6 +18,6 @@ pub fn run(
     var loop: Loop = undefined;
     try loop.initSingleThreaded(a);
     defer loop.deinit();
-    var conn = Conn.init(a, &echo_handler);
+    var conn = try Conn.init(a, &echo_handler);
     try conn.serve(&loop, in_stream, out_stream);
 }

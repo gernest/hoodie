@@ -172,8 +172,7 @@ pub const Conn = struct {
     context_channel: *ContextChannel,
     handler: *const Handler,
 
-    const ContextChannel = event.Channel(*Context);
-
+    const ContextChannel = std.atomic.Queue(*Context);
     pub const Handler = struct {
         handleFn: fn (*const Handler, *Context) anyerror!void,
 
@@ -185,18 +184,19 @@ pub const Conn = struct {
     pub fn init(
         a: *Allocator,
         handler: *const Handler,
-    ) Conn {
-        return Conn{
+    ) !Conn {
+        var conn = Conn{
             .a = a,
-            .context_channel = undefined,
+            .context_channel = try a.create(ContextChannel),
             .handler = handler,
         };
+        conn.context_channel.* = ContextChannel.init();
+        return conn;
     }
 
     pub fn serve(self: *Conn, loop: *event.Loop, in: var, out: var) anyerror!void {
-        self.context_channel = try ContextChannel.create(loop, channel_buffer_size);
-        const reader = try loop.call(read, in, self);
         const writer = try loop.call(write, out, self);
+        const reader = try loop.call(read, in, self);
 
         defer cancel reader;
         defer cancel writer;
@@ -207,6 +207,9 @@ pub const Conn = struct {
         in: *std.os.File.InStream.Stream,
         self: *Conn,
     ) void {
+        suspend {
+            resume @handle();
+        }
         var buffer = std.Buffer.init(self.a, "") catch |err| {
             std.debug.warn("{} \n", err);
             return;
@@ -216,6 +219,7 @@ pub const Conn = struct {
         var p = &json.Parser.init(self.a, true);
         defer p.deinit();
         while (true) {
+            std.debug.warn("reading..\n");
             var ctx = self.a.create(Context) catch |err| {
                 return;
             };
@@ -243,7 +247,13 @@ pub const Conn = struct {
                 },
                 else => unreachable,
             }
-            await (async self.context_channel.put(ctx) catch @panic("out of memory"));
+            var node = self.a.create(ContextChannel.Node) catch |err| {
+                std.debug.warn("{} \n", err);
+                return;
+            };
+            node.* = ContextChannel.Node.init(ctx);
+            self.context_channel.put(node);
+            std.debug.warn("{} \n", buf.toSlice());
         }
     }
 
@@ -251,25 +261,33 @@ pub const Conn = struct {
         out: *std.os.File.OutStream.Stream,
         self: *Conn,
     ) void {
-        while (true) {
-            var active_ctx = await (async self.context_channel.getOrNull() catch |err| {
-                std.debug.warn("{}\n", err);
-                return;
-            });
-            if (active_ctx == null) {
-                continue;
-            }
-            var ctx = active_ctx.?;
-            self.handler.serve(ctx) catch |err| {
-                return;
-            };
-            writeResponseData(ctx, out) catch |err| {
-                return;
-            };
-            // cleanup all memory allocated during the lifetime of the
-            // context.
-            ctx.deinit();
+        suspend {
+            resume @handle();
         }
+        while (true) {
+            handleWrite(out, self) catch |err| {
+                std.debug.warn("{} \n", err);
+                return;
+            };
+        }
+    }
+
+    fn handleWrite(
+        out: *std.os.File.OutStream.Stream,
+        self: *Conn,
+    ) !void {
+        std.debug.warn(" found ctx\n");
+        var active_ctx = self.context_channel.get();
+        if (active_ctx == null) {
+            return;
+        }
+        var ctx = active_ctx.?.data;
+        defer {
+            ctx.deinit();
+            self.a.destroy(active_ctx);
+        }
+        try self.handler.serve(ctx);
+        try writeResponseData(ctx, out);
     }
 
     pub fn readRequestData(buf: *std.Buffer, stream: var) !void {
