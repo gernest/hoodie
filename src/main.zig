@@ -2,6 +2,8 @@ const std = @import("std");
 const debug = std.debug;
 const mem = std.mem;
 const os = std.os;
+const fs = std.fs;
+const process = std.process;
 const io = std.io;
 const heap = std.heap;
 const builtin = @import("builtin");
@@ -13,15 +15,15 @@ const max_src_size = 2 * 1024 * 1024 * 1024; // 2 GiB
 
 // taken from https://github.com/Hejsil/zig-clap
 pub const OsIterator = struct {
-    const Error = os.ArgIterator.NextError;
+    const Error = process.ArgIterator.NextError;
 
     arena: heap.ArenaAllocator,
-    args: os.ArgIterator,
+    args: std.process.ArgIterator,
 
     pub fn init(allocator: *mem.Allocator) OsIterator {
         return OsIterator{
             .arena = heap.ArenaAllocator.init(allocator),
-            .args = os.args(),
+            .args = process.args(),
         };
     }
 
@@ -38,9 +40,9 @@ pub const OsIterator = struct {
     }
 };
 
-var stdout_file: os.File = undefined;
-var stdout_file_out_stream: os.File.OutStream = undefined;
-var stdout_stream: ?*io.OutStream(os.File.WriteError) = null;
+var stdout_file: fs.File = undefined;
+var stdout_file_out_stream: fs.File.OutStream = undefined;
+var stdout_stream: ?*io.OutStream(fs.File.WriteError) = null;
 
 pub fn main() anyerror!void {
     var direct_allocator = std.heap.DirectAllocator.init();
@@ -88,7 +90,7 @@ const outline_help_missing_filename =
     \\  FILENAME is absolute or relatime path to the zig source file.
 ;
 
-pub fn getStdoutStream() !*io.OutStream(os.File.WriteError) {
+pub fn getStdoutStream() !*io.OutStream(fs.File.WriteError) {
     if (stdout_stream) |st| {
         return st;
     } else {

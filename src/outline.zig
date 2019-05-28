@@ -24,6 +24,7 @@ const Declaration = struct {
         Import,
         Const,
         Struct,
+        Field,
         Enum,
         Union,
         Fn,
@@ -35,6 +36,7 @@ const Declaration = struct {
                     .Import => "import",
                     .Const => "const",
                     .Struct => "struct",
+                    .Field => "field",
                     .Enum => "enum",
                     .Union => "union",
                     .Fn => "function",
@@ -43,9 +45,21 @@ const Declaration = struct {
                 },
             };
         }
+
+        fn fromString(container_kind: []const u8) ?Type {
+            if (mem.eql(u8, container_kind, "struct")) {
+                return Declaration.Type.Struct;
+            } else if (mem.eql(u8, container_kind, "enum")) {
+                return Declaration.Type.Enum;
+            } else if (mem.eql(u8, container_kind, "union")) {
+                return Declaration.Type.Union;
+            } else {
+                return null;
+            }
+        }
     };
 
-    fn encode(self: *Declaration, a: *Allocator) !json.Value {
+    fn encode(self: *Declaration, a: *Allocator) anyerror!json.Value {
         var m = json.ObjectMap.init(a);
         _ = try m.put("label", json.Value{
             .String = self.label,
@@ -57,6 +71,13 @@ const Declaration = struct {
         _ = try m.put("end", json.Value{
             .Integer = @intCast(i64, self.end),
         });
+        if (self.children.len > 0) {
+            var children_list = std.ArrayList(json.Value).init(a);
+            for (self.children.toSlice()) |child| {
+                try children_list.append(try child.encode(a));
+            }
+            _ = try m.put("children", json.Value{ .Array = children_list });
+        }
         return json.Value{ .Object = m };
     }
 };
@@ -74,7 +95,7 @@ pub fn outline(a: *Allocator, src: []const u8, stream: var) anyerror!void {
     while (true) {
         var decl = (it.next() orelse break).*;
         try collect(
-            &tree,
+            tree,
             &ls,
             decl,
         );
@@ -115,38 +136,40 @@ fn collect(
                     ast.Node.Id.ContainerDecl => {
                         const container_decl = @fieldParentPtr(ast.Node.ContainerDecl, "base", init_node);
                         const container_kind = tree.tokenSlice(container_decl.kind_token);
-                        // warn("{}\n", container_kind);
-                        if (mem.eql(u8, container_kind, "struct")) {
+                        const typ = Declaration.Type.fromString(container_kind);
+                        if (typ) |kind| {
                             var decl_ptr = try ls.allocator.create(Declaration);
                             decl_ptr.* = Declaration{
                                 .start = first_token.start,
                                 .end = last_token.end,
-                                .typ = Declaration.Type.Struct,
+                                .typ = kind,
                                 .label = decl_name,
                                 .children = Declaration.List.init(ls.allocator),
                             };
-                            try ls.append(decl_ptr);
-                        }
-                        if (mem.eql(u8, container_kind, "enum")) {
-                            var decl_ptr = try ls.allocator.create(Declaration);
-                            decl_ptr.* = Declaration{
-                                .start = first_token.start,
-                                .end = last_token.end,
-                                .typ = Declaration.Type.Enum,
-                                .label = decl_name,
-                                .children = Declaration.List.init(ls.allocator),
-                            };
-                            try ls.append(decl_ptr);
-                        }
-                        if (mem.eql(u8, container_kind, "union")) {
-                            var decl_ptr = try ls.allocator.create(Declaration);
-                            decl_ptr.* = Declaration{
-                                .start = first_token.start,
-                                .end = last_token.end,
-                                .typ = Declaration.Type.Union,
-                                .label = decl_name,
-                                .children = Declaration.List.init(ls.allocator),
-                            };
+                            var it = container_decl.fields_and_decls.iterator(0);
+                            while (true) {
+                                var field = (it.next() orelse break).*;
+                                const field_first_token_ndex = field.firstToken();
+                                const field_last_token_index = field.lastToken();
+                                const field_first_token = tree.tokens.at(field_first_token_ndex);
+                                const field_last_token = tree.tokens.at(field_last_token_index);
+                                switch (field.id) {
+                                    .ContainerField => {
+                                        const field_decl = @fieldParentPtr(ast.Node.ContainerField, "base", field);
+                                        const field_name = tree.tokenSlice(field_decl.name_token);
+                                        var field_ptr = try ls.allocator.create(Declaration);
+                                        field_ptr.* = Declaration{
+                                            .start = field_first_token.start,
+                                            .end = field_last_token.end,
+                                            .typ = Declaration.Type.Field,
+                                            .label = field_name,
+                                            .children = Declaration.List.init(ls.allocator),
+                                        };
+                                        try (&decl_ptr.children).append(field_ptr);
+                                    },
+                                    else => {},
+                                }
+                            }
                             try ls.append(decl_ptr);
                         }
                     },
@@ -266,18 +289,30 @@ test "outline" {
         \\[{"end":18,"label":"outline","type":"function","start":0},{"end":38,"label":"outline2","type":"function","start":19}]
     );
     try testOutline(a, buf,
-        \\const container=struct{};
+        \\const StructContainer=struct{
+        \\  name: []const u8,
+        \\ };
     ,
-        \\[{"end":25,"label":"container","type":"struct","start":0}]
+        \\[{"children":[{"end":53,"label":"name","type":"field","start":0}],"end":53,"label":"StructContainer","type":"struct","start":0}]
     );
     try testOutline(a, buf,
-        \\const container=enum{};
+        \\const EnumContainer=enum{
+        \\  One,
+        \\ };
     ,
-        \\[{"end":23,"label":"container","type":"enum","start":0}]
+        \\[{"children":[{"end":36,"label":"One","type":"field","start":0}],"end":36,"label":"EnumContainer","type":"enum","start":0}]
     );
     try testOutline(a, buf,
-        \\const container=union{};
+        \\const UnionContainer=union{};
     ,
-        \\[{"end":24,"label":"container","type":"union","start":0}]
+        \\[{"end":29,"label":"UnionContainer","type":"union","start":0}]
+    );
+    try testOutline(a, buf,
+        \\const UnionContainer=union{
+        \\ A:usize,
+        \\ B:[]const u8,
+        \\};
+    ,
+        \\[{"children":[{"end":55,"label":"A","type":"field","start":0},{"end":55,"label":"B","type":"field","start":0}],"end":55,"label":"UnionContainer","type":"union","start":0}]
     );
 }

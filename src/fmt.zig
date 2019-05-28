@@ -2,7 +2,7 @@ const std = @import("std");
 const io = std.io;
 const os = std.os;
 const mem = std.mem;
-const render = @import("fmt/render.zig").render;
+const render = std.zig.render;
 const max_src_size = 2 * 1024 * 1024 * 1024; // 2 GiB
 
 pub fn format(allocator: *mem.Allocator, stdout: var) !void {
@@ -17,5 +17,5 @@ pub fn format(allocator: *mem.Allocator, stdout: var) !void {
         os.exit(1);
     };
     defer tree.deinit();
-    _ = try render(allocator, stdout, &tree);
+    _ = try render(allocator, stdout, tree);
 }

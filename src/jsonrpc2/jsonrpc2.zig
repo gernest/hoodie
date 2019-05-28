@@ -204,7 +204,7 @@ pub const Conn = struct {
     }
 
     async fn read(
-        in: *std.os.File.InStream.Stream,
+        in: *std.fs.File.InStream.Stream,
         self: *Conn,
     ) void {
         suspend {
@@ -258,7 +258,7 @@ pub const Conn = struct {
     }
 
     async fn write(
-        out: *std.os.File.OutStream.Stream,
+        out: *std.fs.File.OutStream.Stream,
         self: *Conn,
     ) void {
         suspend {
@@ -273,7 +273,7 @@ pub const Conn = struct {
     }
 
     fn handleWrite(
-        out: *std.os.File.OutStream.Stream,
+        out: *std.fs.File.OutStream.Stream,
         self: *Conn,
     ) !void {
         std.debug.warn(" found ctx\n");
