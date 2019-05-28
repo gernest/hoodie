@@ -24,6 +24,7 @@ const Declaration = struct {
     const Type = enum {
         Import,
         Const,
+        Var,
         Struct,
         Field,
         Method,
@@ -37,6 +38,7 @@ const Declaration = struct {
                 .String = switch (self) {
                     .Import => "import",
                     .Const => "const",
+                    .Var => "var",
                     .Struct => "struct",
                     .Field => "field",
                     .Method => "method",
@@ -59,6 +61,16 @@ const Declaration = struct {
             } else {
                 return null;
             }
+        }
+
+        fn mutable(mut: []const u8) Type {
+            if (mem.eql(u8, mut, "const")) {
+                return Declaration.Type.Const;
+            }
+            if (mem.eql(u8, mut, "var")) {
+                return Declaration.Type.Var;
+            }
+            unreachable;
         }
     };
 
@@ -122,6 +134,8 @@ fn collect(
         ast.Node.Id.VarDecl => {
             const var_decl = @fieldParentPtr(ast.Node.VarDecl, "base", decl);
             const decl_name = tree.tokenSlice(var_decl.name_token);
+            const mut = tree.tokenSlice(var_decl.mut_token);
+            warn("mutable {}\n", mut);
             if (var_decl.init_node) |init_node| {
                 switch (init_node.id) {
                     ast.Node.Id.BuiltinCall => {
@@ -192,6 +206,22 @@ fn collect(
                                             try (&decl_ptr.children).append(fn_decl_ptr);
                                         }
                                     },
+                                    .VarDecl => {
+                                        const field_decl = @fieldParentPtr(ast.Node.VarDecl, "base", field);
+                                        const field_name = tree.tokenSlice(field_decl.name_token);
+                                        var field_ptr = try ls.allocator.create(Declaration);
+                                        field_ptr.* = Declaration{
+                                            .start = field_first_token.start,
+                                            .end = field_last_token.end,
+                                            .typ = Declaration.Type.mutable(
+                                                tree.tokenSlice(field_decl.mut_token),
+                                            ),
+                                            .label = field_name,
+                                            .is_public = field_decl.visib_token != null,
+                                            .children = Declaration.List.init(ls.allocator),
+                                        };
+                                        try (&decl_ptr.children).append(field_ptr);
+                                    },
                                     else => {
                                         field.dump(0);
                                     },
@@ -200,7 +230,18 @@ fn collect(
                             try ls.append(decl_ptr);
                         }
                     },
-                    else => {},
+                    else => {
+                        var decl_ptr = try ls.allocator.create(Declaration);
+                        decl_ptr.* = Declaration{
+                            .start = first_token.start,
+                            .end = last_token.end,
+                            .typ = Declaration.Type.mutable(mut),
+                            .label = decl_name,
+                            .is_public = var_decl.visib_token != null,
+                            .children = Declaration.List.init(ls.allocator),
+                        };
+                        try ls.append(decl_ptr);
+                    },
                 }
             }
         },
@@ -308,10 +349,14 @@ test "outline" {
     //     \\[{"end":18,"label":"outline","type":"function","start":0},{"end":38,"label":"outline2","type":"function","start":19}]
     // );
     try testOutline(a, buf,
-        \\const StructContainer=struct{
+        \\var StructContainer=struct{
         \\  name: []const u8,
+        \\ const max=12;
+        \\var min=20;
         \\ pub fn handle(self: StructContainer)void{}
         \\ };
+        \\ pub const major=0.1;
+        \\ const minor=0.2;
     ,
         \\[{"children":[{"end":53,"label":"name","type":"field","start":0}],"end":53,"label":"StructContainer","type":"struct","start":0}]
     );
