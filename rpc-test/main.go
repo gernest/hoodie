@@ -76,7 +76,7 @@ func proxyCmd(ctx context.Context, name string, args ...string) error {
 
 func handle(ctx context.Context, stream jsonrpc2.Stream) error {
 	conn := jsonrpc2.NewConn(stream)
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(2 * time.Millisecond)
 	defer ticker.Stop()
 	id := 0
 	for {
@@ -85,7 +85,7 @@ func handle(ctx context.Context, stream jsonrpc2.Stream) error {
 			return nil
 		case <-ticker.C:
 			var result json.RawMessage
-			fmt.Println("echo ", id)
+			fmt.Fprintf(os.Stdout, "echo :%v\n", id)
 			err := conn.Call(ctx, "echo", []int{id}, &result)
 			if err != nil {
 				fmt.Fprintf(os.Stdout, "Error :%v\n", err)
