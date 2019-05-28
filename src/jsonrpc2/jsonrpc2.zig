@@ -50,7 +50,8 @@ pub const Request = struct {
 
     pub fn init(m: *const json.ObjectMap) !Request {
         var req: Request = undefined;
-        if (m.get("jsorpc")) |kv| {
+        if (m.get("jsonrpc")) |kv| {
+            std.debug.warn("counting {}\n", m.count());
             req.jsonrpc = kv.value.String;
         }
         if (m.get("method")) |kv| {
@@ -113,9 +114,18 @@ pub const Response = struct {
     err: ?Error,
     id: ?ID,
 
+    fn init(req: *Request) Response {
+        return Response{
+            .jsonrpc = req.jsonrpc,
+            .result = null,
+            .err = null,
+            .id = req.id,
+        };
+    }
+
     pub fn encode(self: *Response, a: *Allocator) !json.Value {
         var m = json.ObjectMap.init(a);
-        _ = try m.put("jsonrpc", json.Value{ .String = self.jsonrpc });
+        _ = try m.put("jsonrpc", json.Value{ .String = json_rpc_version });
         if (self.result != null) {
             _ = try m.put("result", self.result.?);
         }
@@ -195,11 +205,12 @@ pub const Conn = struct {
     }
 
     pub fn serve(self: *Conn, loop: *event.Loop, in: var, out: var) anyerror!void {
-        const writer = try loop.call(write, out, self);
-        const reader = try loop.call(read, in, self);
-
-        defer cancel reader;
-        defer cancel writer;
+        const reader = try async<loop.allocator> read(in, self);
+        const writer = try async<loop.allocator> write(out, self);
+        defer {
+            cancel reader;
+            cancel writer;
+        }
         loop.run();
     }
 
@@ -219,41 +230,44 @@ pub const Conn = struct {
         var p = &json.Parser.init(self.a, true);
         defer p.deinit();
         while (true) {
-            std.debug.warn("reading..\n");
-            var ctx = self.a.create(Context) catch |err| {
-                return;
-            };
-            ctx.* = Context.init(self.a) catch |err| {
-                return;
-            };
-            buf.resize(0) catch |_| return;
-            p.reset();
-            readRequestData(buf, in) catch |err| {
-                std.debug.warn("{} \n", err);
-                return;
-            };
+            suspend {
+                std.debug.warn("reading..\n");
+                var ctx = self.a.create(Context) catch |err| {
+                    return;
+                };
+                ctx.* = Context.init(self.a) catch |err| {
+                    return;
+                };
+                buf.resize(0) catch |_| return;
+                p.reset();
+                readRequestData(buf, in) catch |err| {
+                    std.debug.warn("{} \n", err);
+                    return;
+                };
 
-            var v = p.parse(buf.toSlice()) catch |err| {
-                return;
-            };
-            switch (v.root) {
-                json.Value.Object => |*m| {
-                    var req: Request = undefined;
-                    ctx.tree = v;
-                    ctx.request.* = Request.init(m) catch |err| {
-                        std.debug.warn("{} \n", err);
-                        return;
-                    };
-                },
-                else => unreachable,
+                var v = p.parse(buf.toSlice()) catch |err| {
+                    return;
+                };
+                switch (v.root) {
+                    json.Value.Object => |*m| {
+                        var req: Request = undefined;
+                        ctx.tree = v;
+                        ctx.request.* = Request.init(m) catch |err| {
+                            std.debug.warn("{} \n", err);
+                            return;
+                        };
+                        ctx.response.* = Response.init(ctx.request);
+                    },
+                    else => unreachable,
+                }
+                var node = self.a.create(ContextChannel.Node) catch |err| {
+                    std.debug.warn("{} \n", err);
+                    return;
+                };
+                node.* = ContextChannel.Node.init(ctx);
+                self.context_channel.put(node);
+                std.debug.warn("{} \n", buf.toSlice());
             }
-            var node = self.a.create(ContextChannel.Node) catch |err| {
-                std.debug.warn("{} \n", err);
-                return;
-            };
-            node.* = ContextChannel.Node.init(ctx);
-            self.context_channel.put(node);
-            std.debug.warn("{} \n", buf.toSlice());
         }
     }
 
@@ -261,14 +275,14 @@ pub const Conn = struct {
         out: *std.fs.File.OutStream.Stream,
         self: *Conn,
     ) void {
-        suspend {
-            resume @handle();
-        }
         while (true) {
-            handleWrite(out, self) catch |err| {
-                std.debug.warn("{} \n", err);
-                return;
-            };
+            suspend {
+                handleWrite(out, self) catch |err| {
+                    std.debug.warn("{} \n", err);
+                    return;
+                };
+                resume @handle();
+            }
         }
     }
 
@@ -276,7 +290,6 @@ pub const Conn = struct {
         out: *std.fs.File.OutStream.Stream,
         self: *Conn,
     ) !void {
-        std.debug.warn(" found ctx\n");
         var active_ctx = self.context_channel.get();
         if (active_ctx == null) {
             return;
@@ -322,7 +335,8 @@ pub const Conn = struct {
         var buf = &try std.Buffer.init(a, "");
         var buf_stream = &std.io.BufferOutStream.init(buf).stream;
         var dump = &try Dump.init(a);
-        try dump.dump(try ctx.response.encode(a), buf_stream);
+        var v = try ctx.response.encode(a);
+        try dump.dump(v, buf_stream);
         try stream.print("Content-Length: {}\r\n\r\n", buf.len());
         try stream.write(buf.toSlice());
     }
