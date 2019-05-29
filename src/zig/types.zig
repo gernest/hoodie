@@ -9,23 +9,27 @@ const Allocator = std.mem.Allocator;
 const parse = std.zig.parse;
 
 pub const Object = struct {
-    id: Id,
-    base_object: ?*Base,
-    pub const Id = enum {
-        TypeName,
-        Var,
-        Const,
-        PkgName,
-    };
+    parent: ?*Scope,
+    position: Token,
+    package: ?*Package,
+    name: []const u8,
+    id: []const u8,
 
-    pub const Base = struct {
-        parent: *Scope,
-        position: Token,
-        pkg: *Package,
-        name: []const u8,
-        node: *Node,
-        order: usize,
-    };
+    formatFn: fn (
+        self: *Object,
+        comptime fmt: []const u8,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void,
+
+    order: usize,
+    color: Color,
+
+    sameIdFn: fn (self: *Object, pkg: *Package, name: []const u8) bool,
+
+    /// The start position for the scope that conains this object.
+    scope_position: Token,
 
     pub const Color = struct {
         White,
@@ -34,6 +38,20 @@ pub const Object = struct {
     };
 
     pub const Map = std.AutoHashMap([]const u8, *Object);
+
+    pub fn format(
+        self: *Object,
+        comptime fmt: []const u8,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void {
+        return self.formatFn(self, fmt, context, Errors, output);
+    }
+
+    fn sameIdFn(self: *Object, pkg: *Package, name: []const u8) bool {
+        return self.sameIdFn(self, pkg, name);
+    }
 };
 
 pub const Scope = struct {
