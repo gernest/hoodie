@@ -11,15 +11,38 @@ const warn = std.debug.warn;
 const ArrayList = std.ArrayList;
 const Dump = @import("json/json.zig").Dump;
 const testing = std.testing;
-const Declaration = struct {
+pub const Declaration = struct {
     label: []const u8,
     typ: Type,
     start: usize,
     end: usize,
     is_public: bool,
+    node: *ast.Node,
     children: ArrayList(*Declaration),
 
     const List = ArrayList(*Declaration);
+
+    pub const Iterator = struct {
+        at: usize,
+        ls: []*Declaration,
+
+        pub fn init(ls: *List) Iterator {
+            return Iterator{ .at = 0, .ls = ls.toSlice() };
+        }
+
+        pub fn next(self: *Iterator) ?*Declaration {
+            if (self.at >= self.ls.len) return null;
+            var d = self.ls[self.at];
+            self.at += 1;
+            return d;
+        }
+
+        pub fn peek(self: *Iterator) ?*Declaration {
+            if (self.at >= self.ls.len) return null;
+            var d = self.ls[self.at];
+            return d;
+        }
+    };
 
     const Type = enum {
         Import,
@@ -73,6 +96,17 @@ const Declaration = struct {
             unreachable;
         }
     };
+
+    pub fn less(self: *Declaration, b: *Declaration) bool {
+        if (self.typ == b.typ) {
+            return mem.compare(u8, self.label, b.label) == .LessThan;
+        }
+        return @enumToInt(self.typ) < @enumToInt(b.typ);
+    }
+
+    pub fn sortList(ls: *const List) void {
+        std.sort.sort(*Declaration, ls.toSlice(), less);
+    }
 
     fn encode(self: *Declaration, a: *Allocator) anyerror!json.Value {
         var m = json.ObjectMap.init(a);
@@ -136,7 +170,6 @@ fn collect(
             const var_decl = @fieldParentPtr(ast.Node.VarDecl, "base", decl);
             const decl_name = tree.tokenSlice(var_decl.name_token);
             const mut = tree.tokenSlice(var_decl.mut_token);
-            warn("mutable {}\n", mut);
             if (var_decl.init_node) |init_node| {
                 switch (init_node.id) {
                     .BuiltinCall => {
@@ -149,6 +182,7 @@ fn collect(
                                 .end = last_token.end,
                                 .typ = Declaration.Type.Import,
                                 .label = decl_name,
+                                .node = decl,
                                 .is_public = var_decl.visib_token != null,
                                 .children = Declaration.List.init(ls.allocator),
                             };
@@ -166,6 +200,7 @@ fn collect(
                                 .end = last_token.end,
                                 .typ = kind,
                                 .label = decl_name,
+                                .node = decl,
                                 .is_public = var_decl.visib_token != null,
                                 .children = Declaration.List.init(ls.allocator),
                             };
@@ -186,6 +221,7 @@ fn collect(
                                             .end = field_last_token.end,
                                             .typ = Declaration.Type.Field,
                                             .label = field_name,
+                                            .node = field,
                                             .is_public = field_decl.visib_token != null,
                                             .children = Declaration.List.init(ls.allocator),
                                         };
@@ -201,6 +237,7 @@ fn collect(
                                                 .end = field_last_token.end,
                                                 .typ = Declaration.Type.Fn,
                                                 .label = fn_name,
+                                                .node = field,
                                                 .is_public = fn_decl.visib_token != null,
                                                 .children = Declaration.List.init(ls.allocator),
                                             };
@@ -218,6 +255,7 @@ fn collect(
                                                 tree.tokenSlice(field_decl.mut_token),
                                             ),
                                             .label = field_name,
+                                            .node = field,
                                             .is_public = field_decl.visib_token != null,
                                             .children = Declaration.List.init(ls.allocator),
                                         };
@@ -238,6 +276,7 @@ fn collect(
                             .end = last_token.end,
                             .typ = Declaration.Type.mutable(mut),
                             .label = decl_name,
+                            .node = decl,
                             .is_public = var_decl.visib_token != null,
                             .children = Declaration.List.init(ls.allocator),
                         };
@@ -256,6 +295,7 @@ fn collect(
                 .end = last_token.end,
                 .typ = Declaration.Type.Test,
                 .label = unquote(test_name),
+                .node = decl,
                 .is_public = false,
                 .children = Declaration.List.init(ls.allocator),
             };
@@ -271,6 +311,7 @@ fn collect(
                     .end = last_token.end,
                     .typ = Declaration.Type.Fn,
                     .label = fn_name,
+                    .node = decl,
                     .is_public = fn_decl.visib_token != null,
                     .children = Declaration.List.init(ls.allocator),
                 };

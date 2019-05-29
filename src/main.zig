@@ -9,7 +9,7 @@ const heap = std.heap;
 const builtin = @import("builtin");
 
 const outline = @import("outline.zig").outline;
-const format = @import("fmt.zig").format;
+const format = @import("fmt.zig");
 const lsp = @import("lsp.zig").run;
 const max_src_size = 2 * 1024 * 1024 * 1024; // 2 GiB
 
@@ -76,7 +76,9 @@ pub fn main() anyerror!void {
             }
             return;
         } else if (mem.eql(u8, param, "fmt")) {
-            return format(allocator, stdout);
+            return format.format(allocator, stdout);
+        } else if (mem.eql(u8, param, "fmt-file")) {
+            return format.formatFile(allocator, (try iter.next()).?, stdout);
         } else if (mem.eql(u8, param, "lsp")) {
             try lsp(allocator, stdin, stdout);
         }
