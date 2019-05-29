@@ -165,7 +165,7 @@ pub const Package = struct {
                                 if (builtin_decl.iterate(0)) |param| {
                                     const param_decl = @fieldParentPtr(ast.Node.StringLiteral, "base", param);
                                     var param_name = tree.tokenSlice(param_decl.token);
-                                    var pkg = self.ctx.?.allocator.create(Package);
+                                    var pkg = self.ctx.?.arena().create(Package);
                                     param_name = mem.trim(u8, param_name, "\"");
                                     if (self.ctx.?.seen.get(parm)) |kv| {}
                                     pkg.* = Package.initName(param_name);
