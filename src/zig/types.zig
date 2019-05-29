@@ -119,11 +119,18 @@ pub const Package = struct {
         }
     }
 
-    fn importNode(self: *Package, tree: *Tree, decl: *Node) anyerror!void {
+    fn loadPackageLevelNode(self: *Package, tree: *Tree, decl: *Node) anyerror!void {
+        // if context is not set yet there is no need for further processing of
+        // this package.
+        //
+        //THis implies we don't want to load the package at the moment.
+        if (self.ctx == null) return;
+
         switch (decl.id) {
-            ast.Node.Id.VarDecl => {
+            .VarDecl => {
                 const var_decl = @fieldParentPtr(ast.Node.VarDecl, "base", decl);
                 const decl_name = tree.tokenSlice(var_decl.name_token);
+                if (var_decl.visib_token == null) return;
                 if (var_decl.init_node) |node| {
                     switch (node.id) {
                         ast.Node.Id.BuiltinCall => {
@@ -142,11 +149,9 @@ pub const Package = struct {
                     }
                 }
             },
-            ast.Node.Id.FnProto => {
-                // TODO: check for imports inside function bodies;
-            },
-            ast.Node.Id.TestDecl => {
-                // TODO: check for imports inside tests functions.
+            .FnProto => {
+                const fn_decl = @fieldParentPtr(ast.Node.FnProto, "base", decl);
+                if (fn_decl.visib_token == null) return;
             },
             else => {},
         }
