@@ -131,14 +131,14 @@ fn collect(
     const first_token = tree.tokens.at(first_token_ndex);
     const last_token = tree.tokens.at(last_token_index);
     switch (decl.id) {
-        ast.Node.Id.VarDecl => {
+        .VarDecl => {
             const var_decl = @fieldParentPtr(ast.Node.VarDecl, "base", decl);
             const decl_name = tree.tokenSlice(var_decl.name_token);
             const mut = tree.tokenSlice(var_decl.mut_token);
             warn("mutable {}\n", mut);
             if (var_decl.init_node) |init_node| {
                 switch (init_node.id) {
-                    ast.Node.Id.BuiltinCall => {
+                    .BuiltinCall => {
                         var builtn_call = @fieldParentPtr(ast.Node.BuiltinCall, "base", init_node);
                         const fn_name = tree.tokenSlice(builtn_call.builtin_token);
                         if (mem.eql(u8, fn_name, "@import")) {
@@ -154,7 +154,7 @@ fn collect(
                             try ls.append(decl_ptr);
                         }
                     },
-                    ast.Node.Id.ContainerDecl => {
+                    .ContainerDecl => {
                         const container_decl = @fieldParentPtr(ast.Node.ContainerDecl, "base", init_node);
                         const container_kind = tree.tokenSlice(container_decl.kind_token);
                         const typ = Declaration.Type.fromString(container_kind);
@@ -245,7 +245,7 @@ fn collect(
                 }
             }
         },
-        ast.Node.Id.TestDecl => {
+        .TestDecl => {
             const test_decl = @fieldParentPtr(ast.Node.TestDecl, "base", decl);
             const name_decl = @fieldParentPtr(ast.Node.StringLiteral, "base", test_decl.name);
             const test_name = tree.tokenSlice(name_decl.token);
@@ -260,7 +260,7 @@ fn collect(
             };
             try ls.append(decl_ptr);
         },
-        ast.Node.Id.FnProto => {
+        .FnProto => {
             const fn_decl = @fieldParentPtr(ast.Node.FnProto, "base", decl);
             if (fn_decl.name_token) |idx| {
                 const fn_name = tree.tokenSlice(idx);
