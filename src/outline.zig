@@ -100,25 +100,26 @@ const Declaration = struct {
     }
 };
 
+/// outlineDecls collects top level declarations and returns them as a list. The
+/// order is as they appear in source file.
+pub fn outlineDecls(a: *Allocator, tree: *ast.Tree) anyerror!Declaration.List {
+    var ls = Declaration.List.init(a);
+    var it = tree.root_node.decls.iterator(0);
+    while (true) {
+        var decl = (it.next() orelse break).*;
+        try collect(tree, &ls, decl);
+    }
+    return ls;
+}
+
 pub fn outline(a: *Allocator, src: []const u8, stream: var) anyerror!void {
     var tree = try parse(a, src);
     defer tree.deinit();
     var arena = std.heap.ArenaAllocator.init(a);
     defer arena.deinit();
-    var ls = Declaration.List.init(&arena.allocator);
+    var ls = &try outlineDecls(&arena.allocator, tree);
     defer ls.deinit();
-
-    // tree.root_node.base.dump(0);
-    var it = tree.root_node.decls.iterator(0);
-    while (true) {
-        var decl = (it.next() orelse break).*;
-        try collect(
-            tree,
-            &ls,
-            decl,
-        );
-    }
-    try render(a, &ls, stream);
+    try render(a, ls, stream);
 }
 
 fn collect(
