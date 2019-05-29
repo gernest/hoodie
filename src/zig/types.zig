@@ -26,7 +26,13 @@ pub const Object = struct {
         node: *Node,
         order: usize,
     };
-    pub const Color = struct {};
+
+    pub const Color = struct {
+        White,
+        Black,
+        Grey,
+    };
+
     pub const Map = std.AutoHashMap([]const u8, *Object);
 };
 
