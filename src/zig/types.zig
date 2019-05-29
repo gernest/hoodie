@@ -123,14 +123,14 @@ pub const Package = struct {
         if (m.get(name)) |kv| {
             return kv.value;
         }
-        var pkg = try ctx.allocator.create(Package);
+        var pkg = try ctx.arena().create(Package);
         _ = try m.put(name, pkg);
         pkg.name = name;
         pkg.ctx = ctx;
         const contents = try readPackageFile(ctx.allocator, name);
         errdefer ctx.allocator.free(contents);
         defer ctx.allocator.free(contents);
-        pkg.tree = try parse(ctx.allocator, contents);
+        pkg.tree = try parse(ctx.arena(), contents);
         try pkg.import();
         return pkg;
     }
