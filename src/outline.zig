@@ -1,16 +1,20 @@
 // This sorts imports statements and present them nicely at the top level of the
 // source files.
 
+const Dump = @import("json/json.zig").Dump;
+
 const std = @import("std");
-const mem = std.mem;
-const json = std.json;
+
 const Allocator = mem.Allocator;
+const ArrayList = std.ArrayList;
+const json = std.json;
+const mem = std.mem;
+const testing = std.testing;
+
 const ast = std.zig.ast;
 const parse = std.zig.parse;
 const warn = std.debug.warn;
-const ArrayList = std.ArrayList;
-const Dump = @import("json/json.zig").Dump;
-const testing = std.testing;
+
 pub const Declaration = struct {
     label: []const u8,
     typ: Type,
@@ -46,6 +50,7 @@ pub const Declaration = struct {
 
     const Type = enum {
         Import,
+        TopAssign, //like import but just struct assignment
         Const,
         Var,
         Struct,
@@ -60,6 +65,7 @@ pub const Declaration = struct {
             return json.Value{
                 .String = switch (self) {
                     .Import => "import",
+                    .TopAssign => "topAssign",
                     .Const => "const",
                     .Var => "var",
                     .Struct => "struct",
@@ -98,7 +104,7 @@ pub const Declaration = struct {
     };
 
     pub fn less(self: *Declaration, b: *Declaration) bool {
-        if (self.typ == .Import) {
+        if (@enumToInt(self.typ) <= @enumToInt(Type.TopAssign)) {
             if (self.typ == b.typ) {
                 return mem.compare(u8, self.label, b.label) == .LessThan;
             }
@@ -270,6 +276,83 @@ fn collect(
                                 }
                             }
                             try ls.append(decl_ptr);
+                        }
+                    },
+                    .InfixOp => {
+                        const infix_decl = @fieldParentPtr(ast.Node.InfixOp, "base", init_node);
+                        switch (infix_decl.op) {
+                            .Period => {
+                                switch (infix_decl.lhs.id) {
+                                    .BuiltinCall => {
+                                        var builtn_call = @fieldParentPtr(ast.Node.BuiltinCall, "base", infix_decl.lhs);
+                                        const fn_name = tree.tokenSlice(builtn_call.builtin_token);
+                                        if (mem.eql(u8, fn_name, "@import")) {
+                                            var decl_ptr = try ls.allocator.create(Declaration);
+                                            decl_ptr.* = Declaration{
+                                                .start = first_token.start,
+                                                .end = last_token.end,
+                                                .typ = Declaration.Type.Import,
+                                                .label = decl_name,
+                                                .node = decl,
+                                                .is_public = var_decl.visib_token != null,
+                                                .children = Declaration.List.init(ls.allocator),
+                                            };
+                                            try ls.append(decl_ptr);
+                                        } else {
+                                            var decl_ptr = try ls.allocator.create(Declaration);
+                                            decl_ptr.* = Declaration{
+                                                .start = first_token.start,
+                                                .end = last_token.end,
+                                                .typ = Declaration.Type.mutable(mut),
+                                                .label = decl_name,
+                                                .node = decl,
+                                                .is_public = var_decl.visib_token != null,
+                                                .children = Declaration.List.init(ls.allocator),
+                                            };
+                                            try ls.append(decl_ptr);
+                                        }
+                                    },
+                                    .Identifier => {
+                                        var decl_ptr = try ls.allocator.create(Declaration);
+                                        decl_ptr.* = Declaration{
+                                            .start = first_token.start,
+                                            .end = last_token.end,
+                                            .typ = .TopAssign,
+                                            .label = decl_name,
+                                            .node = decl,
+                                            .is_public = var_decl.visib_token != null,
+                                            .children = Declaration.List.init(ls.allocator),
+                                        };
+                                        try ls.append(decl_ptr);
+                                    },
+                                    else => {
+                                        var decl_ptr = try ls.allocator.create(Declaration);
+                                        decl_ptr.* = Declaration{
+                                            .start = first_token.start,
+                                            .end = last_token.end,
+                                            .typ = Declaration.Type.mutable(mut),
+                                            .label = decl_name,
+                                            .node = decl,
+                                            .is_public = var_decl.visib_token != null,
+                                            .children = Declaration.List.init(ls.allocator),
+                                        };
+                                        try ls.append(decl_ptr);
+                                    },
+                                }
+                            },
+                            else => {
+                                var decl_ptr = try ls.allocator.create(Declaration);
+                                decl_ptr.* = Declaration{
+                                    .start = first_token.start,
+                                    .end = last_token.end,
+                                    .typ = Declaration.Type.mutable(mut),
+                                    .label = decl_name,
+                                    .node = decl,
+                                    .is_public = var_decl.visib_token != null,
+                                    .children = Declaration.List.init(ls.allocator),
+                                };
+                                try ls.append(decl_ptr);
+                            },
                         }
                     },
                     else => {
