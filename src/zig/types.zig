@@ -53,10 +53,16 @@ pub const Object = struct {
     fn sameIdFn(self: *Object, pkg: *Package, name: []const u8) bool {
         return self.sameIdFn(self, pkg, name);
     }
+
+    pub const Var = struct {
+        object: Object,
+        bound: ?bool,
+    };
 };
 
 pub const Type = struct {
     underlying: ?*Type,
+    id: Id,
 
     formatFn: fn (
         self: *Type,
@@ -66,9 +72,37 @@ pub const Type = struct {
         output: fn (@typeOf(context), []const u8) Errors!void,
     ) Errors!void,
 
+    pub const Id = struct {
+        Basic,
+        Array,
+        Slice,
+        Container,
+        Pointer,
+        Signature,
+        Mao,
+        Named,
+    };
+
     pub const Basic = struct {
         id: builtin.TypeId,
         name: []const u8,
+    };
+
+    pub const Array = struct {
+        length: usize,
+        element: *Type,
+    };
+
+    pub const Slice = struct {
+        element: *Type,
+    };
+
+    pub const Container = struct {
+        members: ArrayList(*Object.Var),
+    };
+
+    pub const Pointer = struct {
+        base_type: *Type,
     };
 
     pub fn format(
@@ -81,6 +115,7 @@ pub const Type = struct {
         return self.formatFn(self, fmt, context, Errors, output);
     }
 };
+
 pub const Scope = struct {
     parent: *Scope,
     children: List,
