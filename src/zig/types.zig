@@ -26,7 +26,6 @@ pub const Object = struct {
         node: *Node,
         order: usize,
     };
-
     pub const Color = struct {};
     pub const Map = std.AutoHashMap([]const u8, *Object);
 };
@@ -34,12 +33,29 @@ pub const Object = struct {
 pub const Scope = struct {
     parent: *Scope,
     children: List,
-    elements: Map,
-    token: Token,
-
-    // set to true if this is a function scope.
+    elements: Object.Map,
+    token: ?Token,
     is_func: bool,
+
     pub const List = std.ArrayList(*Scope);
+
+    fn create(a: *Allocator, parent: ?*Scope) !*Scope {
+        var s = try a.create(Scope);
+        s.* = Scope{
+            .parent = parent,
+            .children = List.init(a),
+            .elements = Map.init(a),
+            .token = null,
+            .is_func = false,
+        };
+        return s;
+    }
+    fn addSymbol(
+        self: *Scope,
+        parent: ?*Scope,
+        name: []const u8,
+        node: *Node,
+    ) !void {}
 };
 
 /// Package defines a repesentation of a zig source file.
@@ -65,6 +81,10 @@ pub const Package = struct {
 
     pub const Context = struct {
         allocator: *Allocator,
+
+        // use this for creating objects that will live for the duration of the
+        // context.All objects will be freed when the context is destored.
+        arena_allocator: std.heap.ArenaAllocator,
         seen: SeenMap,
 
         pub const SeenMap = std.AutoHashMap([]const u8, *Package);
@@ -72,6 +92,7 @@ pub const Package = struct {
         fn init(a: *Allocator) !Context {
             var ctx = Context{
                 .allocator = a,
+                .arena_allocator = std.heap.ArenaAllocator.init(a),
                 .seen = SeenMap.init(a),
             };
             _ = try (&ctx.seen).put("std", &standard_package);
@@ -79,8 +100,13 @@ pub const Package = struct {
             return ctx;
         }
 
+        fn arena(self: *Context) *Allocator {
+            return &self.arena.allocator;
+        }
+
         fn deinit(self: *Context) void {
             self.seen.deinit();
+            self.arena_allocator.deinit();
         }
     };
 
@@ -119,7 +145,7 @@ pub const Package = struct {
         }
     }
 
-    fn loadPackageLevelNode(self: *Package, tree: *Tree, decl: *Node) anyerror!void {
+    fn importSybols(self: *Package, tree: *Tree, decl: *Node, lazy: bool) anyerror!void {
         // if context is not set yet there is no need for further processing of
         // this package.
         //
@@ -130,7 +156,6 @@ pub const Package = struct {
             .VarDecl => {
                 const var_decl = @fieldParentPtr(ast.Node.VarDecl, "base", decl);
                 const decl_name = tree.tokenSlice(var_decl.name_token);
-                if (var_decl.visib_token == null) return;
                 if (var_decl.init_node) |node| {
                     switch (node.id) {
                         ast.Node.Id.BuiltinCall => {
@@ -140,7 +165,10 @@ pub const Package = struct {
                                 if (builtin_decl.iterate(0)) |param| {
                                     const param_decl = @fieldParentPtr(ast.Node.StringLiteral, "base", param);
                                     var param_name = tree.tokenSlice(param_decl.token);
+                                    var pkg = self.ctx.?.allocator.create(Package);
                                     param_name = mem.trim(u8, param_name, "\"");
+                                    if (self.ctx.?.seen.get(parm)) |kv| {}
+                                    pkg.* = Package.initName(param_name);
                                     warn("{}\n", param_name);
                                 }
                             }
@@ -151,7 +179,6 @@ pub const Package = struct {
             },
             .FnProto => {
                 const fn_decl = @fieldParentPtr(ast.Node.FnProto, "base", decl);
-                if (fn_decl.visib_token == null) return;
             },
             else => {},
         }
@@ -175,7 +202,6 @@ pub const Package = struct {
         const resolved = try std.os.path.resolve(a, ls.toSlice());
         errdefer a.free(resolved);
         defer a.free(resolved);
-        warn("\n{}\n", resolved);
         return std.io.readFileAlloc(a, resolved);
     }
 };
