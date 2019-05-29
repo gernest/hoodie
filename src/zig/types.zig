@@ -16,14 +16,6 @@ pub const Object = struct {
     name: []const u8,
     id: []const u8,
 
-    formatFn: fn (
-        self: *Object,
-        comptime fmt: []const u8,
-        context: var,
-        comptime Errors: type,
-        output: fn (@typeOf(context), []const u8) Errors!void,
-    ) Errors!void,
-
     order: usize,
     color: Color,
 
@@ -32,7 +24,7 @@ pub const Object = struct {
     /// The start position for the scope that conains this object.
     scope_position: Token,
 
-    pub const Color = struct {
+    pub const Color = enum {
         White,
         Black,
         Grey,
@@ -61,18 +53,9 @@ pub const Object = struct {
 };
 
 pub const Type = struct {
-    underlying: ?*Type,
     id: Id,
 
-    formatFn: fn (
-        self: *Type,
-        comptime fmt: []const u8,
-        context: var,
-        comptime Errors: type,
-        output: fn (@typeOf(context), []const u8) Errors!void,
-    ) Errors!void,
-
-    pub const Id = struct {
+    pub const Id = enum {
         Basic,
         Array,
         Slice,
@@ -84,6 +67,7 @@ pub const Type = struct {
     };
 
     pub const Basic = struct {
+        base: Type,
         id: builtin.TypeId,
         name: []const u8,
     };
@@ -98,7 +82,7 @@ pub const Type = struct {
     };
 
     pub const Container = struct {
-        members: ArrayList(*Object.Var),
+        members: std.ArrayList(*Object.Var),
     };
 
     pub const Pointer = struct {
@@ -106,13 +90,29 @@ pub const Type = struct {
     };
 
     pub fn format(
-        self: *Type,
+        self: *const Type,
         comptime fmt: []const u8,
         context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,
     ) Errors!void {
-        return self.formatFn(self, fmt, context, Errors, output);
+        return self.defaultFormat(fmt, context, Errors, output);
+    }
+
+    pub fn defaultFormat(
+        self: *const Type,
+        comptime fmt: []const u8,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void {
+        switch (self.id) {
+            .Basic => {
+                const basic_decl = @fieldParentPtr(Basic, "base", self);
+                try output(context, basic_decl.name);
+            },
+            else => unreachable,
+        }
     }
 };
 
@@ -292,10 +292,14 @@ pub const Package = struct {
     }
 };
 
-test "package" {
-    var a = std.debug.global_allocator;
-    var ctx = &try Package.Context.init(a);
-
-    var pkg = try Package.init(ctx, "../main.zig");
-    defer pkg.deinit();
+test "Type.format" {
+    const basic = Type.Basic{
+        .base = Type{
+            .id = .Basic,
+        },
+        .name = "basic_number",
+        .id = .Int,
+    };
+    var typ = &basic.base;
+    warn("{}\n", typ);
 }
