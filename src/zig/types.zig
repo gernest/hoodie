@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const Token = std.zig.Token;
 const ast = std.zig.ast;
 const mem = std.mem;
@@ -54,6 +55,32 @@ pub const Object = struct {
     }
 };
 
+pub const Type = struct {
+    underlying: ?*Type,
+
+    formatFn: fn (
+        self: *Type,
+        comptime fmt: []const u8,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void,
+
+    pub const Basic = struct {
+        id: builtin.TypeId,
+        name: []const u8,
+    };
+
+    pub fn format(
+        self: *Type,
+        comptime fmt: []const u8,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void {
+        return self.formatFn(self, fmt, context, Errors, output);
+    }
+};
 pub const Scope = struct {
     parent: *Scope,
     children: List,
