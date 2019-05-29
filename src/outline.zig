@@ -98,10 +98,13 @@ pub const Declaration = struct {
     };
 
     pub fn less(self: *Declaration, b: *Declaration) bool {
-        if (self.typ == b.typ) {
-            return mem.compare(u8, self.label, b.label) == .LessThan;
+        if (self.typ == .Import) {
+            if (self.typ == b.typ) {
+                return mem.compare(u8, self.label, b.label) == .LessThan;
+            }
+            return @enumToInt(self.typ) < @enumToInt(b.typ);
         }
-        return @enumToInt(self.typ) < @enumToInt(b.typ);
+        return false;
     }
 
     pub fn sortList(ls: *const List) void {
