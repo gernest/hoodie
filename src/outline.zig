@@ -15,14 +15,41 @@ const parse = std.zig.parse;
 const testing = std.testing;
 const warn = std.debug.warn;
 
+/// Stores information about a symbol in a zig source file. This covers
+/// declarations at the top level scope of the source file. Since a source file
+/// is just a struct container, this can therefore represent top level members of
+/// the main struct container(or file in this case).
 pub const Declaration = struct {
+    /// The string representation of the declared symbol.This is the identifier
+    /// name. For instance
+    /// ```
+    /// const name="gernest";
+    /// ```
+    /// Here label will be "name"
     label: []const u8,
+
+    /// descripes the kind of the declarion.
     typ: Type,
+
+    /// The position of the first token for this declaration is.
     start: usize,
+
+    /// The position of the last token for this declaration;
     end: usize,
+
+    /// True when the declaration is exported. This means declaration begins with
+    /// keyword pub.
     is_public: bool,
+
+    /// true if the declaration starts with var and false when the declation
+    /// starts with const.
     is_mutable: bool,
+
+    /// The actual node in the ast for this declaration.
     node: *ast.Node,
+
+    /// For container nodes this is the collection of symbols declared within
+    /// the container. Containers can be struct,enum or union.
     children: ArrayList(*Declaration),
 
     const List = ArrayList(*Declaration);
