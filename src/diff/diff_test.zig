@@ -39,8 +39,24 @@ test "diff" {
             .ops = []const diff.Op{},
         },
         TestCase{
-            .a = "A\nB\nC\n",
-            .b = "A\nB\nC\n",
+            .a = "A\n",
+            .b = "B\n",
+            .ops = []const diff.Op{
+                diff.Op{
+                    .kind = .Delete,
+                    .content = null,
+                    .i_1 = 0,
+                    .i_2 = 1,
+                    .j_2 = 0,
+                },
+                diff.Op{
+                    .kind = .Insert,
+                    .content = []const []const u8{"B\n"},
+                    .i_1 = 1,
+                    .i_2 = 1,
+                    .j_2 = 0,
+                },
+            },
         },
     };
 }

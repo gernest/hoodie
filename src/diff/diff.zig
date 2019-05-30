@@ -25,10 +25,10 @@ pub const Diff = struct {
 
 pub const Op = struct {
     kind: Kind,
-    content: []const u8,
+    content: ?[]const []const u8,
     i_1: usize,
     i_2: usize,
-    j2: usize,
+    j_2: usize,
 
     pub const Kind = enum {
         Delete,
