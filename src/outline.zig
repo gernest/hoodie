@@ -7,12 +7,12 @@ const std = @import("std");
 
 const Allocator = mem.Allocator;
 const ArrayList = std.ArrayList;
-const json = std.json;
-const mem = std.mem;
-const testing = std.testing;
 
 const ast = std.zig.ast;
+const json = std.json;
+const mem = std.mem;
 const parse = std.zig.parse;
+const testing = std.testing;
 const warn = std.debug.warn;
 
 pub const Declaration = struct {
@@ -282,9 +282,10 @@ fn collect(
                         const infix_decl = @fieldParentPtr(ast.Node.InfixOp, "base", init_node);
                         switch (infix_decl.op) {
                             .Period => {
-                                switch (infix_decl.lhs.id) {
+                                var inner = innerMostInfix(infix_decl.lhs);
+                                switch (inner.id) {
                                     .BuiltinCall => {
-                                        var builtn_call = @fieldParentPtr(ast.Node.BuiltinCall, "base", infix_decl.lhs);
+                                        var builtn_call = @fieldParentPtr(ast.Node.BuiltinCall, "base", inner);
                                         const fn_name = tree.tokenSlice(builtn_call.builtin_token);
                                         if (mem.eql(u8, fn_name, "@import")) {
                                             var decl_ptr = try ls.allocator.create(Declaration);
@@ -405,6 +406,18 @@ fn collect(
             }
         },
         else => {},
+    }
+}
+
+fn innerMostInfix(node: *ast.Node) *ast.Node {
+    switch (node.id) {
+        .InfixOp => {
+            const infix_decl = @fieldParentPtr(ast.Node.InfixOp, "base", node);
+            return innerMostInfix(infix_decl.lhs);
+        },
+        else => {
+            return node;
+        },
     }
 }
 
