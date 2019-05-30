@@ -1,7 +1,8 @@
 const diff = @import("diff.zig");
-const warn = std.debug.warn;
 const std = @import("std");
+
 const testing = std.testing;
+const warn = std.debug.warn;
 
 const TestCase = struct {
     a: []const u8,
