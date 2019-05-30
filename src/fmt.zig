@@ -1,8 +1,10 @@
-const std = @import("std");
-const io = std.io;
-const os = std.os;
-const mem = std.mem;
 const render = @import("imports.zig").render;
+const std = @import("std");
+
+const io = std.io;
+const mem = std.mem;
+const os = std.os;
+
 const max_src_size = 2 * 1024 * 1024 * 1024; // 2 GiB
 
 pub fn format(allocator: *mem.Allocator, stdout: var) !void {
@@ -29,5 +31,7 @@ pub fn formatFile(allocator: *mem.Allocator, file_path: []const u8, stdout: var)
         os.exit(1);
     };
     defer tree.deinit();
-    _ = try render(allocator, stdout, tree);
+    const baf = try io.BufferedAtomicFile.create(allocator, file_path);
+    defer baf.destroy();
+    _ = try render(allocator, baf.stream(), tree);
 }
