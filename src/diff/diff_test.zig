@@ -7,6 +7,7 @@ const warn = std.debug.warn;
 const TestCase = struct {
     a: []const u8,
     b: []const u8,
+    ops: []const diff.Op,
 };
 
 test "split lines" {
@@ -27,4 +28,19 @@ test "split lines" {
     for (lines.toSlice()) |v, i| {
         testing.expectEqualSlices(u8, v, want[i]);
     }
+}
+
+test "diff" {
+    var a = std.debug.global_allocator;
+    const cases = []const TestCase{
+        TestCase{
+            .a = "A\nB\nC\n",
+            .b = "A\nB\nC\n",
+            .ops = []const diff.Op{},
+        },
+        TestCase{
+            .a = "A\nB\nC\n",
+            .b = "A\nB\nC\n",
+        },
+    };
 }
