@@ -21,6 +21,7 @@ pub const Declaration = struct {
     start: usize,
     end: usize,
     is_public: bool,
+    is_mutable: bool,
     node: *ast.Node,
     children: ArrayList(*Declaration),
 
@@ -122,7 +123,15 @@ pub const Declaration = struct {
         _ = try m.put("label", json.Value{
             .String = self.label,
         });
-        _ = try m.put("type", try self.typ.encode(a));
+        if (self.typ == .TopAssign) {
+            if (self.is_mutable) {
+                _ = try m.put("type", json.Value{ .String = "var" });
+            } else {
+                _ = try m.put("type", json.Value{ .String = "const" });
+            }
+        } else {
+            _ = try m.put("type", try self.typ.encode(a));
+        }
         _ = try m.put("start", json.Value{
             .Integer = @intCast(i64, self.start),
         });
@@ -179,6 +188,7 @@ fn collect(
             const var_decl = @fieldParentPtr(ast.Node.VarDecl, "base", decl);
             const decl_name = tree.tokenSlice(var_decl.name_token);
             const mut = tree.tokenSlice(var_decl.mut_token);
+            const is_mutable = mem.eql(u8, mut, "const");
             if (var_decl.init_node) |init_node| {
                 switch (init_node.id) {
                     .BuiltinCall => {
@@ -193,6 +203,7 @@ fn collect(
                                 .label = decl_name,
                                 .node = decl,
                                 .is_public = var_decl.visib_token != null,
+                                .is_mutable = is_mutable,
                                 .children = Declaration.List.init(ls.allocator),
                             };
                             try ls.append(decl_ptr);
@@ -211,6 +222,7 @@ fn collect(
                                 .label = decl_name,
                                 .node = decl,
                                 .is_public = var_decl.visib_token != null,
+                                .is_mutable = is_mutable,
                                 .children = Declaration.List.init(ls.allocator),
                             };
                             var it = container_decl.fields_and_decls.iterator(0);
@@ -232,6 +244,7 @@ fn collect(
                                             .label = field_name,
                                             .node = field,
                                             .is_public = field_decl.visib_token != null,
+                                            .is_mutable = false,
                                             .children = Declaration.List.init(ls.allocator),
                                         };
                                         try (&decl_ptr.children).append(field_ptr);
@@ -248,6 +261,7 @@ fn collect(
                                                 .label = fn_name,
                                                 .node = field,
                                                 .is_public = fn_decl.visib_token != null,
+                                                .is_mutable = false,
                                                 .children = Declaration.List.init(ls.allocator),
                                             };
                                             try (&decl_ptr.children).append(fn_decl_ptr);
@@ -256,6 +270,8 @@ fn collect(
                                     .VarDecl => {
                                         const field_decl = @fieldParentPtr(ast.Node.VarDecl, "base", field);
                                         const field_name = tree.tokenSlice(field_decl.name_token);
+                                        const f_mut = tree.tokenSlice(field_decl.mut_token);
+                                        const f_is_mutable = mem.eql(u8, f_mut, "var");
                                         var field_ptr = try ls.allocator.create(Declaration);
                                         field_ptr.* = Declaration{
                                             .start = field_first_token.start,
@@ -266,6 +282,7 @@ fn collect(
                                             .label = field_name,
                                             .node = field,
                                             .is_public = field_decl.visib_token != null,
+                                            .is_mutable = f_is_mutable,
                                             .children = Declaration.List.init(ls.allocator),
                                         };
                                         try (&decl_ptr.children).append(field_ptr);
@@ -296,6 +313,7 @@ fn collect(
                                                 .label = decl_name,
                                                 .node = decl,
                                                 .is_public = var_decl.visib_token != null,
+                                                .is_mutable = is_mutable,
                                                 .children = Declaration.List.init(ls.allocator),
                                             };
                                             try ls.append(decl_ptr);
@@ -308,6 +326,7 @@ fn collect(
                                                 .label = decl_name,
                                                 .node = decl,
                                                 .is_public = var_decl.visib_token != null,
+                                                .is_mutable = is_mutable,
                                                 .children = Declaration.List.init(ls.allocator),
                                             };
                                             try ls.append(decl_ptr);
@@ -322,6 +341,7 @@ fn collect(
                                             .label = decl_name,
                                             .node = decl,
                                             .is_public = var_decl.visib_token != null,
+                                            .is_mutable = is_mutable,
                                             .children = Declaration.List.init(ls.allocator),
                                         };
                                         try ls.append(decl_ptr);
@@ -335,6 +355,7 @@ fn collect(
                                             .label = decl_name,
                                             .node = decl,
                                             .is_public = var_decl.visib_token != null,
+                                            .is_mutable = is_mutable,
                                             .children = Declaration.List.init(ls.allocator),
                                         };
                                         try ls.append(decl_ptr);
@@ -350,6 +371,7 @@ fn collect(
                                     .label = decl_name,
                                     .node = decl,
                                     .is_public = var_decl.visib_token != null,
+                                    .is_mutable = is_mutable,
                                     .children = Declaration.List.init(ls.allocator),
                                 };
                                 try ls.append(decl_ptr);
@@ -365,6 +387,7 @@ fn collect(
                             .label = decl_name,
                             .node = decl,
                             .is_public = var_decl.visib_token != null,
+                            .is_mutable = is_mutable,
                             .children = Declaration.List.init(ls.allocator),
                         };
                         try ls.append(decl_ptr);
@@ -384,6 +407,7 @@ fn collect(
                 .label = unquote(test_name),
                 .node = decl,
                 .is_public = false,
+                .is_mutable = false,
                 .children = Declaration.List.init(ls.allocator),
             };
             try ls.append(decl_ptr);
@@ -400,6 +424,7 @@ fn collect(
                     .label = fn_name,
                     .node = decl,
                     .is_public = fn_decl.visib_token != null,
+                    .is_mutable = false,
                     .children = Declaration.List.init(ls.allocator),
                 };
                 try ls.append(decl_ptr);
