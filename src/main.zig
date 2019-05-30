@@ -1,19 +1,21 @@
-const std = @import("std");
-const debug = std.debug;
-const mem = std.mem;
-const os = std.os;
-const fs = std.fs;
-const process = std.process;
-const io = std.io;
-const heap = std.heap;
 const builtin = @import("builtin");
-
-const outline = @import("outline.zig").outline;
 const format = @import("fmt.zig");
 const lsp = @import("lsp.zig").run;
+
+const outline = @import("outline.zig").outline;
+const std = @import("std");
+
+const debug = std.debug;
+const fs = std.fs;
+const heap = std.heap;
+const io = std.io;
+const mem = std.mem;
+const os = std.os;
+const process = std.process;
+
+/// taken from https://github.com/Hejsil/zig-clap
 const max_src_size = 2 * 1024 * 1024 * 1024; // 2 GiB
 
-// taken from https://github.com/Hejsil/zig-clap
 pub const OsIterator = struct {
     const Error = process.ArgIterator.NextError;
 
