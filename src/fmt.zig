@@ -25,7 +25,7 @@ pub fn format(allocator: *mem.Allocator, stdout: var) !void {
         while (error_it.next()) |parse_error| {
             try parse_error.render(&tree.tokens, stderr);
         }
-        return;
+        os.exit(1);
     }
     _ = try render(allocator, stdout, tree);
 }
@@ -45,7 +45,7 @@ pub fn formatFile(allocator: *mem.Allocator, file_path: []const u8, stdout: var)
         while (error_it.next()) |parse_error| {
             try parse_error.render(&tree.tokens, stderr);
         }
-        return;
+        os.exit(1);
     }
     const baf = try io.BufferedAtomicFile.create(allocator, file_path);
     defer baf.destroy();
