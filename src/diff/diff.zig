@@ -1,7 +1,9 @@
 const std = @import("std");
+
+const Allocator = mem.Allocator;
 const mem = std.mem;
 const warn = std.debug.warn;
-const Allocator = mem.Allocator;
+
 pub const Diff = struct {
     list: OpList,
     arena: std.heap.ArenaAllocator,
