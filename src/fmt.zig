@@ -19,6 +19,14 @@ pub fn format(allocator: *mem.Allocator, stdout: var) !void {
         os.exit(1);
     };
     defer tree.deinit();
+    if (tree.errors.count() > 0) {
+        var stderr = try std.debug.getStderrStream();
+        var error_it = tree.errors.iterator(0);
+        while (error_it.next()) |parse_error| {
+            try parse_error.render(&tree.tokens, stderr);
+        }
+        return;
+    }
     _ = try render(allocator, stdout, tree);
 }
 
@@ -31,7 +39,16 @@ pub fn formatFile(allocator: *mem.Allocator, file_path: []const u8, stdout: var)
         os.exit(1);
     };
     defer tree.deinit();
+    if (tree.errors.count() > 0) {
+        var stderr = try std.debug.getStderrStream();
+        var error_it = tree.errors.iterator(0);
+        while (error_it.next()) |parse_error| {
+            try parse_error.render(&tree.tokens, stderr);
+        }
+        return;
+    }
     const baf = try io.BufferedAtomicFile.create(allocator, file_path);
     defer baf.destroy();
     _ = try render(allocator, baf.stream(), tree);
+    try baf.finish();
 }
