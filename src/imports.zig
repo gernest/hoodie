@@ -1,11 +1,13 @@
-const std = @import("std");
 const builtin = @import("builtin");
-const assert = std.debug.assert;
-const warn = std.debug.warn;
-const mem = std.mem;
-const ast = std.zig.ast;
-const Token = std.zig.Token;
 const outline = @import("outline.zig");
+const std = @import("std");
+
+const Token = std.zig.Token;
+const assert = std.debug.assert;
+const ast = std.zig.ast;
+const mem = std.mem;
+const warn = std.debug.warn;
+
 const indent_delta = 4;
 
 pub const Error = error{
@@ -2086,6 +2088,7 @@ fn nodeCausesSliceOpSpace(base: *ast.Node) bool {
 
 // An OutStream that returns whether the given character has been written to it.
 // The contents are not written to anything.
+
 const FindByteOutStream = struct {
     const Self = FindByteOutStream;
     pub const Error = error{};

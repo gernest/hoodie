@@ -48,7 +48,7 @@ pub const Declaration = struct {
         }
     };
 
-    const Type = enum {
+    pub const Type = enum {
         Import,
         TopAssign, //like import but just struct assignment
         Const,
