@@ -146,27 +146,22 @@ pub const Flag = struct {
         Number,
     };
 
+    pub const Type = union(enum) {
+        None,
+        Short: u8,
+        Long: []const u8,
+    };
+
     pub fn init(name: []const u8, kind: Kind) Flag {
         return Flag{
             .name = name,
             .kind = kind,
         };
     }
-
-    pub const Type = union(enum) {
-        None,
-        Short: u8,
-        Long: []const u8,
-    };
 };
 
 pub const FlagSet = struct {
-    list: List,
     pub const List = std.ArrayList(FlagItem);
-
-    pub fn init(a: *mem.Allocator) FlagSet {
-        return FlagSet{ .list = List.init(a) };
-    }
 
     /// stores the flag and the position where the flag was found. Allows easy
     /// getting the value of the flag from arguments linst.
@@ -174,6 +169,11 @@ pub const FlagSet = struct {
         flag: Flag,
         index: usize,
     };
+    list: List,
+
+    pub fn init(a: *mem.Allocator) FlagSet {
+        return FlagSet{ .list = List.init(a) };
+    }
 
     pub fn addFlag(self: *FlagSet, flag: Flag, index: usize) !void {
         try self.list.append(FlagItem{
@@ -230,9 +230,27 @@ pub const Context = struct {
 };
 
 pub const Args = struct {
+    pub const List = std.ArrayList([]const u8);
+
+    pub const Iterator = struct {
+        args: *Args,
+        position: usize,
+
+        pub fn next(self: *Iterator) ?[]const u8 {
+            if (self.position >= self.args.args.len) return null;
+            const e = self.args.at(self.position);
+            self.position += 1;
+            return e;
+        }
+
+        pub fn peek(self: *Iterator) ?[]const u8 {
+            if (self.position >= self.args.args.len) return null;
+            const e = self.args.at(self.position);
+            return e;
+        }
+    };
     args: List,
     a: *mem.Allocator,
-    pub const List = std.ArrayList([]const u8);
 
     pub fn init(a: *mem.Allocator) Args {
         return Args{
@@ -265,24 +283,6 @@ pub const Args = struct {
         const cp = try mem.dupe(self.a, u8, elem);
         return self.args.append(cp);
     }
-
-    pub const Iterator = struct {
-        args: *Args,
-        position: usize,
-
-        pub fn next(self: *Iterator) ?[]const u8 {
-            if (self.position >= self.args.args.len) return null;
-            const e = self.args.at(self.position);
-            self.position += 1;
-            return e;
-        }
-
-        pub fn peek(self: *Iterator) ?[]const u8 {
-            if (self.position >= self.args.args.len) return null;
-            const e = self.args.at(self.position);
-            return e;
-        }
-    };
 
     pub fn at(self: *Args, index: usize) []const u8 {
         return self.args.toSlice()[index];

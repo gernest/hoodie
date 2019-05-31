@@ -976,14 +976,25 @@ fn renderExpression(
             } else {
                 const new_indent = indent + indent_delta;
                 try renderToken(tree, stream, container_decl.lbrace_token, new_indent, start_col, Space.Newline); // {
+                var field_oudline = outline.outlineFromDeclList(
+                    allocator,
+                    tree,
+                    &container_decl.fields_and_decls,
+                ) catch |err| {
+                    warn("{} \n", err);
+                    std.os.exit(1);
+                };
+                defer field_oudline.deinit();
+                outline.Declaration.sortListStruct(&field_oudline);
 
-                var it = container_decl.fields_and_decls.iterator(0);
+                var it = &outline.Declaration.Iterator.init(&field_oudline);
+                // var it = container_decl.fields_and_decls.iterator(0);
                 while (it.next()) |decl| {
                     try stream.writeByteNTimes(' ', new_indent);
-                    try renderTopLevelDecl(allocator, stream, tree, new_indent, start_col, decl.*);
+                    try renderTopLevelDecl(allocator, stream, tree, new_indent, start_col, decl.node);
 
                     if (it.peek()) |next_decl| {
-                        try renderExtraNewline(tree, stream, start_col, next_decl.*);
+                        try renderExtraNewline(tree, stream, start_col, next_decl.node);
                     }
                 }
 

@@ -19,6 +19,30 @@ const warn = std.debug.warn;
 /// is just a struct container, this can therefore represent top level members of
 /// the main struct container(or file in this case).
 pub const Declaration = struct {
+    const List = ArrayList(*Declaration);
+
+    pub const Iterator = struct {
+        at: usize,
+        ls: []*Declaration,
+
+        pub fn init(ls: *List) Iterator {
+            return Iterator{ .at = 0, .ls = ls.toSlice() };
+        }
+
+        pub fn next(self: *Iterator) ?*Declaration {
+            if (self.at >= self.ls.len) return null;
+            var d = self.ls[self.at];
+            self.at += 1;
+            return d;
+        }
+
+        pub fn peek(self: *Iterator) ?*Declaration {
+            if (self.at >= self.ls.len) return null;
+            var d = self.ls[self.at];
+            return d;
+        }
+    };
+
     /// The string representation of the declared symbol.This is the identifier
     /// name. For instance
     /// ```
@@ -50,30 +74,6 @@ pub const Declaration = struct {
     /// For container nodes this is the collection of symbols declared within
     /// the container. Containers can be struct,enum or union.
     children: ArrayList(*Declaration),
-
-    const List = ArrayList(*Declaration);
-
-    pub const Iterator = struct {
-        at: usize,
-        ls: []*Declaration,
-
-        pub fn init(ls: *List) Iterator {
-            return Iterator{ .at = 0, .ls = ls.toSlice() };
-        }
-
-        pub fn next(self: *Iterator) ?*Declaration {
-            if (self.at >= self.ls.len) return null;
-            var d = self.ls[self.at];
-            self.at += 1;
-            return d;
-        }
-
-        pub fn peek(self: *Iterator) ?*Declaration {
-            if (self.at >= self.ls.len) return null;
-            var d = self.ls[self.at];
-            return d;
-        }
-    };
 
     pub const Type = enum {
         Import,
@@ -140,8 +140,19 @@ pub const Declaration = struct {
         return false;
     }
 
+    pub fn lessStruct(self: *Declaration, b: *Declaration) bool {
+        if (self.typ == b.typ) {
+            return false;
+        }
+        return @enumToInt(self.typ) < @enumToInt(b.typ);
+    }
+
     pub fn sortList(ls: *const List) void {
         std.sort.sort(*Declaration, ls.toSlice(), less);
+    }
+
+    pub fn sortListStruct(ls: *const List) void {
+        std.sort.sort(*Declaration, ls.toSlice(), lessStruct);
     }
 
     fn encode(self: *Declaration, a: *Allocator) anyerror!json.Value {
@@ -183,6 +194,20 @@ pub const Declaration = struct {
 pub fn outlineDecls(a: *Allocator, tree: *ast.Tree) anyerror!Declaration.List {
     var ls = Declaration.List.init(a);
     var it = tree.root_node.decls.iterator(0);
+    while (true) {
+        var decl = (it.next() orelse break).*;
+        try collect(tree, &ls, decl);
+    }
+    return ls;
+}
+
+pub fn outlineFromDeclList(
+    a: *Allocator,
+    tree: *ast.Tree,
+    list: *ast.Node.Root.DeclList,
+) anyerror!Declaration.List {
+    var ls = Declaration.List.init(a);
+    var it = list.iterator(0);
     while (true) {
         var decl = (it.next() orelse break).*;
         try collect(tree, &ls, decl);
@@ -420,6 +445,22 @@ fn collect(
                     },
                 }
             }
+        },
+        .ContainerField => {
+            const var_decl = @fieldParentPtr(ast.Node.ContainerField, "base", decl);
+            const decl_name = tree.tokenSlice(var_decl.name_token);
+            var decl_ptr = try ls.allocator.create(Declaration);
+            decl_ptr.* = Declaration{
+                .start = first_token.start,
+                .end = last_token.end,
+                .typ = .Field,
+                .label = decl_name,
+                .node = decl,
+                .is_public = var_decl.visib_token != null,
+                .is_mutable = false,
+                .children = Declaration.List.init(ls.allocator),
+            };
+            try ls.append(decl_ptr);
         },
         .TestDecl => {
             const test_decl = @fieldParentPtr(ast.Node.TestDecl, "base", decl);
