@@ -1,13 +1,14 @@
-const std = @import("std");
 const builtin = @import("builtin");
+const std = @import("std");
+
+const Allocator = std.mem.Allocator;
+const Node = ast.Node;
 const Token = std.zig.Token;
+const Tree = ast.Tree;
 const ast = std.zig.ast;
 const mem = std.mem;
-const warn = std.debug.warn;
-const Tree = ast.Tree;
-const Node = ast.Node;
-const Allocator = std.mem.Allocator;
 const parse = std.zig.parse;
+const warn = std.debug.warn;
 
 pub const Object = struct {
     parent: ?*Scope,
