@@ -1,100 +1,98 @@
 const std = @import("std");
 
 const mem = std.mem;
+const testing = std.testing;
 const warn = std.debug.warn;
 
+/// Defines a commandline application.
 pub const Cli = struct {
     name: []const u8,
-    commands: []const Command,
+    commands: ?[]const Command,
     flags: ?[]const Flag,
     action: fn (
         ctx: *Context,
-        stdin: var,
-        stdout: var,
-        stderr: var,
     ) anyerror!void,
 
-    fn parse(self: *Cli, a: *Allocator, args: *Args) !Context {
-        var it = args.iterator(0);
-        if (it.peek() == 0) {
+    // parses args and finds which commands is to be invoked.
+    pub fn parse(self: *const Cli, a: *mem.Allocator, args: *Args) !Context {
+        var it = &args.iterator(0);
+        if (it.peek() == null) {
             // no any arguments were provided. We return context with the global
             // command set or help text if no action was provided on Cli object.
             return Context{
+                .allocator = a,
                 .cli = self,
                 .args = args,
                 .mode = .Global,
+                .global_flags = FlagSet.init(a),
+                .local_flags = FlagSet.init(a),
                 .args_position = 0,
+                .command = null,
             };
         }
 
         var ctx = Context{
+            .allocator = a,
             .cli = self,
             .args = args,
             .mode = .Local,
+            .global_flags = FlagSet.init(a),
+            .local_flags = FlagSet.init(a),
             .command = null,
             .args_position = 0,
         };
 
         var global_scope = true;
         while (it.peek()) |next_arg| {
-            switch (checkFlag(next_arg)) {
-                .Short => |flag| {
-                    if (global_scope) {
-                        try ctx.addShortGlobalFlag(flag, it);
-                    } else {
-                        try ctx.addShortLocalFlag(flag, it);
-                    }
-                },
-                .Long => |flag| {
-                    if (global_scope) {
-                        try ctx.addLongGlobalFlag(flag, it);
-                    } else {
-                        try ctx.addLongLocalFlag(flag, it);
-                    }
-                },
-                .None => {
-                    if (ctx.command) |cmd| {
-                        if (cmd.sub_commands != null) {
-                            var match = false;
-                            for (cmd.sub_commands.?) |sub| {
-                                if (mem.eql(u8, next_arg, sub.name)) {
-                                    ctx.command = &sub;
-                                    match = true;
-                                }
+            if (checkFlag(next_arg)) |flag| {
+                if (global_scope) {
+                    try ctx.addGlobalFlag(flag, it);
+                } else {
+                    try ctx.addLocalFlag(flag, it);
+                }
+            } else {
+                if (ctx.command) |cmd| {
+                    if (cmd.sub_commands != null) {
+                        var match = false;
+                        for (cmd.sub_commands.?) |sub| {
+                            if (mem.eql(u8, next_arg, sub.name)) {
+                                ctx.command = &sub;
+                                match = true;
                             }
-                            if (!match) {
-                                // raise the error for unknown command
-                            }
-                        } else {
-                            // No need to keep going. We take everything that is
-                            // left on argument list to be the arguments passed
-                            // to the active command.
-                            ctx.args_position = it.position;
-                            break;
+                        }
+                        if (!match) {
+                            // raise the error for unknown command
                         }
                     } else {
-                        if (ctx.cli.commands) |cmds| {
-                            for (cmds) |cmd| {
-                                var match = false;
-                                for (cmd.sub_commands.?) |sub| {
+                        // No need to keep going. We take everything that is
+                        // left on argument list to be the arguments passed
+                        // to the active command.
+                        ctx.args_position = it.position;
+                        break;
+                    }
+                } else {
+                    if (ctx.cli.commands) |cmds| {
+                        for (cmds) |cmd| {
+                            var match = false;
+                            if (cmd.sub_commands) |sub_cmds| {
+                                for (sub_cmds) |sub| {
                                     if (mem.eql(u8, next_arg, sub.name)) {
                                         ctx.command = &sub;
                                         match = true;
                                     }
                                 }
-                                if (!match) {
-                                    // raise the error for unknown command
-                                } else {
-                                    global_scope = false;
-                                }
                             }
-                        } else {
-                            ctx.args_position = it.position;
-                            break;
+                            if (!match) {
+                                // raise the error for unknown command
+                            } else {
+                                global_scope = false;
+                            }
                         }
+                    } else {
+                        ctx.args_position = it.position;
+                        break;
                     }
-                },
-                else => unreachable,
+                }
             }
             _ = it.next();
         }
@@ -102,13 +100,19 @@ pub const Cli = struct {
     }
 };
 
-fn checkFlag(s: []const u8) Flag.Type {
-    if (s.len == 2) {
-        if (s[0] == '-' and s[1] != '-') {
-            return Flag.Type{ .Short = s[1] };
+fn checkFlag(s: []const u8) ?[]const u8 {
+    if (s.len <= 1) return null;
+    var i: usize = 0;
+    for (s) |x| {
+        if (x == '-') {
+            i += 1;
+        } else {
+            break;
         }
     }
-    if (s.len == 0) return .None;
+    if (i == 0) return null;
+    if (i <= 2 and i < s.len) return s[i..];
+    return null;
 }
 
 pub const Command = struct {
@@ -124,9 +128,6 @@ pub const Command = struct {
     /// the program to exit with os.exit(1).
     action: fn (
         ctx: *Context,
-        stdin: var,
-        stdout: var,
-        stderr: var,
     ) anyerror!void,
 };
 
@@ -139,9 +140,6 @@ pub const Flag = struct {
     name: []const u8,
     kind: Kind,
 
-    // used internally
-    index: ?usize,
-
     pub const Kind = enum {
         Bool,
         String,
@@ -149,10 +147,13 @@ pub const Flag = struct {
     };
 
     pub fn init(name: []const u8, kind: Kind) Flag {
-        return Flag{ .name = name, .kind = kind, .index = 0 };
+        return Flag{
+            .name = name,
+            .kind = kind,
+        };
     }
 
-    pub const Type = enum {
+    pub const Type = union(enum) {
         None,
         Short: u8,
         Long: []const u8,
@@ -161,22 +162,68 @@ pub const Flag = struct {
 
 pub const FlagSet = struct {
     list: List,
-    pub const List = std.ArrayList(*Flag);
+    pub const List = std.ArrayList(FlagItem);
+
+    pub fn init(a: *mem.Allocator) FlagSet {
+        return FlagSet{ .list = List.init(a) };
+    }
+
+    /// stores the flag and the position where the flag was found. Allows easy
+    /// getting the value of the flag from arguments linst.
+    pub const FlagItem = struct {
+        flag: Flag,
+        index: usize,
+    };
+
+    pub fn addFlag(self: *FlagSet, flag: Flag, index: usize) !void {
+        try self.list.append(FlagItem{
+            .flag = flag,
+            .index = index,
+        });
+    }
 };
 
-// Context stores information about the application.
-
+/// Context stores information about the application.
 pub const Context = struct {
-    cli: *Cli,
-    args: *Args,
-    command: ?*Command,
+    allocator: *mem.Allocator,
+    cli: *const Cli,
+    args: *const Args,
+    command: ?*const Command,
     mode: Mode,
-    argumet_position: usize,
+    args_position: usize,
+    global_flags: FlagSet,
+    local_flags: FlagSet,
 
     pub const Mode = enum {
         Global,
         Local,
     };
+
+    pub fn addGlobalFlag(self: *Context, name: []const u8, it: *Args.Iterator) !void {
+        if (self.cli.flags) |flags| {
+            for (flags) |f| {
+                if (mem.eql(u8, f.name, name)) {
+                    try self.global_flags.addFlag(f, it.position);
+                    return;
+                }
+            }
+        }
+        return error.UknownFlag;
+    }
+
+    pub fn addLocalFlag(self: *Context, name: []const u8, it: *Args.Iterator) !void {
+        if (self.command) |cmd| {
+            if (cmd.flags) |flags| {
+                for (flags) |f| {
+                    if (mem.eql(u8, f.name, name)) {
+                        try self.local_flags.addFlag(f, it.position);
+                        return;
+                    }
+                }
+            }
+        }
+        return error.UknownFlag;
+    }
 
     // Returns the value that was assigned to the flag fname.
     pub fn flag(self: *Context, T: type, name: []const u8) !@typeOf(T) {}
@@ -194,6 +241,10 @@ pub const Args = struct {
         };
     }
 
+    pub fn deinit(self: Args) void {
+        self.args.deinit();
+    }
+
     pub fn initList(a: *mem.Allocator, ls: []const []const u8) !Args {
         var arg = init(a);
         try arg.addList(ls);
@@ -202,7 +253,7 @@ pub const Args = struct {
 
     pub fn addList(self: *Args, ls: []const []const u8) !void {
         for (ls) |_, i| {
-            try self.addCopy(ls[i]);
+            try self.add(ls[i]);
         }
     }
 
@@ -220,14 +271,14 @@ pub const Args = struct {
         position: usize,
 
         pub fn next(self: *Iterator) ?[]const u8 {
-            if (self.position >= self.args.len) return null;
+            if (self.position >= self.args.args.len) return null;
             const e = self.args.at(self.position);
             self.position += 1;
             return e;
         }
 
         pub fn peek(self: *Iterator) ?[]const u8 {
-            if (self.position >= self.args.size) return null;
+            if (self.position >= self.args.args.len) return null;
             const e = self.args.at(self.position);
             return e;
         }
@@ -247,9 +298,6 @@ pub const Args = struct {
 
 test "command" {
     var a = std.debug.global_allocator;
-    var args = try Args.initList(a, []const []const u8{
-        "hoodie", "fmt", "-m",
-    });
 
     const app = Cli{
         .name = "hoodie",
@@ -257,24 +305,54 @@ test "command" {
         .commands = []const Command{
             Command{
                 .name = "fmt",
-                .flags = []const Flag{Flag{ .name = "f", .kind = .Bool, .index = 0 }},
+                .flags = []const Flag{Flag{
+                    .name = "f",
+                    .kind = .Bool,
+                }},
                 .action = nothing,
                 .sub_commands = null,
             },
             Command{
                 .name = "outline",
-                .flags = null,
+                .flags = []const Flag{Flag{
+                    .name = "modified",
+                    .kind = .Bool,
+                }},
                 .action = nothing,
                 .sub_commands = null,
             },
         },
         .action = nothing,
     };
+
+    // check for correct commands
+    const TestCase = struct {
+        src: []const []const u8,
+        command: ?[]const u8,
+        mode: Context.Mode,
+    };
+
+    const cases = []TestCase{
+        TestCase{
+            .src = []const []const u8{},
+            .command = null,
+            .mode = .Global,
+        },
+        TestCase{
+            .src = []const []const u8{"fmt"},
+            .command = null,
+            .mode = .Local,
+        },
+    };
+
+    for (cases) |ts| {
+        var args = &try Args.initList(a, ts.src);
+        var ctx = &try app.parse(a, args);
+        testing.expectEqual(ts.mode, ctx.mode);
+        args.deinit();
+    }
 }
 
 fn nothing(
-    comptime ctx: *Context,
-    stdin: var,
-    stdout: var,
-    stderr: var,
+    ctx: *const Context,
 ) anyerror!void {}
