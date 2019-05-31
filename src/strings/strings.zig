@@ -1,7 +1,8 @@
 const std = @import("std");
-const ArrayList = std.ArrayList;
-const Allocator = std.mem.Allocator;
 const utf8 = @import("../unicode/utf8/index.zig");
+
+const Allocator = std.mem.Allocator;
+const ArrayList = std.ArrayList;
 const mem = std.mem;
 const warn = std.debug.warn;
 
@@ -26,12 +27,13 @@ fn lastIndexFuncInternal(input: []const u8, f: fn (rune: i32) bool, truthy: bool
 // https://en.wikipedia.org/wiki/Boyer-Moore_string_search_algorithm
 // https://www.cs.utexas.edu/~moore/publications/fstrpos.pdf (note: this aged
 // document uses 1-based indexing)
+
 pub const StringFinder = struct {
     pattern: []const u8,
     bad_char_skip: [256]usize,
     good_suffix_skip: []usize,
-    const Self = @This();
     a: *Allocator,
+    const Self = @This();
 
     pub fn init(a: *Allocator, pattern: []const u8) !Self {
         var s: Self = undefined;
@@ -146,7 +148,6 @@ pub const SingleReplacer = struct {
     find: StringFinder,
     old: []const u8,
     new: []const u8,
-
     replacer: Replacer,
 
     pub fn init(a: *Allocator, old: []const u8, new: []const u8) !SingleReplacer {
@@ -375,51 +376,12 @@ pub const GenericReplacer = struct {
     a: *Allocator,
     replacer: Replacer,
     arena: std.heap.ArenaAllocator,
-
-    pub fn init(a: *Allocator, old_new: []const []const u8) !GenericReplacer {
-        var g: GenericReplacer = undefined;
-        g.arena = std.heap.ArenaAllocator.init(a);
-        g.mapping = []usize{0} ** 256;
-        g.table_size = 0;
-        g.replacer = Replacer{ .replaceFn = replaceFn };
-        var i: usize = 0;
-        while (i < old_new.len) : (i += 2) {
-            var j: usize = 0;
-            const key = old_new[i];
-            while (j < key.len) : (j += 1) {
-                g.mapping[key[j]] = 1;
-            }
-        }
-        for (g.mapping) |value, idx| {
-            g.table_size += value;
-        }
-        var index: usize = 0;
-        for (g.mapping) |*value| {
-            if (value.* == 0) {
-                value.* = g.table_size;
-            } else {
-                value.* = index;
-                index += 1;
-            }
-        }
-        g.a = &g.arena.allocator;
-        g.root = try g.createNode();
-        g.root.table = try g.createTable(g.table_size);
-
-        i = 0;
-        while (i < old_new.len) : (i += 2) {
-            try g.root.add(old_new[i], old_new[i + 1], old_new.len - i, &g);
-        }
-        return g;
-    }
-
     const TrieNode = struct {
         value: []const u8,
         priority: usize,
         prefix: []const u8,
         next: ?*TrieNode,
         table: ?*Table,
-
         const Table = ArrayList(?*TrieNode);
 
         fn padd(size: usize) void {
@@ -492,6 +454,49 @@ pub const GenericReplacer = struct {
         }
     };
 
+    const LookupRes = struct {
+        value: []const u8,
+        key_len: usize,
+        found: bool,
+    };
+
+    pub fn init(a: *Allocator, old_new: []const []const u8) !GenericReplacer {
+        var g: GenericReplacer = undefined;
+        g.arena = std.heap.ArenaAllocator.init(a);
+        g.mapping = []usize{0} ** 256;
+        g.table_size = 0;
+        g.replacer = Replacer{ .replaceFn = replaceFn };
+        var i: usize = 0;
+        while (i < old_new.len) : (i += 2) {
+            var j: usize = 0;
+            const key = old_new[i];
+            while (j < key.len) : (j += 1) {
+                g.mapping[key[j]] = 1;
+            }
+        }
+        for (g.mapping) |value, idx| {
+            g.table_size += value;
+        }
+        var index: usize = 0;
+        for (g.mapping) |*value| {
+            if (value.* == 0) {
+                value.* = g.table_size;
+            } else {
+                value.* = index;
+                index += 1;
+            }
+        }
+        g.a = &g.arena.allocator;
+        g.root = try g.createNode();
+        g.root.table = try g.createTable(g.table_size);
+
+        i = 0;
+        while (i < old_new.len) : (i += 2) {
+            try g.root.add(old_new[i], old_new[i + 1], old_new.len - i, &g);
+        }
+        return g;
+    }
+
     fn createNode(self: *GenericReplacer) !*TrieNode {
         var n = try self.a.create(TrieNode);
         n.* = TrieNode{
@@ -523,12 +528,6 @@ pub const GenericReplacer = struct {
     fn deinit(self: *GenericReplacer) void {
         self.arena.deinit();
     }
-
-    const LookupRes = struct {
-        value: []const u8,
-        key_len: usize,
-        found: bool,
-    };
 
     fn lookup(self: *GenericReplacer, src: []const u8, ignore_root: bool) anyerror!LookupRes {
         var best_priority: usize = 0;
