@@ -80,8 +80,8 @@ pub const Declaration = struct {
         TopAssign, //like import but just struct assignment
         Const,
         Var,
-        Struct,
         Field,
+        Struct,
         Method,
         Enum,
         Union,
@@ -251,6 +251,19 @@ fn collect(
                                 .start = first_token.start,
                                 .end = last_token.end,
                                 .typ = Declaration.Type.Import,
+                                .label = decl_name,
+                                .node = decl,
+                                .is_public = var_decl.visib_token != null,
+                                .is_mutable = is_mutable,
+                                .children = Declaration.List.init(ls.allocator),
+                            };
+                            try ls.append(decl_ptr);
+                        } else {
+                            var decl_ptr = try ls.allocator.create(Declaration);
+                            decl_ptr.* = Declaration{
+                                .start = first_token.start,
+                                .end = last_token.end,
+                                .typ = Declaration.Type.mutable(mut),
                                 .label = decl_name,
                                 .node = decl,
                                 .is_public = var_decl.visib_token != null,
