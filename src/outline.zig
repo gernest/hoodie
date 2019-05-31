@@ -19,30 +19,6 @@ const warn = std.debug.warn;
 /// is just a struct container, this can therefore represent top level members of
 /// the main struct container(or file in this case).
 pub const Declaration = struct {
-    const List = ArrayList(*Declaration);
-
-    pub const Iterator = struct {
-        at: usize,
-        ls: []*Declaration,
-
-        pub fn init(ls: *List) Iterator {
-            return Iterator{ .at = 0, .ls = ls.toSlice() };
-        }
-
-        pub fn next(self: *Iterator) ?*Declaration {
-            if (self.at >= self.ls.len) return null;
-            var d = self.ls[self.at];
-            self.at += 1;
-            return d;
-        }
-
-        pub fn peek(self: *Iterator) ?*Declaration {
-            if (self.at >= self.ls.len) return null;
-            var d = self.ls[self.at];
-            return d;
-        }
-    };
-
     /// The string representation of the declared symbol.This is the identifier
     /// name. For instance
     /// ```
@@ -74,13 +50,36 @@ pub const Declaration = struct {
     /// For container nodes this is the collection of symbols declared within
     /// the container. Containers can be struct,enum or union.
     children: ArrayList(*Declaration),
+    const List = ArrayList(*Declaration);
+
+    pub const Iterator = struct {
+        at: usize,
+        ls: []*Declaration,
+
+        pub fn init(ls: *List) Iterator {
+            return Iterator{ .at = 0, .ls = ls.toSlice() };
+        }
+
+        pub fn next(self: *Iterator) ?*Declaration {
+            if (self.at >= self.ls.len) return null;
+            var d = self.ls[self.at];
+            self.at += 1;
+            return d;
+        }
+
+        pub fn peek(self: *Iterator) ?*Declaration {
+            if (self.at >= self.ls.len) return null;
+            var d = self.ls[self.at];
+            return d;
+        }
+    };
 
     pub const Type = enum {
+        Field,
         Import,
         TopAssign, //like import but just struct assignment
         Const,
         Var,
-        Field,
         Struct,
         Method,
         Enum,
