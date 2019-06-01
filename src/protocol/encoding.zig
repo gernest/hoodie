@@ -28,6 +28,8 @@ pub fn encode(
         .Struct => |elem| {
             const has_cust_encode = comptime implementsEncoder(T);
             if (has_cust_encode) return value.encodeJson(a);
+            const is_array_list = comptime check_array_list(T);
+            if (is_array_list) return encode(@typeOf(@field(value, "items")), a, value.toSlice());
             var m = json.ObjectMap.init(a);
             comptime var i: usize = 0;
             inline while (i < elem.fields.len) : (i += 1) {
@@ -40,7 +42,23 @@ pub fn encode(
             }
             return json.Value{ .Object = m };
         },
+        .Pointer => |pointer| {
+            switch (pointer.size) {
+                .Slice => {
+                    var ls = std.ArrayList(json.Value).init(a);
+                    for (value) |elem| {
+                        try ls.append(try encode(@typeOf(elem), a, elem));
+                    }
+                    return json.Value{ .Array = ls };
+                },
+                else => {
+                    warn("{} {}\n", @typeId(T), pointer.size);
+                    return error.NotSupported;
+                },
+            }
+        },
         else => {
+            warn("{}\n", @typeId(T));
             return error.NotSupported;
         },
     }
@@ -49,6 +67,15 @@ pub fn encode(
 fn implementsEncoder(comptime T: type) bool {
     return meta.trait.hasFn("encodeJson")(T);
 }
+
+const check_array_list = meta.trait.multiTrait(
+    meta.trait.TraitList{
+        meta.trait.hasFn("toSlice"),
+        meta.trait.hasField("len"),
+        meta.trait.hasField("items"),
+        meta.trait.hasField("allocator"),
+    },
+);
 
 fn valid(value: var) bool {
     switch (@typeId(@typeOf(value))) {
@@ -93,12 +120,10 @@ test "encode" {
     // try testEncode(a, Bool{ .value = true });
     // try testEncode(a, Bool{ .value = false });
 
-    // const List = std.ArrayList(Bool);
-    // var list = List.init(a);
-    // try list.append(Bool{ .value = true });
-    // try testEncode(a, list);
-
-    try testEncode(bool, a, true);
+    const List = std.ArrayList(Bool);
+    var list = List.init(a);
+    try list.append(Bool{ .value = true });
+    try testEncode(List, a, list);
 }
 
 fn testEncode(
