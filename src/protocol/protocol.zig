@@ -2,8 +2,9 @@
 // generated automatically from vscode-languageserver-node
 //  version of Fri May 03 2019 10:46:04 GMT+0300 (East Africa Time)
 const std = @import("std");
-const json = std.json;
+
 const ArrayList = std.ArrayList;
+const json = std.json;
 
 pub const ImplementationClientCapabilities = struct {
     textDocument: ?TextDocument,
@@ -219,20 +220,21 @@ pub const TextDocumentPositionParams = struct {
 pub const WorkspaceClientCapabilities = struct {
     applyEdit: ?bool,
     workspaceEdit: ?WorkspaceEdit,
+    didChangeConfiguration: ?DidChangeConfiguration,
+    didChangeWatchedFiles: ?DidChangeWatchedFiles,
+    symbol: ?Symbol,
+    executeCommand: ?ExecuteCommand,
     pub const WorkspaceEdit = struct {
         documentChanges: ?bool,
         resourceOperations: ?ArrayList(ResourceOperationKind),
         failureHandling: ?FailureHandlingKind,
     };
-    didChangeConfiguration: ?DidChangeConfiguration,
     pub const DidChangeConfiguration = struct {
         dynamicRegistration: ?bool,
     };
-    didChangeWatchedFiles: ?DidChangeWatchedFiles,
     pub const DidChangeWatchedFiles = struct {
         dynamicRegistration: ?bool,
     };
-    symbol: ?Symbol,
     pub const Symbol = struct {
         dynamicRegistration: ?bool,
         symbolKind: ?SymbolKind,
@@ -240,7 +242,6 @@ pub const WorkspaceClientCapabilities = struct {
             valueSet: ?ArrayList(SymbolKind),
         };
     };
-    executeCommand: ?ExecuteCommand,
     pub const ExecuteCommand = struct {
         dynamicRegistration: ?bool,
     };
@@ -251,16 +252,32 @@ pub const WorkspaceClientCapabilities = struct {
 ///  */
 pub const TextDocumentClientCapabilities = struct {
     synchronization: ?Synchronization,
+    completion: ?Completion,
+    hover: ?Hover,
+    signatureHelp: ?SignatureHelp,
+    references: ?References,
+    documentHighlight: ?DocumentHighlight,
+    documentSymbol: ?DocumentSymbol,
+    formatting: ?Formatting,
+    rangeFormatting: ?RangeFormatting,
+    onTypeFormatting: ?OnTypeFormatting,
+    definition: ?Definition,
+    codeAction: ?CodeAction,
+    codeLens: ?CodeLens,
+    documentLink: ?DocumentLink,
+    rename: ?Rename,
+    publishDiagnostics: ?PublishDiagnostics,
     pub const Synchronization = struct {
         dynamicRegistration: ?bool,
         willSave: ?bool,
         willSaveWaitUntil: ?bool,
         didSave: ?bool,
     };
-    completion: ?Completion,
     pub const Completion = struct {
         dynamicRegistration: ?bool,
         completionItem: ?CompletionItem,
+        completionItemKind: ?CompletionItemKind,
+        contextSupport: ?bool,
         pub const CompletionItem = struct {
             snippetSupport: ?bool,
             commitCharactersSupport: ?bool,
@@ -268,18 +285,14 @@ pub const TextDocumentClientCapabilities = struct {
             deprecatedSupport: ?bool,
             preselectSupport: ?bool,
         };
-        completionItemKind: ?CompletionItemKind,
         pub const CompletionItemKind = struct {
             valueSet: ?ArrayList(CompletionItemKind),
         };
-        contextSupport: ?bool,
     };
-    hover: ?Hover,
     pub const Hover = struct {
         dynamicRegistration: ?bool,
         contentFormat: ?ArrayList(MarkupKind),
     };
-    signatureHelp: ?SignatureHelp,
     pub const SignatureHelp = struct {
         dynamicRegistration: ?bool,
         signatureInformation: ?SignatureInformation,
@@ -291,41 +304,33 @@ pub const TextDocumentClientCapabilities = struct {
             };
         };
     };
-    references: ?References,
     pub const References = struct {
         dynamicRegistration: ?bool,
     };
-    documentHighlight: ?DocumentHighlight,
     pub const DocumentHighlight = struct {
         dynamicRegistration: ?bool,
     };
-    documentSymbol: ?DocumentSymbol,
     pub const DocumentSymbol = struct {
         dynamicRegistration: ?bool,
         symbolKind: ?SymbolKind,
+        hierarchicalDocumentSymbolSupport: ?bool,
         pub const SymbolKind = struct {
             valueSet: ?ArrayList(SymbolKind),
         };
-        hierarchicalDocumentSymbolSupport: ?bool,
     };
-    formatting: ?Formatting,
     pub const Formatting = struct {
         dynamicRegistration: ?bool,
     };
-    rangeFormatting: ?RangeFormatting,
     pub const RangeFormatting = struct {
         dynamicRegistration: ?bool,
     };
-    onTypeFormatting: ?OnTypeFormatting,
     pub const OnTypeFormatting = struct {
         dynamicRegistration: ?bool,
     };
-    definition: ?Definition,
     pub const Definition = struct {
         dynamicRegistration: ?bool,
         linkSupport: ?bool,
     };
-    codeAction: ?CodeAction,
     pub const CodeAction = struct {
         dynamicRegistration: ?bool,
         codeActionLiteralSupport: ?CodeActionLiteralSupport,
@@ -336,20 +341,16 @@ pub const TextDocumentClientCapabilities = struct {
             };
         };
     };
-    codeLens: ?CodeLens,
     pub const CodeLens = struct {
         dynamicRegistration: ?bool,
     };
-    documentLink: ?DocumentLink,
     pub const DocumentLink = struct {
         dynamicRegistration: ?bool,
     };
-    rename: ?Rename,
     pub const Rename = struct {
         dynamicRegistration: ?bool,
         prepareSupport: ?bool,
     };
-    publishDiagnostics: ?PublishDiagnostics,
     pub const PublishDiagnostics = struct {
         relatedInformation: ?bool,
         tagSupport: ?bool,
@@ -379,6 +380,12 @@ pub const ClientCapabilities = struct {
     window: ?WindowClientCapabilities,
     experimental: ?json.Value,
     textDocument: ?TextDocument,
+    textDocument: ?TextDocument,
+    workspace: ?Workspace,
+    workspace: ?Workspace,
+    textDocument: ?TextDocument,
+    textDocument: ?TextDocument,
+    textDocument: ?TextDocument,
     pub const TextDocument = struct {
         implementation: ?Implementation,
         pub const Implementation = struct {
@@ -386,7 +393,6 @@ pub const ClientCapabilities = struct {
             linkSupport: ?bool,
         };
     };
-    textDocument: ?TextDocument,
     pub const TextDocument = struct {
         typeDefinition: ?TypeDefinition,
         pub const TypeDefinition = struct {
@@ -394,22 +400,18 @@ pub const ClientCapabilities = struct {
             linkSupport: ?bool,
         };
     };
-    workspace: ?Workspace,
     pub const Workspace = struct {
         workspaceFolders: ?bool,
     };
-    workspace: ?Workspace,
     pub const Workspace = struct {
         configuration: ?bool,
     };
-    textDocument: ?TextDocument,
     pub const TextDocument = struct {
         colorProvider: ?ColorProvider,
         pub const ColorProvider = struct {
             dynamicRegistration: ?bool,
         };
     };
-    textDocument: ?TextDocument,
     pub const TextDocument = struct {
         foldingRange: ?FoldingRange,
         pub const FoldingRange = struct {
@@ -418,7 +420,6 @@ pub const ClientCapabilities = struct {
             lineFoldingOnly: ?bool,
         };
     };
-    textDocument: ?TextDocument,
     pub const TextDocument = struct {
         declaration: ?Declaration,
         pub const Declaration = struct {
@@ -536,14 +537,14 @@ pub const InnerServerCapabilities = struct {
     documentFormattingProvider: ?bool,
     documentRangeFormattingProvider: ?bool,
     documentOnTypeFormattingProvider: ?DocumentOnTypeFormattingProvider,
-    pub const DocumentOnTypeFormattingProvider = struct {
-        firstTriggerCharacter: []const u8,
-        moreTriggerCharacter: ?ArrayList([]const u8),
-    };
     renameProvider: ?bool,
     documentLinkProvider: ?DocumentLinkOptions,
     executeCommandProvider: ?ExecuteCommandOptions,
     experimental: ?json.Value,
+    pub const DocumentOnTypeFormattingProvider = struct {
+        firstTriggerCharacter: []const u8,
+        moreTriggerCharacter: ?ArrayList([]const u8),
+    };
 };
 
 pub const ServerCapabilities = struct {
@@ -561,10 +562,6 @@ pub const ServerCapabilities = struct {
     documentFormattingProvider: ?bool,
     documentRangeFormattingProvider: ?bool,
     documentOnTypeFormattingProvider: ?DocumentOnTypeFormattingProvider,
-    pub const DocumentOnTypeFormattingProvider = struct {
-        firstTriggerCharacter: []const u8,
-        moreTriggerCharacter: ?ArrayList([]const u8),
-    };
     renameProvider: ?bool,
     documentLinkProvider: ?DocumentLinkOptions,
     executeCommandProvider: ?ExecuteCommandOptions,
@@ -572,6 +569,13 @@ pub const ServerCapabilities = struct {
     implementationProvider: ?bool,
     typeDefinitionProvider: ?bool,
     workspace: ?Workspace,
+    colorProvider: ?bool,
+    foldingRangeProvider: ?bool,
+    declarationProvider: ?bool,
+    pub const DocumentOnTypeFormattingProvider = struct {
+        firstTriggerCharacter: []const u8,
+        moreTriggerCharacter: ?ArrayList([]const u8),
+    };
     pub const Workspace = struct {
         workspaceFolders: ?WorkspaceFolders,
         pub const WorkspaceFolders = struct {
@@ -579,9 +583,6 @@ pub const ServerCapabilities = struct {
             changeNotifications: ?[]const u8,
         };
     };
-    colorProvider: ?bool,
-    foldingRangeProvider: ?bool,
-    declarationProvider: ?bool,
 };
 
 /// /**
@@ -1375,6 +1376,7 @@ pub const TextDocumentContentChangeEvent = struct {
     rangeLength: ?f64,
     text: []const u8,
 };
+
 const FoldingRangeKind = enum {
     Comment,
     Imports,
@@ -1563,6 +1565,7 @@ const TextDocumentSaveReason = enum(f64) {
 };
 
 // DocumentFilter is a type
+
 const DocumentFilter = struct {
     language: []const u8,
     scheme: ?[]const u8,
