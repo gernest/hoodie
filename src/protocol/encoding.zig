@@ -5,8 +5,6 @@ const mem = std.mem;
 const meta = std.meta;
 const warn = std.debug.warn;
 
-const array_list_prefix = "std.array_list.AlignedArrayList";
-
 pub fn encode(
     comptime T: type,
     a: *mem.Allocator,
