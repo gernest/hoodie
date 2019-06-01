@@ -26,22 +26,7 @@ pub fn encode(
             return json.Value{ .Bool = false };
         },
         .Struct => |elem| {
-            const has_cust_encode = comptime cf: {
-                const info = @typeInfo(T);
-                const defs = switch (info) {
-                    builtin.TypeId.Struct => |s| s.defs,
-                    builtin.TypeId.Union => |u| u.defs,
-                    builtin.TypeId.Enum => |e| e.defs,
-                    else => unreachable,
-                };
-
-                for (defs) |def| {
-                    if (mem.eql(u8, def.name, "encodeJson")) {
-                        break :cf true;
-                    }
-                }
-                break :cf false;
-            };
+            const has_cust_encode = comptime implementsEncoder(T);
             if (has_cust_encode) return value.encodeJson(a);
             var m = json.ObjectMap.init(a);
             comptime var i: usize = 0;
@@ -59,6 +44,10 @@ pub fn encode(
             return error.NotSupported;
         },
     }
+}
+
+fn implementsEncoder(comptime T: type) bool {
+    return meta.trait.hasFn("encodeJson")(T);
 }
 
 fn valid(value: var) bool {
