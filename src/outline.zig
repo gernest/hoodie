@@ -6,6 +6,7 @@ const std = @import("std");
 
 const Allocator = mem.Allocator;
 const ArrayList = std.ArrayList;
+const Token = std.zig.Token;
 
 const ast = std.zig.ast;
 const json = std.json;
@@ -13,6 +14,29 @@ const mem = std.mem;
 const parse = std.zig.parse;
 const testing = std.testing;
 const warn = std.debug.warn;
+
+pub const Span = struct {
+    start: Token,
+    end: Token,
+
+    pub fn encode(self: Span, a: *Allocator) !json.Value {
+        var m = json.ObjectMap.init(a);
+        _ = try m.put("startToken", try encodeToken(self.start, a));
+        _ = try m.put("endToken", try encodeToken(self.end, a));
+        return json.Value{ .Object = m };
+    }
+
+    pub fn encodeToken(self: Token, a: *Allocator) !json.Value {
+        var m = json.ObjectMap.init(a);
+        _ = try m.put("start", json.Value{
+            .Integer = @intCast(i64, self.start),
+        });
+        _ = try m.put("end", json.Value{
+            .Integer = @intCast(i64, self.end),
+        });
+        return json.Value{ .Object = m };
+    }
+};
 
 /// Stores information about a symbol in a zig source file. This covers
 /// declarations at the top level scope of the source file. Since a source file
@@ -46,6 +70,9 @@ pub const Declaration = struct {
 
     /// The actual node in the ast for this declaration.
     node: *ast.Node,
+
+    /// sybmol's documentation.
+    zig_doc: ?Span,
 
     /// For container nodes this is the collection of symbols declared within
     /// the container. Containers can be struct,enum or union.
@@ -177,6 +204,9 @@ pub const Declaration = struct {
         _ = try m.put("isPublic", json.Value{
             .Bool = self.is_public,
         });
+        if (self.zig_doc) |doc| {
+            _ = try m.put("zigDoc", try doc.encode(a));
+        }
         if (self.children.len > 0) {
             var children_list = std.ArrayList(json.Value).init(a);
             for (self.children.toSlice()) |child| {
@@ -224,6 +254,16 @@ pub fn outline(a: *Allocator, src: []const u8, stream: var) anyerror!void {
     try render(a, ls, stream);
 }
 
+/// Returns text for a zig docummentation of symbols.
+fn getDoc(tree: *ast.Tree, doc: ?*ast.Node.DocComment) ?Span {
+    if (doc == null) {
+        return null;
+    }
+    const first = tree.tokens.at(doc.?.firstToken());
+    const last = tree.tokens.at(doc.?.lastToken());
+    return Span{ .start = first.*, .end = last.* };
+}
+
 fn collect(
     tree: *ast.Tree,
     ls: *Declaration.List,
@@ -252,6 +292,7 @@ fn collect(
                                 .typ = Declaration.Type.Import,
                                 .label = decl_name,
                                 .node = decl,
+                                .zig_doc = getDoc(tree, var_decl.doc_comments),
                                 .is_public = var_decl.visib_token != null,
                                 .is_mutable = is_mutable,
                                 .children = Declaration.List.init(ls.allocator),
@@ -265,6 +306,7 @@ fn collect(
                                 .typ = Declaration.Type.mutable(mut),
                                 .label = decl_name,
                                 .node = decl,
+                                .zig_doc = getDoc(tree, var_decl.doc_comments),
                                 .is_public = var_decl.visib_token != null,
                                 .is_mutable = is_mutable,
                                 .children = Declaration.List.init(ls.allocator),
@@ -284,6 +326,7 @@ fn collect(
                                 .typ = kind,
                                 .label = decl_name,
                                 .node = decl,
+                                .zig_doc = getDoc(tree, var_decl.doc_comments),
                                 .is_public = var_decl.visib_token != null,
                                 .is_mutable = is_mutable,
                                 .children = Declaration.List.init(ls.allocator),
@@ -306,6 +349,7 @@ fn collect(
                                             .typ = Declaration.Type.Field,
                                             .label = field_name,
                                             .node = field,
+                                            .zig_doc = getDoc(tree, field_decl.doc_comments),
                                             .is_public = field_decl.visib_token != null,
                                             .is_mutable = false,
                                             .children = Declaration.List.init(ls.allocator),
@@ -323,6 +367,7 @@ fn collect(
                                                 .typ = Declaration.Type.Fn,
                                                 .label = fn_name,
                                                 .node = field,
+                                                .zig_doc = getDoc(tree, fn_decl.doc_comments),
                                                 .is_public = fn_decl.visib_token != null,
                                                 .is_mutable = false,
                                                 .children = Declaration.List.init(ls.allocator),
@@ -344,6 +389,7 @@ fn collect(
                                             ),
                                             .label = field_name,
                                             .node = field,
+                                            .zig_doc = getDoc(tree, field_decl.doc_comments),
                                             .is_public = field_decl.visib_token != null,
                                             .is_mutable = f_is_mutable,
                                             .children = Declaration.List.init(ls.allocator),
@@ -375,6 +421,7 @@ fn collect(
                                                 .typ = Declaration.Type.Import,
                                                 .label = decl_name,
                                                 .node = decl,
+                                                .zig_doc = getDoc(tree, var_decl.doc_comments),
                                                 .is_public = var_decl.visib_token != null,
                                                 .is_mutable = is_mutable,
                                                 .children = Declaration.List.init(ls.allocator),
@@ -388,6 +435,7 @@ fn collect(
                                                 .typ = Declaration.Type.mutable(mut),
                                                 .label = decl_name,
                                                 .node = decl,
+                                                .zig_doc = getDoc(tree, var_decl.doc_comments),
                                                 .is_public = var_decl.visib_token != null,
                                                 .is_mutable = is_mutable,
                                                 .children = Declaration.List.init(ls.allocator),
@@ -403,6 +451,7 @@ fn collect(
                                             .typ = .TopAssign,
                                             .label = decl_name,
                                             .node = decl,
+                                            .zig_doc = getDoc(tree, var_decl.doc_comments),
                                             .is_public = var_decl.visib_token != null,
                                             .is_mutable = is_mutable,
                                             .children = Declaration.List.init(ls.allocator),
@@ -417,6 +466,7 @@ fn collect(
                                             .typ = Declaration.Type.mutable(mut),
                                             .label = decl_name,
                                             .node = decl,
+                                            .zig_doc = getDoc(tree, var_decl.doc_comments),
                                             .is_public = var_decl.visib_token != null,
                                             .is_mutable = is_mutable,
                                             .children = Declaration.List.init(ls.allocator),
@@ -433,6 +483,7 @@ fn collect(
                                     .typ = Declaration.Type.mutable(mut),
                                     .label = decl_name,
                                     .node = decl,
+                                    .zig_doc = getDoc(tree, var_decl.doc_comments),
                                     .is_public = var_decl.visib_token != null,
                                     .is_mutable = is_mutable,
                                     .children = Declaration.List.init(ls.allocator),
@@ -449,6 +500,7 @@ fn collect(
                             .typ = Declaration.Type.mutable(mut),
                             .label = decl_name,
                             .node = decl,
+                            .zig_doc = getDoc(tree, var_decl.doc_comments),
                             .is_public = var_decl.visib_token != null,
                             .is_mutable = is_mutable,
                             .children = Declaration.List.init(ls.allocator),
@@ -468,6 +520,7 @@ fn collect(
                 .typ = .Field,
                 .label = decl_name,
                 .node = decl,
+                .zig_doc = getDoc(tree, var_decl.doc_comments),
                 .is_public = var_decl.visib_token != null,
                 .is_mutable = false,
                 .children = Declaration.List.init(ls.allocator),
@@ -485,6 +538,7 @@ fn collect(
                 .typ = Declaration.Type.Test,
                 .label = unquote(test_name),
                 .node = decl,
+                .zig_doc = getDoc(tree, test_decl.doc_comments),
                 .is_public = false,
                 .is_mutable = false,
                 .children = Declaration.List.init(ls.allocator),
@@ -502,6 +556,7 @@ fn collect(
                     .typ = Declaration.Type.Fn,
                     .label = fn_name,
                     .node = decl,
+                    .zig_doc = getDoc(tree, fn_decl.doc_comments),
                     .is_public = fn_decl.visib_token != null,
                     .is_mutable = false,
                     .children = Declaration.List.init(ls.allocator),
