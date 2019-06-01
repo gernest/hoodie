@@ -1,3 +1,4 @@
+const builtin = @import("builtin");
 const std = @import("std");
 
 const json = std.json;
@@ -24,11 +25,28 @@ pub fn encode(
             }
             return json.Value{ .Bool = false };
         },
-        .Struct => |s| {
+        .Struct => |elem| {
+            const has_cust_encode = comptime cf: {
+                const info = @typeInfo(T);
+                const defs = switch (info) {
+                    builtin.TypeId.Struct => |s| s.defs,
+                    builtin.TypeId.Union => |u| u.defs,
+                    builtin.TypeId.Enum => |e| e.defs,
+                    else => unreachable,
+                };
+
+                for (defs) |def| {
+                    if (mem.eql(u8, def.name, "encodeJson")) {
+                        break :cf true;
+                    }
+                }
+                break :cf false;
+            };
+            if (has_cust_encode) return value.encodeJson(a);
             var m = json.ObjectMap.init(a);
             comptime var i: usize = 0;
-            inline while (i < s.fields.len) : (i += 1) {
-                const field = s.fields[i];
+            inline while (i < elem.fields.len) : (i += 1) {
+                const field = elem.fields[i];
                 _ = try m.put(field.name, try encode(
                     field.field_type,
                     a,
@@ -41,6 +59,10 @@ pub fn encode(
             return error.NotSupported;
         },
     }
+}
+
+fn implementsEncode(comptime T: type) bool {
+    return meta.trait.hasFn("encodeJson")(T);
 }
 
 fn valid(value: var) bool {
@@ -63,9 +85,13 @@ test "encode" {
     // try testEncode(a, &Int{ .value = 12 });
 
     const Nested = struct {
-        value: usize,
-        child: Int,
+        const Self = @This();
+        pub fn encodeJson(self: Self, alloc: *mem.Allocator) anyerror!json.Value {
+            return json.Value{ .String = "okay" };
+        }
     };
+
+    try testEncode(Nested, a, Nested{});
     // try testEncode(a, Nested{
     //     .value = 12,
     //     .child = Int{ .value = 12 },
