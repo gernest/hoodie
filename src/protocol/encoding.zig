@@ -61,10 +61,6 @@ pub fn encode(
     }
 }
 
-fn implementsEncode(comptime T: type) bool {
-    return meta.trait.hasFn("encodeJson")(T);
-}
-
 fn valid(value: var) bool {
     switch (@typeId(@typeOf(value))) {
         .Int, .Float, .Pointer, .Array, .Struct => return true,
