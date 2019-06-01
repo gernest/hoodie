@@ -88,10 +88,6 @@ test "encode" {
     };
 
     try testEncode(Nested, a, Nested{});
-    // try testEncode(a, Nested{
-    //     .value = 12,
-    //     .child = Int{ .value = 12 },
-    // });
 
     const NestedPtr = struct {
         value: usize,
