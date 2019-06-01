@@ -7,11 +7,10 @@ const meta = std.meta;
 const warn = std.debug.warn;
 
 pub fn encode(
-    comptime T: type,
     a: *mem.Allocator,
-    value: T,
+    value: var,
 ) anyerror!json.Value {
-    warn("{}\n ", @typeId(T));
+    const T = @typeOf(value);
     switch (@typeInfo(T)) {
         .Int => |elem| {
             return json.Value{ .Integer = @intCast(i64, value) };
@@ -29,16 +28,12 @@ pub fn encode(
             const has_cust_encode = comptime implementsEncoder(T);
             if (has_cust_encode) return value.encodeJson(a);
             const is_array_list = comptime check_array_list(T);
-            if (is_array_list) return encode(@typeOf(@field(value, "items")), a, value.toSlice());
+            if (is_array_list) return encode(a, value.toSlice());
             var m = json.ObjectMap.init(a);
             comptime var i: usize = 0;
             inline while (i < elem.fields.len) : (i += 1) {
                 const field = elem.fields[i];
-                _ = try m.put(field.name, try encode(
-                    field.field_type,
-                    a,
-                    @field(value, field.name),
-                ));
+                _ = try m.put(field.name, try encode(a, @field(value, field.name)));
             }
             return json.Value{ .Object = m };
         },
@@ -47,7 +42,7 @@ pub fn encode(
                 .Slice => {
                     var ls = std.ArrayList(json.Value).init(a);
                     for (value) |elem| {
-                        try ls.append(try encode(@typeOf(elem), a, elem));
+                        try ls.append(try encode(a, elem));
                     }
                     return json.Value{ .Array = ls };
                 },
@@ -93,7 +88,7 @@ test "encode" {
         value: usize,
     };
     warn("\n");
-    try testEncode(Int, a, Int{ .value = 12 });
+    try testEncode(a, Int{ .value = 12 });
     // try testEncode(a, &Int{ .value = 12 });
 
     const Nested = struct {
@@ -103,7 +98,7 @@ test "encode" {
         }
     };
 
-    try testEncode(Nested, a, Nested{});
+    try testEncode(a, Nested{});
 
     const NestedPtr = struct {
         value: usize,
@@ -123,17 +118,16 @@ test "encode" {
     const List = std.ArrayList(Bool);
     var list = List.init(a);
     try list.append(Bool{ .value = true });
-    try testEncode(List, a, list);
+    try testEncode(a, list);
 }
 
 fn testEncode(
-    comptime T: type,
     a: *mem.Allocator,
     value: var,
 ) !void {
     var arena = std.heap.ArenaAllocator.init(a);
     defer arena.deinit();
-    var v = try encode(T, &arena.allocator, value);
+    var v = try encode(&arena.allocator, value);
     v.dump();
     warn("\n");
 }
