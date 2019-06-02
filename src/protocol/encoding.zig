@@ -6,6 +6,21 @@ const mem = std.mem;
 const meta = std.meta;
 const warn = std.debug.warn;
 
+/// encode takes a value and returns json.Value that can be marshalled to json
+/// object. This limits on which objects can be marshalled and also supports
+/// custom encoding for objects.
+///
+/// Valid values supported are
+/// ```
+/// Integers => any integer that can be casted to i64
+/// Floats => any float that can be casted to f64
+/// Structs,
+/// Enums,
+/// Optionals.
+/// HashMap => keys must be string
+/// ```
+/// Also Pointers to any valid objects works fine. Including Arrays,Slices of
+/// valid objects.
 pub fn encode(
     a: *mem.Allocator,
     value: var,
