@@ -39,6 +39,9 @@ pub fn encode(
         },
         .Pointer => |pointer| {
             switch (pointer.size) {
+                .One => {
+                    return encode(a, value.*);
+                },
                 .Slice => {
                     var ls = std.ArrayList(json.Value).init(a);
                     for (value) |elem| {
@@ -104,10 +107,10 @@ test "encode" {
         value: usize,
         child: *Int,
     };
-    // try testEncode(a, NestedPtr{
-    //     .value = 12,
-    //     .child = &Int{ .value = 12 },
-    // });
+    try testEncode(a, NestedPtr{
+        .value = 12,
+        .child = &Int{ .value = 12 },
+    });
 
     const Bool = struct {
         value: bool,
