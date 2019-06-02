@@ -33,7 +33,13 @@ pub fn encode(
             comptime var i: usize = 0;
             inline while (i < elem.fields.len) : (i += 1) {
                 const field = elem.fields[i];
-                _ = try m.put(field.name, try encode(a, @field(value, field.name)));
+                if (@typeId(field.field_type) == .Optional) {
+                    if (@field(value, field.name)) |optional_value| {
+                        _ = try m.put(field.name, try encode(a, optional_value));
+                    }
+                } else {
+                    _ = try m.put(field.name, try encode(a, @field(value, field.name)));
+                }
             }
             return json.Value{ .Object = m };
         },
@@ -122,6 +128,12 @@ test "encode" {
     var list = List.init(a);
     try list.append(Bool{ .value = true });
     try testEncode(a, list);
+
+    const Optional = struct {
+        maybe: ?bool,
+    };
+    try testEncode(a, Optional{ .maybe = null });
+    try testEncode(a, Optional{ .maybe = true });
 }
 
 fn testEncode(
