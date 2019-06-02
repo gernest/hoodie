@@ -8,6 +8,8 @@
 
 const std = @import("std");
 
+const Comparison = mem.Compare;
+
 const mem = std.mem;
 const warn = std.debug.warn;
 
@@ -37,12 +39,6 @@ fn isBadNum(v: []const u8) bool {
     while (i < v.len and '0' <= v[i] and v[i] <= '9') : (i += 1) {}
     return i == v.len and i > 1 and v[0] == '0';
 }
-
-pub const Comparison = enum {
-    LessThan,
-    Equal,
-    GreaterThan,
-};
 
 pub fn compare(x: []const u8, y: []const u8) !Comparison {
     var a = try parse(x);
