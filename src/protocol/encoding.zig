@@ -33,12 +33,16 @@ pub fn encode(
             comptime var i: usize = 0;
             inline while (i < elem.fields.len) : (i += 1) {
                 const field = elem.fields[i];
-                if (@typeId(field.field_type) == .Optional) {
-                    if (@field(value, field.name)) |optional_value| {
-                        _ = try m.put(field.name, try encode(a, optional_value));
+                if (validValue(field.field_type)) {
+                    if (@typeId(field.field_type) == .Optional) {
+                        if (@field(value, field.name)) |optional_value| {
+                            if (validValue(@typeOf(optional_value))) {
+                                _ = try m.put(field.name, try encode(a, optional_value));
+                            }
+                        }
+                    } else {
+                        _ = try m.put(field.name, try encode(a, @field(value, field.name)));
                     }
-                } else {
-                    _ = try m.put(field.name, try encode(a, @field(value, field.name)));
                 }
             }
             return json.Value{ .Object = m };
@@ -56,7 +60,6 @@ pub fn encode(
                     return json.Value{ .Array = ls };
                 },
                 else => {
-                    warn("{} {}\n", @typeId(T), pointer.size);
                     return error.NotSupported;
                 },
             }
@@ -81,9 +84,17 @@ const check_array_list = meta.trait.multiTrait(
     },
 );
 
-fn valid(value: var) bool {
-    switch (@typeId(@typeOf(value))) {
-        .Int, .Float, .Pointer, .Array, .Struct => return true,
+/// Returns true if T is a valid value for encoding and false aotherwise.
+fn validValue(comptime T: type) bool {
+    switch (@typeId(T)) {
+        .Int,
+        .Float,
+        .Bool,
+        .Pointer,
+        .Array,
+        .Struct,
+        .Optional,
+        => return true,
         else => {
             return false;
         },
