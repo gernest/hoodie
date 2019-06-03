@@ -159,6 +159,15 @@ pub const Scope = struct {
         return ls;
     }
 
+    // / returns an object with name that is is the scope, it reyurns null if
+    // the object doesn't exist.
+    pub fn lookup(self: *Scope, name: []const u8) ?*Object {
+        if (self.elements.get(name)) |kv| {
+            return kv.value;
+        }
+        return null;
+    }
+
     fn stringSortFn(lhs: []const u8, rhs: []const u8) bool {
         return mem.compare(u8, lhs, rhs) == .LessThan;
     }
