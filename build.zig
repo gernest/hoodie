@@ -2,7 +2,7 @@ const Builder = @import("std").build.Builder;
 
 pub fn build(b: *Builder) void {
     const mode = b.standardReleaseOptions();
-    const exe = b.addExecutable("hoodie", "src/main.zig");
+    const exe = b.addExecutable("hoodie", "src/hoodie.zig");
     exe.setBuildMode(mode);
 
     const run_cmd = exe.run();

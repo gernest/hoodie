@@ -1,4 +1,4 @@
-const jsonrpc2 = @import("jsonrpc2/jsonrpc2.zig");
+const jsonrpc2 = @import("../lsp/jsonrpc2/jsonrpc2.zig");
 const std = @import("std");
 
 const Conn = jsonrpc2.Conn;

@@ -1,8 +1,7 @@
 const builtin = @import("builtin");
-const format = @import("fmt.zig");
-const lsp = @import("lsp.zig").run;
-
-const outline = @import("outline.zig").outline;
+const format = @import("cmd/fmt.zig");
+const lsp = @import("cmd/lsp.zig").run;
+const outline = @import("cmd/outline.zig").outline;
 const std = @import("std");
 
 const debug = std.debug;
@@ -17,10 +16,9 @@ const process = std.process;
 const max_src_size = 2 * 1024 * 1024 * 1024; // 2 GiB
 
 pub const OsIterator = struct {
-    const Error = process.ArgIterator.NextError;
-
     arena: heap.ArenaAllocator,
     args: std.process.ArgIterator,
+    const Error = process.ArgIterator.NextError;
 
     pub fn init(allocator: *mem.Allocator) OsIterator {
         return OsIterator{
