@@ -2,12 +2,14 @@ const builtin = @import("builtin");
 const std = @import("std");
 
 const Allocator = std.mem.Allocator;
+const ArrayList = std.ArrayList;
 const Node = ast.Node;
 const Token = std.zig.Token;
 const Tree = ast.Tree;
 const ast = std.zig.ast;
 const mem = std.mem;
 const parse = std.zig.parse;
+const sort = std.sort.sort;
 const warn = std.debug.warn;
 
 pub const Object = struct {
@@ -25,13 +27,18 @@ pub const Object = struct {
     /// The start position for the scope that conains this object.
     scope_position: Token,
 
+    pub const Map = std.AutoHashMap([]const u8, *Object);
+
+    pub const Var = struct {
+        object: Object,
+        bound: ?bool,
+    };
+
     pub const Color = enum {
         White,
         Black,
         Grey,
     };
-
-    pub const Map = std.AutoHashMap([]const u8, *Object);
 
     pub fn format(
         self: *Object,
@@ -46,26 +53,10 @@ pub const Object = struct {
     fn sameIdFn(self: *Object, pkg: *Package, name: []const u8) bool {
         return self.sameIdFn(self, pkg, name);
     }
-
-    pub const Var = struct {
-        object: Object,
-        bound: ?bool,
-    };
 };
 
 pub const Type = struct {
     id: Id,
-
-    pub const Id = enum {
-        Basic,
-        Array,
-        Slice,
-        Container,
-        Pointer,
-        Signature,
-        Mao,
-        Named,
-    };
 
     pub const Basic = struct {
         base: Type,
@@ -88,6 +79,17 @@ pub const Type = struct {
 
     pub const Pointer = struct {
         base_type: *Type,
+    };
+
+    pub const Id = enum {
+        Basic,
+        Array,
+        Slice,
+        Container,
+        Pointer,
+        Signature,
+        Mao,
+        Named,
     };
 
     pub fn format(
@@ -117,6 +119,8 @@ pub const Type = struct {
     }
 };
 
+pub const StringSlice = ArrayList([]const u8);
+
 pub const Scope = struct {
     parent: *Scope,
     children: List,
@@ -124,7 +128,7 @@ pub const Scope = struct {
     token: ?Token,
     is_func: bool,
 
-    pub const List = std.ArrayList(*Scope);
+    pub const List = ArrayList(*Scope);
 
     fn create(a: *Allocator, parent: ?*Scope) !*Scope {
         var s = try a.create(Scope);
@@ -143,6 +147,21 @@ pub const Scope = struct {
         name: []const u8,
         node: *Node,
     ) !void {}
+
+    /// returns a scope's element names in sorted order.
+    fn names(self: *Scope, a: *Allocator) !StringSlice {
+        var ls = StringSlice.init(a);
+        var it = self.elements.iterator();
+        while (it.next()) |next| {
+            try ls.append(next.key);
+        }
+        sort([]const u8, ls.toSlice(), stringSortFn);
+        return ls;
+    }
+
+    fn stringSortFn(lhs: []const u8, rhs: []const u8) bool {
+        return mem.compare(u8, lhs, rhs) == .LessThan;
+    }
 };
 
 /// Package defines a repesentation of a zig source file.
