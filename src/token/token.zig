@@ -1,6 +1,8 @@
 const std = @import("std");
-const heap = std.heap;
+
 const Allocator = std.mem.Allocator;
+const heap = std.heap;
+const mem = std.mem;
 
 pub const Position = struct {
     filename: []const u8,
@@ -56,7 +58,13 @@ pub const File = struct {
         column: usize,
     };
 
-    pub fn init(a: *Allocator, set: *FileSet, name: []const u8, base: usize, size: usize) File {
+    pub fn init(
+        a: *Allocator,
+        set: *FileSet,
+        name: []const u8,
+        base: usize,
+        size: usize,
+    ) File {
         return File{
             .set = set,
             .name = name,
@@ -66,37 +74,6 @@ pub const File = struct {
             .lines = LineList.init(a),
         };
     }
-
-    pub const FileSet = struct {
-        mutex: std.Mutex,
-        base: usize,
-        files: FileList,
-        last: ?*File,
-
-        pub const FileList = std.ArrayList(*File);
-
-        pub fn init(a: *Allocator) FileSet {
-            return FileSet{
-                .mutex = std.Mutex.init(),
-                .base = 1,
-                .files = FileList.init(a),
-                .arena = heap.ArenaAllocator.init(a),
-                .last = null,
-            };
-        }
-
-        pub fn addFile(self: *FileSet, base: usize, size: usize) !*File {
-            if (base < self.base) {
-                return error.IllegalBase;
-            }
-            var a = &self.arena.allocator;
-            var f = try a.create(File);
-            f.* = File.init();
-            try (&self.files).append(f);
-            self.last = f;
-            return f;
-        }
-    };
 
     fn lineCount(self: *File) usize {
         const held = self.mutex.acquire();
@@ -128,4 +105,107 @@ pub const File = struct {
         mem.copy(u8, slice[line..], slice[line + 1 ..]);
         try a.shrink(a.len - 1);
     }
+
+    fn position(self: *File, pos: usize) ?Position {
+        const offset = pos - self.base;
+        return self.unpack(offset);
+    }
+
+    pub fn unpack(self: *File, offset: Pos) Position {
+        var pos = Position{
+            .name = self.name,
+            .offset = offset,
+            .line = 0,
+            .column = 0,
+        };
+        if (searchInts(self.lines.toSlice(), offset)) |i| {
+            pos.line = i + 1;
+            pos.column = offset - self.lines.at(i) + 1;
+        }
+        return pos;
+    }
+
+    pub fn positionFor(self: *File, pos: Pos) ?Position {
+        switch (pos) {
+            .NoPos => return null,
+            .Pos => |p| {
+                if (p < self.base or p > self.base + self.size) {
+                    @panic("illegal pos value");
+                }
+                return self.position(pos);
+            },
+        }
+    }
 };
+
+pub const Pos = union(enum) {
+    NoPos,
+    Pos: usize,
+};
+
+pub const FileSet = struct {
+    mutex: std.Mutex,
+    base: usize,
+    files: FileList,
+    last: ?*File,
+
+    pub const FileList = std.ArrayList(*File);
+
+    pub fn init(a: *Allocator) FileSet {
+        return FileSet{
+            .mutex = std.Mutex.init(),
+            .base = 1,
+            .files = FileList.init(a),
+            .arena = heap.ArenaAllocator.init(a),
+            .last = null,
+        };
+    }
+
+    pub fn addFile(self: *FileSet, base: usize, size: usize) !*File {
+        if (base < self.base) {
+            return error.IllegalBase;
+        }
+        var a = &self.arena.allocator;
+        var f = try a.create(File);
+        f.* = File.init(a, self, name, base, size);
+        try self.files.append(f);
+        self.base = base + size + 1;
+        self.last = f;
+        return f;
+    }
+
+    fn searchFiles(ls: *FileList, x: usize) ?usize {}
+
+    pub fn file(self: *FileSet, pos: Pos) ?*File {
+        switch (pos) {
+            .NoPos => {
+                return null;
+            },
+            .Pos => |p| {
+                return self.getFile(p);
+            },
+            else => unreachable,
+        }
+    }
+
+    fn getFile(slef: *FileSet, pos: usize) ?*File {
+        if (self.last) |f| {
+            if (f.base <= pos and pos <= f.base + f.size) {
+                return f;
+            }
+        }
+        if (searchFiles(self.files)) |i| {
+            var f = self.files.at(i);
+            if (p <= f.base + f.size) {
+                //TODO lock
+                s.last = f;
+                return f;
+            }
+        }
+        return null;
+    }
+};
+
+fn searchInts(a: []usize, x: usize) ?usize {
+    return mem.indexOfScalar(usize, a, x);
+}
