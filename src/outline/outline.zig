@@ -263,207 +263,373 @@ fn collect(
     const last_token_index = decl.lastToken();
     const first_token = tree.tokens.at(first_token_ndex);
     const last_token = tree.tokens.at(last_token_index);
+    // decl.dump(0);
     switch (decl.id) {
         .VarDecl => {
-            const var_decl = @fieldParentPtr(ast.Node.VarDecl, "base", decl);
-            const decl_name = tree.tokenSlice(var_decl.name_token);
-            const mut = tree.tokenSlice(var_decl.mut_token);
-            const is_mutable = mem.eql(u8, mut, "const");
-            if (var_decl.init_node) |init_node| {
-                switch (init_node.id) {
-                    .BuiltinCall => {
-                        var builtn_call = @fieldParentPtr(ast.Node.BuiltinCall, "base", init_node);
-                        const fn_name = tree.tokenSlice(builtn_call.builtin_token);
-                        if (mem.eql(u8, fn_name, "@import")) {
-                            var decl_ptr = try ls.allocator.create(Declaration);
-                            decl_ptr.* = Declaration{
-                                .start = first_token.start,
-                                .end = last_token.end,
-                                .typ = Declaration.Type.Import,
-                                .label = decl_name,
-                                .node = decl,
-                                .zig_doc = getDoc(tree, var_decl.doc_comments),
-                                .is_public = var_decl.visib_token != null,
-                                .is_mutable = is_mutable,
-                                .children = Declaration.List.init(ls.allocator),
-                            };
-                            try ls.append(decl_ptr);
-                        } else {
-                            var decl_ptr = try ls.allocator.create(Declaration);
-                            decl_ptr.* = Declaration{
-                                .start = first_token.start,
-                                .end = last_token.end,
-                                .typ = Declaration.Type.mutable(mut),
-                                .label = decl_name,
-                                .node = decl,
-                                .zig_doc = getDoc(tree, var_decl.doc_comments),
-                                .is_public = var_decl.visib_token != null,
-                                .is_mutable = is_mutable,
-                                .children = Declaration.List.init(ls.allocator),
-                            };
-                            try ls.append(decl_ptr);
-                        }
-                    },
-                    .ContainerDecl => {
-                        const container_decl = @fieldParentPtr(ast.Node.ContainerDecl, "base", init_node);
-                        const container_kind = tree.tokenSlice(container_decl.kind_token);
-                        const typ = Declaration.Type.fromString(container_kind);
-                        if (typ) |kind| {
-                            var decl_ptr = try ls.allocator.create(Declaration);
-                            decl_ptr.* = Declaration{
-                                .start = first_token.start,
-                                .end = last_token.end,
-                                .typ = kind,
-                                .label = decl_name,
-                                .node = decl,
-                                .zig_doc = getDoc(tree, var_decl.doc_comments),
-                                .is_public = var_decl.visib_token != null,
-                                .is_mutable = is_mutable,
-                                .children = Declaration.List.init(ls.allocator),
-                            };
-                            var it = container_decl.fields_and_decls.iterator(0);
-                            while (true) {
-                                var field = (it.next() orelse break).*;
-                                const field_first_token_ndex = field.firstToken();
-                                const field_last_token_index = field.lastToken();
-                                const field_first_token = tree.tokens.at(field_first_token_ndex);
-                                const field_last_token = tree.tokens.at(field_last_token_index);
-                                switch (field.id) {
-                                    .ContainerField => {
-                                        const field_decl = @fieldParentPtr(ast.Node.ContainerField, "base", field);
-                                        const field_name = tree.tokenSlice(field_decl.name_token);
-                                        var field_ptr = try ls.allocator.create(Declaration);
-                                        field_ptr.* = Declaration{
-                                            .start = field_first_token.start,
-                                            .end = field_last_token.end,
-                                            .typ = Declaration.Type.Field,
-                                            .label = field_name,
-                                            .node = field,
-                                            .zig_doc = getDoc(tree, field_decl.doc_comments),
-                                            .is_public = field_decl.visib_token != null,
-                                            .is_mutable = false,
-                                            .children = Declaration.List.init(ls.allocator),
-                                        };
-                                        try (&decl_ptr.children).append(field_ptr);
-                                    },
-                                    .FnProto => {
-                                        const fn_decl = @fieldParentPtr(ast.Node.FnProto, "base", field);
-                                        if (fn_decl.name_token) |idx| {
-                                            const fn_name = tree.tokenSlice(idx);
-                                            var fn_decl_ptr = try ls.allocator.create(Declaration);
-                                            fn_decl_ptr.* = Declaration{
-                                                .start = field_first_token.start,
-                                                .end = field_last_token.end,
-                                                .typ = Declaration.Type.Fn,
-                                                .label = fn_name,
-                                                .node = field,
-                                                .zig_doc = getDoc(tree, fn_decl.doc_comments),
-                                                .is_public = fn_decl.visib_token != null,
-                                                .is_mutable = false,
-                                                .children = Declaration.List.init(ls.allocator),
-                                            };
-                                            try (&decl_ptr.children).append(fn_decl_ptr);
+            try collectVarDecl(tree, ls, decl);
+        },
+        .ContainerField => {
+            try collectContainerDecl(tree, ls, decl);
+        },
+        .TestDecl => {
+            const test_decl = @fieldParentPtr(ast.Node.TestDecl, "base", decl);
+            const name_decl = @fieldParentPtr(ast.Node.StringLiteral, "base", test_decl.name);
+            const test_name = tree.tokenSlice(name_decl.token);
+            var decl_ptr = try ls.allocator.create(Declaration);
+            decl_ptr.* = Declaration{
+                .start = first_token.start,
+                .end = last_token.end,
+                .typ = Declaration.Type.Test,
+                .label = unquote(test_name),
+                .node = decl,
+                .zig_doc = getDoc(tree, test_decl.doc_comments),
+                .is_public = false,
+                .is_mutable = false,
+                .children = Declaration.List.init(ls.allocator),
+            };
+            try ls.append(decl_ptr);
+        },
+        .FnProto => {
+            try collectFnProto(tree, ls, decl);
+        },
+        else => {},
+    }
+}
+
+fn collectFnProto(
+    tree: *ast.Tree,
+    ls: *Declaration.List,
+    decl: *ast.Node,
+) !void {
+    const first_token_ndex = decl.firstToken();
+    const last_token_index = decl.lastToken();
+    const first_token = tree.tokens.at(first_token_ndex);
+    const last_token = tree.tokens.at(last_token_index);
+
+    const fn_decl = @fieldParentPtr(ast.Node.FnProto, "base", decl);
+    if (fn_decl.name_token) |idx| {
+        const fn_name = tree.tokenSlice(idx);
+        switch (fn_decl.return_type) {
+            .Explicit => |n| {
+                const ident = @fieldParentPtr(ast.Node.Identifier, "base", n);
+                const txt = tree.tokenSlice(ident.token);
+                if (mem.eql(u8, txt, "type")) {
+                    if (fn_decl.body_node) |body| {
+                        const block = @fieldParentPtr(ast.Node.Block, "base", body);
+                        if (block.statements.count() > 0) {
+                            const last = block.statements.count() - 1;
+                            var ln = block.statements.at(last).*;
+                            const cf = @fieldParentPtr(ast.Node.ControlFlowExpression, "base", ln);
+                            switch (cf.kind) {
+                                .Return => {
+                                    if (cf.rhs) |r| {
+                                        if (r.id == .ContainerDecl) {
+                                            const container_decl = @fieldParentPtr(ast.Node.ContainerDecl, "base", r);
+                                            const container_kind = tree.tokenSlice(container_decl.kind_token);
+                                            const typ = Declaration.Type.fromString(container_kind);
+                                            if (typ) |kind| {
+                                                var decl_ptr = try ls.allocator.create(Declaration);
+                                                decl_ptr.* = Declaration{
+                                                    .start = first_token.start,
+                                                    .end = last_token.end,
+                                                    .typ = kind,
+                                                    .label = fn_name,
+                                                    .node = decl,
+                                                    .zig_doc = getDoc(tree, fn_decl.doc_comments),
+                                                    .is_public = fn_decl.visib_token != null,
+                                                    .is_mutable = false,
+                                                    .children = Declaration.List.init(ls.allocator),
+                                                };
+                                                var it = container_decl.fields_and_decls.iterator(0);
+                                                while (true) {
+                                                    var field = (it.next() orelse break).*;
+                                                    const field_first_token_ndex = field.firstToken();
+                                                    const field_last_token_index = field.lastToken();
+                                                    const field_first_token = tree.tokens.at(field_first_token_ndex);
+                                                    const field_last_token = tree.tokens.at(field_last_token_index);
+                                                    switch (field.id) {
+                                                        .ContainerField => {
+                                                            const field_decl = @fieldParentPtr(ast.Node.ContainerField, "base", field);
+                                                            const field_name = tree.tokenSlice(field_decl.name_token);
+                                                            var field_ptr = try ls.allocator.create(Declaration);
+                                                            field_ptr.* = Declaration{
+                                                                .start = field_first_token.start,
+                                                                .end = field_last_token.end,
+                                                                .typ = Declaration.Type.Field,
+                                                                .label = field_name,
+                                                                .node = field,
+                                                                .zig_doc = getDoc(tree, field_decl.doc_comments),
+                                                                .is_public = field_decl.visib_token != null,
+                                                                .is_mutable = false,
+                                                                .children = Declaration.List.init(ls.allocator),
+                                                            };
+                                                            try (&decl_ptr.children).append(field_ptr);
+                                                        },
+                                                        .FnProto => {
+                                                            const ret_fn_decl = @fieldParentPtr(ast.Node.FnProto, "base", field);
+                                                            if (ret_fn_decl.name_token) |ret_idx| {
+                                                                const ret_fn_name = tree.tokenSlice(ret_idx);
+                                                                var fn_decl_ptr = try ls.allocator.create(Declaration);
+                                                                fn_decl_ptr.* = Declaration{
+                                                                    .start = field_first_token.start,
+                                                                    .end = field_last_token.end,
+                                                                    .typ = Declaration.Type.Fn,
+                                                                    .label = ret_fn_name,
+                                                                    .node = field,
+                                                                    .zig_doc = getDoc(tree, ret_fn_decl.doc_comments),
+                                                                    .is_public = ret_fn_decl.visib_token != null,
+                                                                    .is_mutable = false,
+                                                                    .children = Declaration.List.init(ls.allocator),
+                                                                };
+                                                                try (&decl_ptr.children).append(fn_decl_ptr);
+                                                            }
+                                                        },
+                                                        .VarDecl => {
+                                                            const field_decl = @fieldParentPtr(ast.Node.VarDecl, "base", field);
+                                                            const field_name = tree.tokenSlice(field_decl.name_token);
+                                                            const f_mut = tree.tokenSlice(field_decl.mut_token);
+                                                            const f_is_mutable = mem.eql(u8, f_mut, "var");
+                                                            var field_ptr = try ls.allocator.create(Declaration);
+                                                            field_ptr.* = Declaration{
+                                                                .start = field_first_token.start,
+                                                                .end = field_last_token.end,
+                                                                .typ = Declaration.Type.mutable(
+                                                                    tree.tokenSlice(field_decl.mut_token),
+                                                                ),
+                                                                .label = field_name,
+                                                                .node = field,
+                                                                .zig_doc = getDoc(tree, field_decl.doc_comments),
+                                                                .is_public = field_decl.visib_token != null,
+                                                                .is_mutable = f_is_mutable,
+                                                                .children = Declaration.List.init(ls.allocator),
+                                                            };
+                                                            try (&decl_ptr.children).append(field_ptr);
+                                                        },
+                                                        else => {
+                                                            field.dump(0);
+                                                        },
+                                                    }
+                                                }
+                                                try ls.append(decl_ptr);
+                                            }
+                                            return;
                                         }
-                                    },
-                                    .VarDecl => {
-                                        const field_decl = @fieldParentPtr(ast.Node.VarDecl, "base", field);
-                                        const field_name = tree.tokenSlice(field_decl.name_token);
-                                        const f_mut = tree.tokenSlice(field_decl.mut_token);
-                                        const f_is_mutable = mem.eql(u8, f_mut, "var");
-                                        var field_ptr = try ls.allocator.create(Declaration);
-                                        field_ptr.* = Declaration{
-                                            .start = field_first_token.start,
-                                            .end = field_last_token.end,
-                                            .typ = Declaration.Type.mutable(
-                                                tree.tokenSlice(field_decl.mut_token),
-                                            ),
-                                            .label = field_name,
-                                            .node = field,
-                                            .zig_doc = getDoc(tree, field_decl.doc_comments),
-                                            .is_public = field_decl.visib_token != null,
-                                            .is_mutable = f_is_mutable,
-                                            .children = Declaration.List.init(ls.allocator),
-                                        };
-                                        try (&decl_ptr.children).append(field_ptr);
-                                    },
-                                    else => {
-                                        field.dump(0);
-                                    },
-                                }
+                                    }
+                                },
+                                else => {},
                             }
-                            try ls.append(decl_ptr);
                         }
-                    },
-                    .InfixOp => {
-                        const infix_decl = @fieldParentPtr(ast.Node.InfixOp, "base", init_node);
-                        switch (infix_decl.op) {
-                            .Period => {
-                                var inner = innerMostInfix(infix_decl.lhs);
-                                switch (inner.id) {
-                                    .BuiltinCall => {
-                                        var builtn_call = @fieldParentPtr(ast.Node.BuiltinCall, "base", inner);
-                                        const fn_name = tree.tokenSlice(builtn_call.builtin_token);
-                                        if (mem.eql(u8, fn_name, "@import")) {
-                                            var decl_ptr = try ls.allocator.create(Declaration);
-                                            decl_ptr.* = Declaration{
-                                                .start = first_token.start,
-                                                .end = last_token.end,
-                                                .typ = Declaration.Type.Import,
-                                                .label = decl_name,
-                                                .node = decl,
-                                                .zig_doc = getDoc(tree, var_decl.doc_comments),
-                                                .is_public = var_decl.visib_token != null,
-                                                .is_mutable = is_mutable,
-                                                .children = Declaration.List.init(ls.allocator),
-                                            };
-                                            try ls.append(decl_ptr);
-                                        } else {
-                                            var decl_ptr = try ls.allocator.create(Declaration);
-                                            decl_ptr.* = Declaration{
-                                                .start = first_token.start,
-                                                .end = last_token.end,
-                                                .typ = Declaration.Type.mutable(mut),
-                                                .label = decl_name,
-                                                .node = decl,
-                                                .zig_doc = getDoc(tree, var_decl.doc_comments),
-                                                .is_public = var_decl.visib_token != null,
-                                                .is_mutable = is_mutable,
-                                                .children = Declaration.List.init(ls.allocator),
-                                            };
-                                            try ls.append(decl_ptr);
-                                        }
-                                    },
-                                    .Identifier => {
-                                        var decl_ptr = try ls.allocator.create(Declaration);
-                                        decl_ptr.* = Declaration{
-                                            .start = first_token.start,
-                                            .end = last_token.end,
-                                            .typ = .TopAssign,
-                                            .label = decl_name,
-                                            .node = decl,
-                                            .zig_doc = getDoc(tree, var_decl.doc_comments),
-                                            .is_public = var_decl.visib_token != null,
-                                            .is_mutable = is_mutable,
-                                            .children = Declaration.List.init(ls.allocator),
-                                        };
-                                        try ls.append(decl_ptr);
-                                    },
-                                    else => {
-                                        var decl_ptr = try ls.allocator.create(Declaration);
-                                        decl_ptr.* = Declaration{
-                                            .start = first_token.start,
-                                            .end = last_token.end,
-                                            .typ = Declaration.Type.mutable(mut),
-                                            .label = decl_name,
-                                            .node = decl,
-                                            .zig_doc = getDoc(tree, var_decl.doc_comments),
-                                            .is_public = var_decl.visib_token != null,
-                                            .is_mutable = is_mutable,
-                                            .children = Declaration.List.init(ls.allocator),
-                                        };
-                                        try ls.append(decl_ptr);
-                                    },
+                    }
+                }
+            },
+            else => {},
+        }
+        var decl_ptr = try ls.allocator.create(Declaration);
+        decl_ptr.* = Declaration{
+            .start = first_token.start,
+            .end = last_token.end,
+            .typ = .Fn,
+            .label = fn_name,
+            .node = decl,
+            .zig_doc = getDoc(tree, fn_decl.doc_comments),
+            .is_public = fn_decl.visib_token != null,
+            .is_mutable = false,
+            .children = Declaration.List.init(ls.allocator),
+        };
+        try ls.append(decl_ptr);
+    }
+}
+fn collectVarDecl(
+    tree: *ast.Tree,
+    ls: *Declaration.List,
+    decl: *ast.Node,
+) !void {
+    const first_token_ndex = decl.firstToken();
+    const last_token_index = decl.lastToken();
+    const first_token = tree.tokens.at(first_token_ndex);
+    const last_token = tree.tokens.at(last_token_index);
+    const var_decl = @fieldParentPtr(ast.Node.VarDecl, "base", decl);
+    const decl_name = tree.tokenSlice(var_decl.name_token);
+    const mut = tree.tokenSlice(var_decl.mut_token);
+    const is_mutable = mem.eql(u8, mut, "const");
+    if (var_decl.init_node) |init_node| {
+        switch (init_node.id) {
+            .BuiltinCall => {
+                var builtn_call = @fieldParentPtr(ast.Node.BuiltinCall, "base", init_node);
+                const fn_name = tree.tokenSlice(builtn_call.builtin_token);
+                if (mem.eql(u8, fn_name, "@import")) {
+                    var decl_ptr = try ls.allocator.create(Declaration);
+                    decl_ptr.* = Declaration{
+                        .start = first_token.start,
+                        .end = last_token.end,
+                        .typ = Declaration.Type.Import,
+                        .label = decl_name,
+                        .node = decl,
+                        .zig_doc = getDoc(tree, var_decl.doc_comments),
+                        .is_public = var_decl.visib_token != null,
+                        .is_mutable = is_mutable,
+                        .children = Declaration.List.init(ls.allocator),
+                    };
+                    try ls.append(decl_ptr);
+                } else {
+                    var decl_ptr = try ls.allocator.create(Declaration);
+                    decl_ptr.* = Declaration{
+                        .start = first_token.start,
+                        .end = last_token.end,
+                        .typ = Declaration.Type.mutable(mut),
+                        .label = decl_name,
+                        .node = decl,
+                        .zig_doc = getDoc(tree, var_decl.doc_comments),
+                        .is_public = var_decl.visib_token != null,
+                        .is_mutable = is_mutable,
+                        .children = Declaration.List.init(ls.allocator),
+                    };
+                    try ls.append(decl_ptr);
+                }
+            },
+            .ContainerDecl => {
+                const container_decl = @fieldParentPtr(ast.Node.ContainerDecl, "base", init_node);
+                const container_kind = tree.tokenSlice(container_decl.kind_token);
+                const typ = Declaration.Type.fromString(container_kind);
+                if (typ) |kind| {
+                    var decl_ptr = try ls.allocator.create(Declaration);
+                    decl_ptr.* = Declaration{
+                        .start = first_token.start,
+                        .end = last_token.end,
+                        .typ = kind,
+                        .label = decl_name,
+                        .node = decl,
+                        .zig_doc = getDoc(tree, var_decl.doc_comments),
+                        .is_public = var_decl.visib_token != null,
+                        .is_mutable = is_mutable,
+                        .children = Declaration.List.init(ls.allocator),
+                    };
+                    var it = container_decl.fields_and_decls.iterator(0);
+                    while (true) {
+                        var field = (it.next() orelse break).*;
+                        const field_first_token_ndex = field.firstToken();
+                        const field_last_token_index = field.lastToken();
+                        const field_first_token = tree.tokens.at(field_first_token_ndex);
+                        const field_last_token = tree.tokens.at(field_last_token_index);
+                        switch (field.id) {
+                            .ContainerField => {
+                                const field_decl = @fieldParentPtr(ast.Node.ContainerField, "base", field);
+                                const field_name = tree.tokenSlice(field_decl.name_token);
+                                var field_ptr = try ls.allocator.create(Declaration);
+                                field_ptr.* = Declaration{
+                                    .start = field_first_token.start,
+                                    .end = field_last_token.end,
+                                    .typ = Declaration.Type.Field,
+                                    .label = field_name,
+                                    .node = field,
+                                    .zig_doc = getDoc(tree, field_decl.doc_comments),
+                                    .is_public = field_decl.visib_token != null,
+                                    .is_mutable = false,
+                                    .children = Declaration.List.init(ls.allocator),
+                                };
+                                try (&decl_ptr.children).append(field_ptr);
+                            },
+                            .FnProto => {
+                                const fn_decl = @fieldParentPtr(ast.Node.FnProto, "base", field);
+                                if (fn_decl.name_token) |idx| {
+                                    const fn_name = tree.tokenSlice(idx);
+                                    var fn_decl_ptr = try ls.allocator.create(Declaration);
+                                    fn_decl_ptr.* = Declaration{
+                                        .start = field_first_token.start,
+                                        .end = field_last_token.end,
+                                        .typ = Declaration.Type.Fn,
+                                        .label = fn_name,
+                                        .node = field,
+                                        .zig_doc = getDoc(tree, fn_decl.doc_comments),
+                                        .is_public = fn_decl.visib_token != null,
+                                        .is_mutable = false,
+                                        .children = Declaration.List.init(ls.allocator),
+                                    };
+                                    try (&decl_ptr.children).append(fn_decl_ptr);
                                 }
+                            },
+                            .VarDecl => {
+                                const field_decl = @fieldParentPtr(ast.Node.VarDecl, "base", field);
+                                const field_name = tree.tokenSlice(field_decl.name_token);
+                                const f_mut = tree.tokenSlice(field_decl.mut_token);
+                                const f_is_mutable = mem.eql(u8, f_mut, "var");
+                                var field_ptr = try ls.allocator.create(Declaration);
+                                field_ptr.* = Declaration{
+                                    .start = field_first_token.start,
+                                    .end = field_last_token.end,
+                                    .typ = Declaration.Type.mutable(
+                                        tree.tokenSlice(field_decl.mut_token),
+                                    ),
+                                    .label = field_name,
+                                    .node = field,
+                                    .zig_doc = getDoc(tree, field_decl.doc_comments),
+                                    .is_public = field_decl.visib_token != null,
+                                    .is_mutable = f_is_mutable,
+                                    .children = Declaration.List.init(ls.allocator),
+                                };
+                                try (&decl_ptr.children).append(field_ptr);
+                            },
+                            else => {
+                                field.dump(0);
+                            },
+                        }
+                    }
+                    try ls.append(decl_ptr);
+                }
+            },
+            .InfixOp => {
+                const infix_decl = @fieldParentPtr(ast.Node.InfixOp, "base", init_node);
+                switch (infix_decl.op) {
+                    .Period => {
+                        var inner = innerMostInfix(infix_decl.lhs);
+                        switch (inner.id) {
+                            .BuiltinCall => {
+                                var builtn_call = @fieldParentPtr(ast.Node.BuiltinCall, "base", inner);
+                                const fn_name = tree.tokenSlice(builtn_call.builtin_token);
+                                if (mem.eql(u8, fn_name, "@import")) {
+                                    var decl_ptr = try ls.allocator.create(Declaration);
+                                    decl_ptr.* = Declaration{
+                                        .start = first_token.start,
+                                        .end = last_token.end,
+                                        .typ = Declaration.Type.Import,
+                                        .label = decl_name,
+                                        .node = decl,
+                                        .zig_doc = getDoc(tree, var_decl.doc_comments),
+                                        .is_public = var_decl.visib_token != null,
+                                        .is_mutable = is_mutable,
+                                        .children = Declaration.List.init(ls.allocator),
+                                    };
+                                    try ls.append(decl_ptr);
+                                } else {
+                                    var decl_ptr = try ls.allocator.create(Declaration);
+                                    decl_ptr.* = Declaration{
+                                        .start = first_token.start,
+                                        .end = last_token.end,
+                                        .typ = Declaration.Type.mutable(mut),
+                                        .label = decl_name,
+                                        .node = decl,
+                                        .zig_doc = getDoc(tree, var_decl.doc_comments),
+                                        .is_public = var_decl.visib_token != null,
+                                        .is_mutable = is_mutable,
+                                        .children = Declaration.List.init(ls.allocator),
+                                    };
+                                    try ls.append(decl_ptr);
+                                }
+                            },
+                            .Identifier => {
+                                var decl_ptr = try ls.allocator.create(Declaration);
+                                decl_ptr.* = Declaration{
+                                    .start = first_token.start,
+                                    .end = last_token.end,
+                                    .typ = .TopAssign,
+                                    .label = decl_name,
+                                    .node = decl,
+                                    .zig_doc = getDoc(tree, var_decl.doc_comments),
+                                    .is_public = var_decl.visib_token != null,
+                                    .is_mutable = is_mutable,
+                                    .children = Declaration.List.init(ls.allocator),
+                                };
+                                try ls.append(decl_ptr);
                             },
                             else => {
                                 var decl_ptr = try ls.allocator.create(Declaration);
@@ -498,64 +664,51 @@ fn collect(
                         try ls.append(decl_ptr);
                     },
                 }
-            }
-        },
-        .ContainerField => {
-            const var_decl = @fieldParentPtr(ast.Node.ContainerField, "base", decl);
-            const decl_name = tree.tokenSlice(var_decl.name_token);
-            var decl_ptr = try ls.allocator.create(Declaration);
-            decl_ptr.* = Declaration{
-                .start = first_token.start,
-                .end = last_token.end,
-                .typ = .Field,
-                .label = decl_name,
-                .node = decl,
-                .zig_doc = getDoc(tree, var_decl.doc_comments),
-                .is_public = var_decl.visib_token != null,
-                .is_mutable = false,
-                .children = Declaration.List.init(ls.allocator),
-            };
-            try ls.append(decl_ptr);
-        },
-        .TestDecl => {
-            const test_decl = @fieldParentPtr(ast.Node.TestDecl, "base", decl);
-            const name_decl = @fieldParentPtr(ast.Node.StringLiteral, "base", test_decl.name);
-            const test_name = tree.tokenSlice(name_decl.token);
-            var decl_ptr = try ls.allocator.create(Declaration);
-            decl_ptr.* = Declaration{
-                .start = first_token.start,
-                .end = last_token.end,
-                .typ = Declaration.Type.Test,
-                .label = unquote(test_name),
-                .node = decl,
-                .zig_doc = getDoc(tree, test_decl.doc_comments),
-                .is_public = false,
-                .is_mutable = false,
-                .children = Declaration.List.init(ls.allocator),
-            };
-            try ls.append(decl_ptr);
-        },
-        .FnProto => {
-            const fn_decl = @fieldParentPtr(ast.Node.FnProto, "base", decl);
-            if (fn_decl.name_token) |idx| {
-                const fn_name = tree.tokenSlice(idx);
+            },
+            else => {
                 var decl_ptr = try ls.allocator.create(Declaration);
                 decl_ptr.* = Declaration{
                     .start = first_token.start,
                     .end = last_token.end,
-                    .typ = Declaration.Type.Fn,
-                    .label = fn_name,
+                    .typ = Declaration.Type.mutable(mut),
+                    .label = decl_name,
                     .node = decl,
-                    .zig_doc = getDoc(tree, fn_decl.doc_comments),
-                    .is_public = fn_decl.visib_token != null,
-                    .is_mutable = false,
+                    .zig_doc = getDoc(tree, var_decl.doc_comments),
+                    .is_public = var_decl.visib_token != null,
+                    .is_mutable = is_mutable,
                     .children = Declaration.List.init(ls.allocator),
                 };
                 try ls.append(decl_ptr);
-            }
-        },
-        else => {},
+            },
+        }
     }
+}
+
+fn collectContainerDecl(
+    tree: *ast.Tree,
+    ls: *Declaration.List,
+    decl: *ast.Node,
+) !void {
+    const first_token_ndex = decl.firstToken();
+    const last_token_index = decl.lastToken();
+    const first_token = tree.tokens.at(first_token_ndex);
+    const last_token = tree.tokens.at(last_token_index);
+
+    const var_decl = @fieldParentPtr(ast.Node.ContainerField, "base", decl);
+    const decl_name = tree.tokenSlice(var_decl.name_token);
+    var decl_ptr = try ls.allocator.create(Declaration);
+    decl_ptr.* = Declaration{
+        .start = first_token.start,
+        .end = last_token.end,
+        .typ = .Field,
+        .label = decl_name,
+        .node = decl,
+        .zig_doc = getDoc(tree, var_decl.doc_comments),
+        .is_public = var_decl.visib_token != null,
+        .is_mutable = false,
+        .children = Declaration.List.init(ls.allocator),
+    };
+    try ls.append(decl_ptr);
 }
 
 fn innerMostInfix(node: *ast.Node) *ast.Node {
