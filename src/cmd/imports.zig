@@ -1,5 +1,5 @@
 const builtin = @import("builtin");
-const outline = @import("outline.zig");
+const outline = @import("../outline/outline.zig");
 const std = @import("std");
 
 const Token = std.zig.Token;
@@ -23,15 +23,14 @@ pub fn render(allocator: *mem.Allocator, stream: var, tree: *ast.Tree) anyerror!
 
     // make a passthrough stream that checks whether something changed
     const MyStream = struct {
-        const MyStream = @This();
-        const StreamError = @typeOf(stream).Child.Error;
-        const Stream = std.io.OutStream(StreamError);
-
         anything_changed_ptr: *bool,
         child_stream: @typeOf(stream),
         stream: Stream,
         source_index: usize,
         source: []const u8,
+        const MyStream = @This();
+        const StreamError = @typeOf(stream).Child.Error;
+        const Stream = std.io.OutStream(StreamError);
 
         fn write(iface_stream: *Stream, bytes: []const u8) StreamError!void {
             const self = @fieldParentPtr(MyStream, "stream", iface_stream);
@@ -2101,13 +2100,12 @@ fn nodeCausesSliceOpSpace(base: *ast.Node) bool {
 // The contents are not written to anything.
 
 const FindByteOutStream = struct {
-    const Self = FindByteOutStream;
-    pub const Error = error{};
-    pub const Stream = std.io.OutStream(Error);
-
     pub stream: Stream,
     pub byte_found: bool,
     byte: u8,
+    const Self = FindByteOutStream;
+    pub const Error = error{};
+    pub const Stream = std.io.OutStream(Error);
 
     pub fn init(byte: u8) Self {
         return Self{

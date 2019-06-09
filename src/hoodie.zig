@@ -1,7 +1,7 @@
 const builtin = @import("builtin");
 const format = @import("cmd/fmt.zig");
 const lsp = @import("cmd/lsp.zig").run;
-const outline = @import("cmd/outline.zig").outline;
+const outline = @import("cmd/outline.zig").exec;
 const std = @import("std");
 
 const debug = std.debug;
