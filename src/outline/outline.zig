@@ -363,7 +363,7 @@ fn collectFnProto(
                                                                 .is_mutable = false,
                                                                 .children = Declaration.List.init(ls.allocator),
                                                             };
-                                                            try (&decl_ptr.children).append(field_ptr);
+                                                            try decl_ptr.children.append(field_ptr);
                                                         },
                                                         .FnProto => {
                                                             const ret_fn_decl = @fieldParentPtr(ast.Node.FnProto, "base", field);
@@ -381,7 +381,7 @@ fn collectFnProto(
                                                                     .is_mutable = false,
                                                                     .children = Declaration.List.init(ls.allocator),
                                                                 };
-                                                                try (&decl_ptr.children).append(fn_decl_ptr);
+                                                                try decl_ptr.children.append(fn_decl_ptr);
                                                             }
                                                         },
                                                         .VarDecl => {
@@ -403,7 +403,7 @@ fn collectFnProto(
                                                                 .is_mutable = f_is_mutable,
                                                                 .children = Declaration.List.init(ls.allocator),
                                                             };
-                                                            try (&decl_ptr.children).append(field_ptr);
+                                                            try decl_ptr.children.append(field_ptr);
                                                         },
                                                         else => {
                                                             field.dump(0);
@@ -527,7 +527,7 @@ fn collectVarDecl(
                                     .is_mutable = false,
                                     .children = Declaration.List.init(ls.allocator),
                                 };
-                                try (&decl_ptr.children).append(field_ptr);
+                                try decl_ptr.children.append(field_ptr);
                             },
                             .FnProto => {
                                 const fn_decl = @fieldParentPtr(ast.Node.FnProto, "base", field);
@@ -545,7 +545,7 @@ fn collectVarDecl(
                                         .is_mutable = false,
                                         .children = Declaration.List.init(ls.allocator),
                                     };
-                                    try (&decl_ptr.children).append(fn_decl_ptr);
+                                    try decl_ptr.children.append(fn_decl_ptr);
                                 }
                             },
                             .VarDecl => {
@@ -567,7 +567,7 @@ fn collectVarDecl(
                                     .is_mutable = f_is_mutable,
                                     .children = Declaration.List.init(ls.allocator),
                                 };
-                                try (&decl_ptr.children).append(field_ptr);
+                                try decl_ptr.children.append(field_ptr);
                             },
                             else => {
                                 field.dump(0);
