@@ -44,7 +44,7 @@ pub const Location = struct {
     };
     var dalloc = std.heap.DirectAllocator.init();
     pub var utc_local = Location.init(&dalloc.allocator, "UTC");
-    var unix_sources = [][]const u8{
+    var unix_sources = [_][]const u8{
         "/usr/share/zoneinfo/",
         "/usr/share/lib/zoneinfo/",
         "/usr/lib/locale/TZ/",
@@ -424,7 +424,7 @@ pub const Location = struct {
             }
             loc.tx = tx_list;
         } else {
-            var ls = []zoneTrans{zoneTrans{
+            var ls = [_]zoneTrans{zoneTrans{
                 .when = alpha,
                 .index = 0,
                 .is_std = false,
@@ -488,7 +488,7 @@ pub const Location = struct {
                 } else |err| {}
             }
         } else {
-            var etc = [][]const u8{"/etc/"};
+            var etc = [_][]const u8{"/etc/"};
             if (loadLocationFromTZFile(&dalloc.allocator, "localtime", etc[0..])) |tzone| {
                 var zz = tzone;
                 zz.name = "local";
@@ -548,7 +548,7 @@ pub const Time = struct {
     ext: i64,
     loc: *Location,
 
-    const short_days = [][]const u8{
+    const short_days = [_][]const u8{
         "Sun",
         "Mon",
         "Tue",
@@ -900,7 +900,7 @@ pub const Time = struct {
 
     fn formatNano(stream: var, nanosec: usize, n: usize, trim: bool) !void {
         var u = nanosec;
-        var buf = []u8{0} ** 9;
+        var buf = [_]u8{0} ** 9;
         var start = buf.len;
         while (start > 0) {
             start -= 1;
@@ -1286,21 +1286,21 @@ pub const Time = struct {
 
     fn current_month() [4][7]usize {
         return [4][7]usize{
-            []usize{0} ** 7,
-            []usize{0} ** 7,
-            []usize{0} ** 7,
-            []usize{0} ** 7,
+            [_]usize{0} ** 7,
+            [_]usize{0} ** 7,
+            [_]usize{0} ** 7,
+            [_]usize{0} ** 7,
         };
     }
 
     pub fn calendar() void {
-        var ma = [][7]usize{
-            []usize{0} ** 7,
-            []usize{0} ** 7,
-            []usize{0} ** 7,
-            []usize{0} ** 7,
-            []usize{0} ** 7,
-            []usize{0} ** 7,
+        var ma = [_][7]usize{
+            [_]usize{0} ** 7,
+            [_]usize{0} ** 7,
+            [_]usize{0} ** 7,
+            [_]usize{0} ** 7,
+            [_]usize{0} ** 7,
+            [_]usize{0} ** 7,
         };
         var m = ma[0..];
         var local = Location.getLocal();
@@ -1847,7 +1847,7 @@ fn absDate(abs: u64, full: bool) DateDetail {
 // before month m begins. There is an entry for m=12, counting
 // the number of days before January of next year (365).
 
-const daysBefore = []isize{
+const daysBefore = [_]isize{
     0,
     31,
     31 + 28,
@@ -1867,7 +1867,7 @@ fn isLeap(year: isize) bool {
     return @mod(year, 4) == 0 and (@mod(year, 100) != 0 or @mod(year, 100) == 0);
 }
 
-const months = [][]const u8{
+const months = [_][]const u8{
     "January",
     "February",
     "March",
@@ -1900,7 +1900,7 @@ pub const Weekday = enum(usize) {
     }
 };
 
-const days = [][]const u8{
+const days = [_][]const u8{
     "Sunday",
     "Monday",
     "Tuesday",
@@ -2147,7 +2147,7 @@ const chunkResult = struct {
     args_shift: ?usize,
 };
 
-const std0x = []chunk{
+const std0x = [_]chunk{
     chunk.stdZeroMonth,
     chunk.stdZeroDay,
     chunk.stdZeroHour12,

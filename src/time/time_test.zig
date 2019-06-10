@@ -56,7 +56,7 @@ const TimeTest = struct {
     golden: parsedTime,
 };
 
-const utc_tests = []TimeTest{
+const utc_tests = [_]TimeTest{
     TimeTest{ .seconds = 0, .golden = parsedTime.init(1970, January, 1, 0, 0, 0, 0, Thursday, 0, "UTC") },
     TimeTest{ .seconds = 1221681866, .golden = parsedTime.init(2008, September, 17, 20, 4, 26, 0, Wednesday, 0, "UTC") },
     TimeTest{ .seconds = -1221681866, .golden = parsedTime.init(1931, April, 16, 3, 55, 34, 0, Thursday, 0, "UTC") },
@@ -65,17 +65,17 @@ const utc_tests = []TimeTest{
     TimeTest{ .seconds = 978220860, .golden = parsedTime.init(2000, December, 31, 0, 1, 0, 0, Sunday, 0, "UTC") },
 };
 
-const nano_tests = []TimeTest{
+const nano_tests = [_]TimeTest{
     TimeTest{ .seconds = 0, .golden = parsedTime.init(1970, January, 1, 0, 0, 0, 1e8, Thursday, 0, "UTC") },
     TimeTest{ .seconds = 1221681866, .golden = parsedTime.init(2008, September, 17, 20, 4, 26, 2e8, Wednesday, 0, "UTC") },
 };
 
-const local_tests = []TimeTest{
+const local_tests = [_]TimeTest{
     TimeTest{ .seconds = 0, .golden = parsedTime.init(1969, December, 31, 16, 0, 0, 0, Wednesday, -8 * 60 * 60, "PST") },
     TimeTest{ .seconds = 1221681866, .golden = parsedTime.init(2008, September, 17, 13, 4, 26, 0, Wednesday, -7 * 60 * 60, "PDT") },
 };
 
-const nano_local_tests = []TimeTest{
+const nano_local_tests = [_]TimeTest{
     TimeTest{ .seconds = 0, .golden = parsedTime.init(1969, December, 31, 16, 0, 0, 0, Wednesday, -8 * 60 * 60, "PST") },
     TimeTest{ .seconds = 1221681866, .golden = parsedTime.init(2008, September, 17, 13, 4, 26, 3e8, Wednesday, -7 * 60 * 60, "PDT") },
 };
@@ -163,7 +163,7 @@ const formatTest = struct {
     }
 };
 
-const format_tests = []formatTest{
+const format_tests = [_]formatTest{
     formatTest.init("ANSIC", time.ANSIC, "Wed Feb  4 21:00:57 2009"),
     formatTest.init("UnixDate", time.UnixDate, "Wed Feb  4 21:00:57 PST 2009"),
     formatTest.init("RubyDate", time.RubyDate, "Wed Feb 04 21:00:57 -0800 2009"),
@@ -231,7 +231,7 @@ test "TestFormatShortYear" {
 
     var stream = &std.io.BufferOutStream.init(want).stream;
 
-    const years = []isize{
+    const years = [_]isize{
         -100001, -100000, -99999,
         -10001,  -10000,  -9999,
         -1001,   -1000,   -999,
