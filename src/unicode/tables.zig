@@ -177,7 +177,7 @@ pub const Category = enum {
 
 const _C = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0000, 0x001f, 1),
             Range16.init(0x007f, 0x009f, 1),
             Range16.init(0x00ad, 0x0600, 1363),
@@ -196,7 +196,7 @@ const _C = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x110bd, 0x1bca0, 44003),
             Range32.init(0x1bca1, 0x1bca3, 1),
             Range32.init(0x1d173, 0x1d17a, 1),
@@ -211,18 +211,18 @@ const _C = RangeTable{
 };
 const _Cc = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0000, 0x001f, 1),
             Range16.init(0x007f, 0x009f, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 2,
 };
 const _Cf = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x00ad, 0x0600, 1363),
             Range16.init(0x0601, 0x0605, 1),
             Range16.init(0x061c, 0x06dd, 193),
@@ -238,7 +238,7 @@ const _Cf = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x110bd, 0x1bca0, 44003),
             Range32.init(0x1bca1, 0x1bca3, 1),
             Range32.init(0x1d173, 0x1d17a, 1),
@@ -251,11 +251,11 @@ const _Cf = RangeTable{
 };
 const _Co = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0xe000, 0xf8ff, 1)};
+        var r = [_]Range16{Range16.init(0xe000, 0xf8ff, 1)};
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0xf0000, 0xffffd, 1),
             Range32.init(0x100000, 0x10fffd, 1),
         };
@@ -265,15 +265,15 @@ const _Co = RangeTable{
 };
 const _Cs = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0xd800, 0xdfff, 1)};
+        var r = [_]Range16{Range16.init(0xd800, 0xdfff, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _L = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0041, 0x005a, 1),
             Range16.init(0x0061, 0x007a, 1),
             Range16.init(0x00aa, 0x00b5, 11),
@@ -637,7 +637,7 @@ const _L = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10000, 0x1000b, 1),
             Range32.init(0x1000d, 0x10026, 1),
             Range32.init(0x10028, 0x1003a, 1),
@@ -834,7 +834,7 @@ const _L = RangeTable{
 };
 const _Ll = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0061, 0x007a, 1),
             Range16.init(0x00b5, 0x00df, 42),
             Range16.init(0x00e0, 0x00f6, 1),
@@ -956,7 +956,7 @@ const _Ll = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10428, 0x1044f, 1),
             Range32.init(0x104d8, 0x104fb, 1),
             Range32.init(0x10cc0, 0x10cf2, 1),
@@ -997,7 +997,7 @@ const _Ll = RangeTable{
 };
 const _Lm = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x02b0, 0x02c1, 1),
             Range16.init(0x02c6, 0x02d1, 1),
             Range16.init(0x02e0, 0x02e4, 1),
@@ -1042,7 +1042,7 @@ const _Lm = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x16b40, 0x16b40, 1),
             Range32.init(0x16b41, 0x16b43, 1),
             Range32.init(0x16f93, 0x16f9f, 1),
@@ -1054,7 +1054,7 @@ const _Lm = RangeTable{
 };
 const _Lo = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x00aa, 0x00ba, 16),
             Range16.init(0x01bb, 0x01c0, 5),
             Range16.init(0x01c1, 0x01c3, 1),
@@ -1341,7 +1341,7 @@ const _Lo = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10000, 0x1000b, 1),
             Range32.init(0x1000d, 0x10026, 1),
             Range32.init(0x10028, 0x1003a, 1),
@@ -1499,7 +1499,7 @@ const _Lo = RangeTable{
 };
 const _Lt = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x01c5, 0x01cb, 3),
             Range16.init(0x01f2, 0x1f88, 7574),
             Range16.init(0x1f89, 0x1f8f, 1),
@@ -1510,12 +1510,12 @@ const _Lt = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Lu = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0041, 0x005a, 1),
             Range16.init(0x00c0, 0x00d6, 1),
             Range16.init(0x00d8, 0x00de, 1),
@@ -1623,7 +1623,7 @@ const _Lu = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10400, 0x10427, 1),
             Range32.init(0x104b0, 0x104d3, 1),
             Range32.init(0x10c80, 0x10cb2, 1),
@@ -1666,7 +1666,7 @@ const _Lu = RangeTable{
 };
 const _M = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0300, 0x036f, 1),
             Range16.init(0x0483, 0x0489, 1),
             Range16.init(0x0591, 0x05bd, 1),
@@ -1849,7 +1849,7 @@ const _M = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x101fd, 0x102e0, 227),
             Range32.init(0x10376, 0x1037a, 1),
             Range32.init(0x10a01, 0x10a03, 1),
@@ -1934,7 +1934,7 @@ const _M = RangeTable{
 };
 const _Mc = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0903, 0x093b, 56),
             Range16.init(0x093e, 0x0940, 1),
             Range16.init(0x0949, 0x094c, 1),
@@ -2036,7 +2036,7 @@ const _Mc = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11000, 0x11002, 2),
             Range32.init(0x11082, 0x110b0, 46),
             Range32.init(0x110b1, 0x110b2, 1),
@@ -2087,7 +2087,7 @@ const _Mc = RangeTable{
 };
 const _Me = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0488, 0x0489, 1),
             Range16.init(0x1abe, 0x20dd, 1567),
             Range16.init(0x20de, 0x20e0, 1),
@@ -2096,12 +2096,12 @@ const _Me = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Mn = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0300, 0x036f, 1),
             Range16.init(0x0483, 0x0487, 1),
             Range16.init(0x0591, 0x05bd, 1),
@@ -2282,7 +2282,7 @@ const _Mn = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x101fd, 0x102e0, 227),
             Range32.init(0x10376, 0x1037a, 1),
             Range32.init(0x10a01, 0x10a03, 1),
@@ -2381,7 +2381,7 @@ const _Mn = RangeTable{
 };
 const _N = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0030, 0x0039, 1),
             Range16.init(0x00b2, 0x00b3, 1),
             Range16.init(0x00b9, 0x00bc, 3),
@@ -2452,7 +2452,7 @@ const _N = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10107, 0x10133, 1),
             Range32.init(0x10140, 0x10178, 1),
             Range32.init(0x1018a, 0x1018b, 1),
@@ -2508,7 +2508,7 @@ const _N = RangeTable{
 };
 const _Nd = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0030, 0x0039, 1),
             Range16.init(0x0660, 0x0669, 1),
             Range16.init(0x06f0, 0x06f9, 1),
@@ -2550,7 +2550,7 @@ const _Nd = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x104a0, 0x104a9, 1),
             Range32.init(0x11066, 0x1106f, 1),
             Range32.init(0x110f0, 0x110f9, 1),
@@ -2576,7 +2576,7 @@ const _Nd = RangeTable{
 };
 const _Nl = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x16ee, 0x16f0, 1),
             Range16.init(0x2160, 0x2182, 1),
             Range16.init(0x2185, 0x2188, 1),
@@ -2588,7 +2588,7 @@ const _Nl = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10140, 0x10174, 1),
             Range32.init(0x10341, 0x1034a, 9),
             Range32.init(0x103d1, 0x103d5, 1),
@@ -2600,7 +2600,7 @@ const _Nl = RangeTable{
 };
 const _No = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x00b2, 0x00b3, 1),
             Range16.init(0x00b9, 0x00bc, 3),
             Range16.init(0x00bd, 0x00be, 1),
@@ -2633,7 +2633,7 @@ const _No = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10107, 0x10133, 1),
             Range32.init(0x10175, 0x10178, 1),
             Range32.init(0x1018a, 0x1018b, 1),
@@ -2672,7 +2672,7 @@ const _No = RangeTable{
 };
 const _P = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0021, 0x0023, 1),
             Range16.init(0x0025, 0x002a, 1),
             Range16.init(0x002c, 0x002f, 1),
@@ -2789,7 +2789,7 @@ const _P = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10100, 0x10102, 1),
             Range32.init(0x1039f, 0x103d0, 49),
             Range32.init(0x1056f, 0x10857, 744),
@@ -2835,7 +2835,7 @@ const _P = RangeTable{
 };
 const _Pc = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x005f, 0x203f, 8160),
             Range16.init(0x2040, 0x2054, 20),
             Range16.init(0xfe33, 0xfe34, 1),
@@ -2844,12 +2844,12 @@ const _Pc = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Pd = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x002d, 0x058a, 1373),
             Range16.init(0x05be, 0x1400, 3650),
             Range16.init(0x1806, 0x2010, 2058),
@@ -2864,12 +2864,12 @@ const _Pd = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Pe = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0029, 0x005d, 52),
             Range16.init(0x007d, 0x0f3b, 3774),
             Range16.init(0x0f3d, 0x169c, 1887),
@@ -2895,12 +2895,12 @@ const _Pe = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 1,
 };
 const _Pf = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x00bb, 0x2019, 8030),
             Range16.init(0x201d, 0x203a, 29),
             Range16.init(0x2e03, 0x2e05, 2),
@@ -2909,12 +2909,12 @@ const _Pf = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Pi = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x00ab, 0x2018, 8045),
             Range16.init(0x201b, 0x201c, 1),
             Range16.init(0x201f, 0x2039, 26),
@@ -2924,12 +2924,12 @@ const _Pi = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Po = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0021, 0x0023, 1),
             Range16.init(0x0025, 0x0027, 1),
             Range16.init(0x002a, 0x002e, 2),
@@ -3043,7 +3043,7 @@ const _Po = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10100, 0x10100, 1),
             Range32.init(0x10101, 0x10102, 1),
             Range32.init(0x1039f, 0x103d0, 49),
@@ -3090,7 +3090,7 @@ const _Po = RangeTable{
 };
 const _Ps = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0028, 0x005b, 51),
             Range16.init(0x007b, 0x0f3a, 3775),
             Range16.init(0x0f3c, 0x169b, 1887),
@@ -3119,12 +3119,12 @@ const _Ps = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 1,
 };
 const _S = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0024, 0x002b, 7),
             Range16.init(0x003c, 0x003e, 1),
             Range16.init(0x005e, 0x0060, 2),
@@ -3255,7 +3255,7 @@ const _S = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10137, 0x1013f, 1),
             Range32.init(0x10179, 0x10189, 1),
             Range32.init(0x1018c, 0x1018e, 1),
@@ -3325,7 +3325,7 @@ const _S = RangeTable{
 };
 const _Sc = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0024, 0x00a2, 126),
             Range16.init(0x00a3, 0x00a5, 1),
             Range16.init(0x058f, 0x060b, 124),
@@ -3341,12 +3341,12 @@ const _Sc = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 2,
 };
 const _Sk = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x005e, 0x0060, 2),
             Range16.init(0x00a8, 0x00af, 7),
             Range16.init(0x00b4, 0x00b8, 4),
@@ -3374,7 +3374,7 @@ const _Sk = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1f3fb, 0x1f3fb, 1),
             Range32.init(0x1f3fc, 0x1f3ff, 1),
         };
@@ -3384,7 +3384,7 @@ const _Sk = RangeTable{
 };
 const _Sm = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x002b, 0x003c, 17),
             Range16.init(0x003d, 0x003e, 1),
             Range16.init(0x007c, 0x007e, 2),
@@ -3432,7 +3432,7 @@ const _Sm = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1d6c1, 0x1d6db, 26),
             Range32.init(0x1d6fb, 0x1d715, 26),
             Range32.init(0x1d735, 0x1d74f, 26),
@@ -3446,7 +3446,7 @@ const _Sm = RangeTable{
 };
 const _So = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x00a6, 0x00a9, 3),
             Range16.init(0x00ae, 0x00b0, 2),
             Range16.init(0x0482, 0x058d, 267),
@@ -3551,7 +3551,7 @@ const _So = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10137, 0x10137, 1),
             Range32.init(0x10138, 0x1013f, 1),
             Range32.init(0x10179, 0x10189, 1),
@@ -3617,7 +3617,7 @@ const _So = RangeTable{
 };
 const _Z = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0020, 0x00a0, 128),
             Range16.init(0x1680, 0x2000, 2432),
             Range16.init(0x2001, 0x200a, 1),
@@ -3627,28 +3627,28 @@ const _Z = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 1,
 };
 const _Zl = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0x2028, 0x2028, 1)};
+        var r = [_]Range16{Range16.init(0x2028, 0x2028, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Zp = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0x2029, 0x2029, 1)};
+        var r = [_]Range16{Range16.init(0x2029, 0x2029, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Zs = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0020, 0x00a0, 128),
             Range16.init(0x1680, 0x2000, 2432),
             Range16.init(0x2001, 0x200a, 1),
@@ -3657,7 +3657,7 @@ const _Zs = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 1,
 };
 pub const Cc = &_Cc; // Cc is the set of Unicode characters in category Cc.
@@ -4010,9 +4010,9 @@ pub const Script = enum {
 };
 
 const _Adlam = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1e900, 0x1e94a, 1),
             Range32.init(0x1e950, 0x1e959, 1),
             Range32.init(0x1e95e, 0x1e95f, 1),
@@ -4022,9 +4022,9 @@ const _Adlam = RangeTable{
     .latin_offset = 0,
 };
 const _Ahom = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11700, 0x11719, 1),
             Range32.init(0x1171d, 0x1172b, 1),
             Range32.init(0x11730, 0x1173f, 1),
@@ -4034,16 +4034,16 @@ const _Ahom = RangeTable{
     .latin_offset = 0,
 };
 const _Anatolian_Hieroglyphs = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x14400, 0x14646, 1)};
+        var r = [_]Range32{Range32.init(0x14400, 0x14646, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Arabic = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0600, 0x0604, 1),
             Range16.init(0x0606, 0x060b, 1),
             Range16.init(0x060d, 0x061a, 1),
@@ -4070,7 +4070,7 @@ const _Arabic = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10e60, 0x10e7e, 1),
             Range32.init(0x1ee00, 0x1ee03, 1),
             Range32.init(0x1ee05, 0x1ee1f, 1),
@@ -4113,7 +4113,7 @@ const _Arabic = RangeTable{
 };
 const _Armenian = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0531, 0x0556, 1),
             Range16.init(0x0559, 0x055f, 1),
             Range16.init(0x0561, 0x0587, 1),
@@ -4123,13 +4123,13 @@ const _Armenian = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Avestan = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10b00, 0x10b35, 1),
             Range32.init(0x10b39, 0x10b3f, 1),
         };
@@ -4139,30 +4139,30 @@ const _Avestan = RangeTable{
 };
 const _Balinese = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1b00, 0x1b4b, 1),
             Range16.init(0x1b50, 0x1b7c, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Bamum = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0xa6a0, 0xa6f7, 1)};
+        var r = [_]Range16{Range16.init(0xa6a0, 0xa6f7, 1)};
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{Range32.init(0x16800, 0x16a38, 1)};
+        var r = [_]Range32{Range32.init(0x16800, 0x16a38, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Bassa_Vah = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x16ad0, 0x16aed, 1),
             Range32.init(0x16af0, 0x16af5, 1),
         };
@@ -4172,18 +4172,18 @@ const _Bassa_Vah = RangeTable{
 };
 const _Batak = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1bc0, 0x1bf3, 1),
             Range16.init(0x1bfc, 0x1bff, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Bengali = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0980, 0x0983, 1),
             Range16.init(0x0985, 0x098c, 1),
             Range16.init(0x098f, 0x0990, 1),
@@ -4201,13 +4201,13 @@ const _Bengali = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Bhaiksuki = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11c00, 0x11c08, 1),
             Range32.init(0x11c0a, 0x11c36, 1),
             Range32.init(0x11c38, 0x11c45, 1),
@@ -4219,20 +4219,20 @@ const _Bhaiksuki = RangeTable{
 };
 const _Bopomofo = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x02ea, 0x02eb, 1),
             Range16.init(0x3105, 0x312e, 1),
             Range16.init(0x31a0, 0x31ba, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Brahmi = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11000, 0x1104d, 1),
             Range32.init(0x11052, 0x1106f, 1),
             Range32.init(0x1107f, 0x1107f, 1),
@@ -4243,54 +4243,54 @@ const _Brahmi = RangeTable{
 };
 const _Braille = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0x2800, 0x28ff, 1)};
+        var r = [_]Range16{Range16.init(0x2800, 0x28ff, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Buginese = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1a00, 0x1a1b, 1),
             Range16.init(0x1a1e, 0x1a1f, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Buhid = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0x1740, 0x1753, 1)};
+        var r = [_]Range16{Range16.init(0x1740, 0x1753, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Canadian_Aboriginal = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1400, 0x167f, 1),
             Range16.init(0x18b0, 0x18f5, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Carian = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x102a0, 0x102d0, 1)};
+        var r = [_]Range32{Range32.init(0x102a0, 0x102d0, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Caucasian_Albanian = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10530, 0x10563, 1),
             Range32.init(0x1056f, 0x1056f, 1),
         };
@@ -4299,9 +4299,9 @@ const _Caucasian_Albanian = RangeTable{
     .latin_offset = 0,
 };
 const _Chakma = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11100, 0x11134, 1),
             Range32.init(0x11136, 0x11143, 1),
         };
@@ -4311,7 +4311,7 @@ const _Chakma = RangeTable{
 };
 const _Cham = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0xaa00, 0xaa36, 1),
             Range16.init(0xaa40, 0xaa4d, 1),
             Range16.init(0xaa50, 0xaa59, 1),
@@ -4319,24 +4319,24 @@ const _Cham = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Cherokee = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x13a0, 0x13f5, 1),
             Range16.init(0x13f8, 0x13fd, 1),
             Range16.init(0xab70, 0xabbf, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Common = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0000, 0x0040, 1),
             Range16.init(0x005b, 0x0060, 1),
             Range16.init(0x007b, 0x00a9, 1),
@@ -4433,7 +4433,7 @@ const _Common = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10100, 0x10102, 1),
             Range32.init(0x10107, 0x10133, 1),
             Range32.init(0x10137, 0x1013f, 1),
@@ -4513,20 +4513,20 @@ const _Common = RangeTable{
 };
 const _Coptic = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x03e2, 0x03ef, 1),
             Range16.init(0x2c80, 0x2cf3, 1),
             Range16.init(0x2cf9, 0x2cff, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Cuneiform = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x12000, 0x12399, 1),
             Range32.init(0x12400, 0x1246e, 1),
             Range32.init(0x12470, 0x12474, 1),
@@ -4537,9 +4537,9 @@ const _Cuneiform = RangeTable{
     .latin_offset = 0,
 };
 const _Cypriot = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10800, 0x10805, 1),
             Range32.init(0x10808, 0x10808, 1),
             Range32.init(0x1080a, 0x10835, 1),
@@ -4553,7 +4553,7 @@ const _Cypriot = RangeTable{
 };
 const _Cyrillic = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0400, 0x0484, 1),
             Range16.init(0x0487, 0x052f, 1),
             Range16.init(0x1c80, 0x1c88, 1),
@@ -4565,20 +4565,20 @@ const _Cyrillic = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Deseret = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x10400, 0x1044f, 1)};
+        var r = [_]Range32{Range32.init(0x10400, 0x1044f, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Devanagari = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0900, 0x0950, 1),
             Range16.init(0x0953, 0x0963, 1),
             Range16.init(0x0966, 0x097f, 1),
@@ -4586,13 +4586,13 @@ const _Devanagari = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Duployan = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1bc00, 0x1bc6a, 1),
             Range32.init(0x1bc70, 0x1bc7c, 1),
             Range32.init(0x1bc80, 0x1bc88, 1),
@@ -4604,24 +4604,24 @@ const _Duployan = RangeTable{
     .latin_offset = 0,
 };
 const _Egyptian_Hieroglyphs = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x13000, 0x1342e, 1)};
+        var r = [_]Range32{Range32.init(0x13000, 0x1342e, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Elbasan = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x10500, 0x10527, 1)};
+        var r = [_]Range32{Range32.init(0x10500, 0x10527, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Ethiopic = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1200, 0x1248, 1),
             Range16.init(0x124a, 0x124d, 1),
             Range16.init(0x1250, 0x1256, 1),
@@ -4657,12 +4657,12 @@ const _Ethiopic = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Georgian = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x10a0, 0x10c5, 1),
             Range16.init(0x10c7, 0x10c7, 1),
             Range16.init(0x10cd, 0x10cd, 1),
@@ -4674,19 +4674,19 @@ const _Georgian = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Glagolitic = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x2c00, 0x2c2e, 1),
             Range16.init(0x2c30, 0x2c5e, 1),
         };
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1e000, 0x1e006, 1),
             Range32.init(0x1e008, 0x1e018, 1),
             Range32.init(0x1e01b, 0x1e021, 1),
@@ -4698,17 +4698,17 @@ const _Glagolitic = RangeTable{
     .latin_offset = 0,
 };
 const _Gothic = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x10330, 0x1034a, 1)};
+        var r = [_]Range32{Range32.init(0x10330, 0x1034a, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Grantha = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11300, 0x11303, 1),
             Range32.init(0x11305, 0x1130c, 1),
             Range32.init(0x1130f, 0x11310, 1),
@@ -4731,7 +4731,7 @@ const _Grantha = RangeTable{
 };
 const _Greek = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0370, 0x0373, 1),
             Range16.init(0x0375, 0x0377, 1),
             Range16.init(0x037a, 0x037d, 1),
@@ -4769,7 +4769,7 @@ const _Greek = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10140, 0x1018e, 1),
             Range32.init(0x101a0, 0x101a0, 1),
             Range32.init(0x1d200, 0x1d245, 1),
@@ -4780,7 +4780,7 @@ const _Greek = RangeTable{
 };
 const _Gujarati = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0a81, 0x0a83, 1),
             Range16.init(0x0a85, 0x0a8d, 1),
             Range16.init(0x0a8f, 0x0a91, 1),
@@ -4798,12 +4798,12 @@ const _Gujarati = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Gurmukhi = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0a01, 0x0a03, 1),
             Range16.init(0x0a05, 0x0a0a, 1),
             Range16.init(0x0a0f, 0x0a10, 1),
@@ -4823,12 +4823,12 @@ const _Gurmukhi = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Han = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x2e80, 0x2e99, 1),
             Range16.init(0x2e9b, 0x2ef3, 1),
             Range16.init(0x2f00, 0x2fd5, 1),
@@ -4844,7 +4844,7 @@ const _Han = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x20000, 0x2a6d6, 1),
             Range32.init(0x2a700, 0x2b734, 1),
             Range32.init(0x2b740, 0x2b81d, 1),
@@ -4858,7 +4858,7 @@ const _Han = RangeTable{
 };
 const _Hangul = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1100, 0x11ff, 1),
             Range16.init(0x302e, 0x302f, 1),
             Range16.init(0x3131, 0x318e, 1),
@@ -4876,21 +4876,21 @@ const _Hangul = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Hanunoo = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0x1720, 0x1734, 1)};
+        var r = [_]Range16{Range16.init(0x1720, 0x1734, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Hatran = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x108e0, 0x108f2, 1),
             Range32.init(0x108f4, 0x108f5, 1),
             Range32.init(0x108fb, 0x108ff, 1),
@@ -4901,7 +4901,7 @@ const _Hatran = RangeTable{
 };
 const _Hebrew = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0591, 0x05c7, 1),
             Range16.init(0x05d0, 0x05ea, 1),
             Range16.init(0x05f0, 0x05f4, 1),
@@ -4914,19 +4914,19 @@ const _Hebrew = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Hiragana = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x3041, 0x3096, 1),
             Range16.init(0x309d, 0x309f, 1),
         };
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1b001, 0x1b11e, 1),
             Range32.init(0x1f200, 0x1f200, 1),
         };
@@ -4935,9 +4935,9 @@ const _Hiragana = RangeTable{
     .latin_offset = 0,
 };
 const _Imperial_Aramaic = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10840, 0x10855, 1),
             Range32.init(0x10857, 0x1085f, 1),
         };
@@ -4947,7 +4947,7 @@ const _Imperial_Aramaic = RangeTable{
 };
 const _Inherited = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0300, 0x036f, 1),
             Range16.init(0x0485, 0x0486, 1),
             Range16.init(0x064b, 0x0655, 1),
@@ -4972,7 +4972,7 @@ const _Inherited = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x101fd, 0x101fd, 1),
             Range32.init(0x102e0, 0x102e0, 1),
             Range32.init(0x1d167, 0x1d169, 1),
@@ -4986,9 +4986,9 @@ const _Inherited = RangeTable{
     .latin_offset = 0,
 };
 const _Inscriptional_Pahlavi = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10b60, 0x10b72, 1),
             Range32.init(0x10b78, 0x10b7f, 1),
         };
@@ -4997,9 +4997,9 @@ const _Inscriptional_Pahlavi = RangeTable{
     .latin_offset = 0,
 };
 const _Inscriptional_Parthian = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10b40, 0x10b55, 1),
             Range32.init(0x10b58, 0x10b5f, 1),
         };
@@ -5009,27 +5009,27 @@ const _Inscriptional_Parthian = RangeTable{
 };
 const _Javanese = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0xa980, 0xa9cd, 1),
             Range16.init(0xa9d0, 0xa9d9, 1),
             Range16.init(0xa9de, 0xa9df, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Kaithi = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x11080, 0x110c1, 1)};
+        var r = [_]Range32{Range32.init(0x11080, 0x110c1, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Kannada = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0c80, 0x0c83, 1),
             Range16.init(0x0c85, 0x0c8c, 1),
             Range16.init(0x0c8e, 0x0c90, 1),
@@ -5047,12 +5047,12 @@ const _Kannada = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Katakana = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x30a1, 0x30fa, 1),
             Range16.init(0x30fd, 0x30ff, 1),
             Range16.init(0x31f0, 0x31ff, 1),
@@ -5064,26 +5064,26 @@ const _Katakana = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{Range32.init(0x1b000, 0x1b000, 1)};
+        var r = [_]Range32{Range32.init(0x1b000, 0x1b000, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Kayah_Li = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0xa900, 0xa92d, 1),
             Range16.init(0xa92f, 0xa92f, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Kharoshthi = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10a00, 0x10a03, 1),
             Range32.init(0x10a05, 0x10a06, 1),
             Range32.init(0x10a0c, 0x10a13, 1),
@@ -5099,7 +5099,7 @@ const _Kharoshthi = RangeTable{
 };
 const _Khmer = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1780, 0x17dd, 1),
             Range16.init(0x17e0, 0x17e9, 1),
             Range16.init(0x17f0, 0x17f9, 1),
@@ -5107,13 +5107,13 @@ const _Khmer = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Khojki = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11200, 0x11211, 1),
             Range32.init(0x11213, 0x1123e, 1),
         };
@@ -5122,9 +5122,9 @@ const _Khojki = RangeTable{
     .latin_offset = 0,
 };
 const _Khudawadi = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x112b0, 0x112ea, 1),
             Range32.init(0x112f0, 0x112f9, 1),
         };
@@ -5134,7 +5134,7 @@ const _Khudawadi = RangeTable{
 };
 const _Lao = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0e81, 0x0e82, 1),
             Range16.init(0x0e84, 0x0e84, 1),
             Range16.init(0x0e87, 0x0e88, 1),
@@ -5156,12 +5156,12 @@ const _Lao = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Latin = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0041, 0x005a, 1),
             Range16.init(0x0061, 0x007a, 1),
             Range16.init(0x00aa, 0x00aa, 1),
@@ -5196,24 +5196,24 @@ const _Latin = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 6,
 };
 const _Lepcha = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1c00, 0x1c37, 1),
             Range16.init(0x1c3b, 0x1c49, 1),
             Range16.init(0x1c4d, 0x1c4f, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Limbu = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1900, 0x191e, 1),
             Range16.init(0x1920, 0x192b, 1),
             Range16.init(0x1930, 0x193b, 1),
@@ -5222,13 +5222,13 @@ const _Limbu = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Linear_A = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10600, 0x10736, 1),
             Range32.init(0x10740, 0x10755, 1),
             Range32.init(0x10760, 0x10767, 1),
@@ -5238,9 +5238,9 @@ const _Linear_A = RangeTable{
     .latin_offset = 0,
 };
 const _Linear_B = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10000, 0x1000b, 1),
             Range32.init(0x1000d, 0x10026, 1),
             Range32.init(0x10028, 0x1003a, 1),
@@ -5255,24 +5255,24 @@ const _Linear_B = RangeTable{
 };
 const _Lisu = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0xa4d0, 0xa4ff, 1)};
+        var r = [_]Range16{Range16.init(0xa4d0, 0xa4ff, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Lycian = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x10280, 0x1029c, 1)};
+        var r = [_]Range32{Range32.init(0x10280, 0x1029c, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Lydian = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10920, 0x10939, 1),
             Range32.init(0x1093f, 0x1093f, 1),
         };
@@ -5281,16 +5281,16 @@ const _Lydian = RangeTable{
     .latin_offset = 0,
 };
 const _Mahajani = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x11150, 0x11176, 1)};
+        var r = [_]Range32{Range32.init(0x11150, 0x11176, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Malayalam = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0d00, 0x0d03, 1),
             Range16.init(0x0d05, 0x0d0c, 1),
             Range16.init(0x0d0e, 0x0d10, 1),
@@ -5302,24 +5302,24 @@ const _Malayalam = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Mandaic = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0840, 0x085b, 1),
             Range16.init(0x085e, 0x085e, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Manichaean = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10ac0, 0x10ae6, 1),
             Range32.init(0x10aeb, 0x10af6, 1),
         };
@@ -5328,9 +5328,9 @@ const _Manichaean = RangeTable{
     .latin_offset = 0,
 };
 const _Marchen = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11c70, 0x11c8f, 1),
             Range32.init(0x11c92, 0x11ca7, 1),
             Range32.init(0x11ca9, 0x11cb6, 1),
@@ -5340,9 +5340,9 @@ const _Marchen = RangeTable{
     .latin_offset = 0,
 };
 const _Masaram_Gondi = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11d00, 0x11d06, 1),
             Range32.init(0x11d08, 0x11d09, 1),
             Range32.init(0x11d0b, 0x11d36, 1),
@@ -5357,20 +5357,20 @@ const _Masaram_Gondi = RangeTable{
 };
 const _Meetei_Mayek = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0xaae0, 0xaaf6, 1),
             Range16.init(0xabc0, 0xabed, 1),
             Range16.init(0xabf0, 0xabf9, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Mende_Kikakui = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1e800, 0x1e8c4, 1),
             Range32.init(0x1e8c7, 0x1e8d6, 1),
         };
@@ -5379,9 +5379,9 @@ const _Mende_Kikakui = RangeTable{
     .latin_offset = 0,
 };
 const _Meroitic_Cursive = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x109a0, 0x109b7, 1),
             Range32.init(0x109bc, 0x109cf, 1),
             Range32.init(0x109d2, 0x109ff, 1),
@@ -5391,17 +5391,17 @@ const _Meroitic_Cursive = RangeTable{
     .latin_offset = 0,
 };
 const _Meroitic_Hieroglyphs = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x10980, 0x1099f, 1)};
+        var r = [_]Range32{Range32.init(0x10980, 0x1099f, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Miao = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x16f00, 0x16f44, 1),
             Range32.init(0x16f50, 0x16f7e, 1),
             Range32.init(0x16f8f, 0x16f9f, 1),
@@ -5411,9 +5411,9 @@ const _Miao = RangeTable{
     .latin_offset = 0,
 };
 const _Modi = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11600, 0x11644, 1),
             Range32.init(0x11650, 0x11659, 1),
         };
@@ -5423,7 +5423,7 @@ const _Modi = RangeTable{
 };
 const _Mongolian = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1800, 0x1801, 1),
             Range16.init(0x1804, 0x1804, 1),
             Range16.init(0x1806, 0x180e, 1),
@@ -5434,15 +5434,15 @@ const _Mongolian = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{Range32.init(0x11660, 0x1166c, 1)};
+        var r = [_]Range32{Range32.init(0x11660, 0x1166c, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Mro = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x16a40, 0x16a5e, 1),
             Range32.init(0x16a60, 0x16a69, 1),
             Range32.init(0x16a6e, 0x16a6f, 1),
@@ -5452,9 +5452,9 @@ const _Mro = RangeTable{
     .latin_offset = 0,
 };
 const _Multani = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11280, 0x11286, 1),
             Range32.init(0x11288, 0x11288, 1),
             Range32.init(0x1128a, 0x1128d, 1),
@@ -5467,20 +5467,20 @@ const _Multani = RangeTable{
 };
 const _Myanmar = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1000, 0x109f, 1),
             Range16.init(0xa9e0, 0xa9fe, 1),
             Range16.init(0xaa60, 0xaa7f, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Nabataean = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10880, 0x1089e, 1),
             Range32.init(0x108a7, 0x108af, 1),
         };
@@ -5490,7 +5490,7 @@ const _Nabataean = RangeTable{
 };
 const _New_Tai_Lue = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1980, 0x19ab, 1),
             Range16.init(0x19b0, 0x19c9, 1),
             Range16.init(0x19d0, 0x19da, 1),
@@ -5498,13 +5498,13 @@ const _New_Tai_Lue = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Newa = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11400, 0x11459, 1),
             Range32.init(0x1145b, 0x1145b, 1),
             Range32.init(0x1145d, 0x1145d, 1),
@@ -5515,16 +5515,16 @@ const _Newa = RangeTable{
 };
 const _Nko = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0x07c0, 0x07fa, 1)};
+        var r = [_]Range16{Range16.init(0x07c0, 0x07fa, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Nushu = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x16fe1, 0x16fe1, 1),
             Range32.init(0x1b170, 0x1b2fb, 1),
         };
@@ -5534,24 +5534,24 @@ const _Nushu = RangeTable{
 };
 const _Ogham = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0x1680, 0x169c, 1)};
+        var r = [_]Range16{Range16.init(0x1680, 0x169c, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Ol_Chiki = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0x1c50, 0x1c7f, 1)};
+        var r = [_]Range16{Range16.init(0x1c50, 0x1c7f, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Old_Hungarian = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10c80, 0x10cb2, 1),
             Range32.init(0x10cc0, 0x10cf2, 1),
             Range32.init(0x10cfa, 0x10cff, 1),
@@ -5561,9 +5561,9 @@ const _Old_Hungarian = RangeTable{
     .latin_offset = 0,
 };
 const _Old_Italic = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10300, 0x10323, 1),
             Range32.init(0x1032d, 0x1032f, 1),
         };
@@ -5572,25 +5572,25 @@ const _Old_Italic = RangeTable{
     .latin_offset = 0,
 };
 const _Old_North_Arabian = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x10a80, 0x10a9f, 1)};
+        var r = [_]Range32{Range32.init(0x10a80, 0x10a9f, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Old_Permic = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x10350, 0x1037a, 1)};
+        var r = [_]Range32{Range32.init(0x10350, 0x1037a, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Old_Persian = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x103a0, 0x103c3, 1),
             Range32.init(0x103c8, 0x103d5, 1),
         };
@@ -5599,24 +5599,24 @@ const _Old_Persian = RangeTable{
     .latin_offset = 0,
 };
 const _Old_South_Arabian = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x10a60, 0x10a7f, 1)};
+        var r = [_]Range32{Range32.init(0x10a60, 0x10a7f, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Old_Turkic = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x10c00, 0x10c48, 1)};
+        var r = [_]Range32{Range32.init(0x10c00, 0x10c48, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Oriya = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0b01, 0x0b03, 1),
             Range16.init(0x0b05, 0x0b0c, 1),
             Range16.init(0x0b0f, 0x0b10, 1),
@@ -5634,13 +5634,13 @@ const _Oriya = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Osage = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x104b0, 0x104d3, 1),
             Range32.init(0x104d8, 0x104fb, 1),
         };
@@ -5649,9 +5649,9 @@ const _Osage = RangeTable{
     .latin_offset = 0,
 };
 const _Osmanya = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10480, 0x1049d, 1),
             Range32.init(0x104a0, 0x104a9, 1),
         };
@@ -5660,9 +5660,9 @@ const _Osmanya = RangeTable{
     .latin_offset = 0,
 };
 const _Pahawh_Hmong = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x16b00, 0x16b45, 1),
             Range32.init(0x16b50, 0x16b59, 1),
             Range32.init(0x16b5b, 0x16b61, 1),
@@ -5674,33 +5674,33 @@ const _Pahawh_Hmong = RangeTable{
     .latin_offset = 0,
 };
 const _Palmyrene = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x10860, 0x1087f, 1)};
+        var r = [_]Range32{Range32.init(0x10860, 0x1087f, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Pau_Cin_Hau = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x11ac0, 0x11af8, 1)};
+        var r = [_]Range32{Range32.init(0x11ac0, 0x11af8, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Phags_Pa = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0xa840, 0xa877, 1)};
+        var r = [_]Range16{Range16.init(0xa840, 0xa877, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Phoenician = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10900, 0x1091b, 1),
             Range32.init(0x1091f, 0x1091f, 1),
         };
@@ -5709,9 +5709,9 @@ const _Phoenician = RangeTable{
     .latin_offset = 0,
 };
 const _Psalter_Pahlavi = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10b80, 0x10b91, 1),
             Range32.init(0x10b99, 0x10b9c, 1),
             Range32.init(0x10ba9, 0x10baf, 1),
@@ -5722,52 +5722,52 @@ const _Psalter_Pahlavi = RangeTable{
 };
 const _Rejang = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0xa930, 0xa953, 1),
             Range16.init(0xa95f, 0xa95f, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Runic = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x16a0, 0x16ea, 1),
             Range16.init(0x16ee, 0x16f8, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Samaritan = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0800, 0x082d, 1),
             Range16.init(0x0830, 0x083e, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Saurashtra = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0xa880, 0xa8c5, 1),
             Range16.init(0xa8ce, 0xa8d9, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Sharada = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11180, 0x111cd, 1),
             Range32.init(0x111d0, 0x111df, 1),
         };
@@ -5776,17 +5776,17 @@ const _Sharada = RangeTable{
     .latin_offset = 0,
 };
 const _Shavian = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x10450, 0x1047f, 1)};
+        var r = [_]Range32{Range32.init(0x10450, 0x1047f, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Siddham = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11580, 0x115b5, 1),
             Range32.init(0x115b8, 0x115dd, 1),
         };
@@ -5795,9 +5795,9 @@ const _Siddham = RangeTable{
     .latin_offset = 0,
 };
 const _SignWriting = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1d800, 0x1da8b, 1),
             Range32.init(0x1da9b, 0x1da9f, 1),
             Range32.init(0x1daa1, 0x1daaf, 1),
@@ -5808,7 +5808,7 @@ const _SignWriting = RangeTable{
 };
 const _Sinhala = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0d82, 0x0d83, 1),
             Range16.init(0x0d85, 0x0d96, 1),
             Range16.init(0x0d9a, 0x0db1, 1),
@@ -5825,15 +5825,15 @@ const _Sinhala = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{Range32.init(0x111e1, 0x111f4, 1)};
+        var r = [_]Range32{Range32.init(0x111e1, 0x111f4, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Sora_Sompeng = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x110d0, 0x110e8, 1),
             Range32.init(0x110f0, 0x110f9, 1),
         };
@@ -5842,9 +5842,9 @@ const _Sora_Sompeng = RangeTable{
     .latin_offset = 0,
 };
 const _Soyombo = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11a50, 0x11a83, 1),
             Range32.init(0x11a86, 0x11a9c, 1),
             Range32.init(0x11a9e, 0x11aa2, 1),
@@ -5855,26 +5855,26 @@ const _Soyombo = RangeTable{
 };
 const _Sundanese = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1b80, 0x1bbf, 1),
             Range16.init(0x1cc0, 0x1cc7, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Syloti_Nagri = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0xa800, 0xa82b, 1)};
+        var r = [_]Range16{Range16.init(0xa800, 0xa82b, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Syriac = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0700, 0x070d, 1),
             Range16.init(0x070f, 0x074a, 1),
             Range16.init(0x074d, 0x074f, 1),
@@ -5882,46 +5882,46 @@ const _Syriac = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Tagalog = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1700, 0x170c, 1),
             Range16.init(0x170e, 0x1714, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Tagbanwa = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1760, 0x176c, 1),
             Range16.init(0x176e, 0x1770, 1),
             Range16.init(0x1772, 0x1773, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Tai_Le = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1950, 0x196d, 1),
             Range16.init(0x1970, 0x1974, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Tai_Tham = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1a20, 0x1a5e, 1),
             Range16.init(0x1a60, 0x1a7c, 1),
             Range16.init(0x1a7f, 0x1a89, 1),
@@ -5930,24 +5930,24 @@ const _Tai_Tham = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Tai_Viet = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0xaa80, 0xaac2, 1),
             Range16.init(0xaadb, 0xaadf, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Takri = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11680, 0x116b7, 1),
             Range32.init(0x116c0, 0x116c9, 1),
         };
@@ -5957,7 +5957,7 @@ const _Takri = RangeTable{
 };
 const _Tamil = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0b82, 0x0b83, 1),
             Range16.init(0x0b85, 0x0b8a, 1),
             Range16.init(0x0b8e, 0x0b90, 1),
@@ -5977,13 +5977,13 @@ const _Tamil = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Tangut = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x16fe0, 0x16fe0, 1),
             Range32.init(0x17000, 0x187ec, 1),
             Range32.init(0x18800, 0x18af2, 1),
@@ -5994,7 +5994,7 @@ const _Tangut = RangeTable{
 };
 const _Telugu = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0c00, 0x0c03, 1),
             Range16.init(0x0c05, 0x0c0c, 1),
             Range16.init(0x0c0e, 0x0c10, 1),
@@ -6011,31 +6011,31 @@ const _Telugu = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Thaana = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0x0780, 0x07b1, 1)};
+        var r = [_]Range16{Range16.init(0x0780, 0x07b1, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Thai = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0e01, 0x0e3a, 1),
             Range16.init(0x0e40, 0x0e5b, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Tibetan = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0f00, 0x0f47, 1),
             Range16.init(0x0f49, 0x0f6c, 1),
             Range16.init(0x0f71, 0x0f97, 1),
@@ -6046,25 +6046,25 @@ const _Tibetan = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Tifinagh = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x2d30, 0x2d67, 1),
             Range16.init(0x2d6f, 0x2d70, 1),
             Range16.init(0x2d7f, 0x2d7f, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Tirhuta = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x11480, 0x114c7, 1),
             Range32.init(0x114d0, 0x114d9, 1),
         };
@@ -6073,9 +6073,9 @@ const _Tirhuta = RangeTable{
     .latin_offset = 0,
 };
 const _Ugaritic = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10380, 0x1039d, 1),
             Range32.init(0x1039f, 0x1039f, 1),
         };
@@ -6085,16 +6085,16 @@ const _Ugaritic = RangeTable{
 };
 const _Vai = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0xa500, 0xa62b, 1)};
+        var r = [_]Range16{Range16.init(0xa500, 0xa62b, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Warang_Citi = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x118a0, 0x118f2, 1),
             Range32.init(0x118ff, 0x118ff, 1),
         };
@@ -6104,19 +6104,19 @@ const _Warang_Citi = RangeTable{
 };
 const _Yi = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0xa000, 0xa48c, 1),
             Range16.init(0xa490, 0xa4c6, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Zanabazar_Square = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x11a00, 0x11a47, 1)};
+        var r = [_]Range32{Range32.init(0x11a00, 0x11a47, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
@@ -6355,19 +6355,19 @@ pub const Property = enum {
 
 const _ASCII_Hex_Digit = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0030, 0x0039, 1),
             Range16.init(0x0041, 0x0046, 1),
             Range16.init(0x0061, 0x0066, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 3,
 };
 const _Bidi_Control = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x061c, 0x061c, 1),
             Range16.init(0x200e, 0x200f, 1),
             Range16.init(0x202a, 0x202e, 1),
@@ -6375,12 +6375,12 @@ const _Bidi_Control = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Dash = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x002d, 0x002d, 1),
             Range16.init(0x058a, 0x058a, 1),
             Range16.init(0x05be, 0x05be, 1),
@@ -6405,12 +6405,12 @@ const _Dash = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 1,
 };
 const _Deprecated = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0149, 0x0149, 1),
             Range16.init(0x0673, 0x0673, 1),
             Range16.init(0x0f77, 0x0f77, 1),
@@ -6422,14 +6422,14 @@ const _Deprecated = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{Range32.init(0xe0001, 0xe0001, 1)};
+        var r = [_]Range32{Range32.init(0xe0001, 0xe0001, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Diacritic = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x005e, 0x005e, 1),
             Range16.init(0x0060, 0x0060, 1),
             Range16.init(0x00a8, 0x00a8, 1),
@@ -6557,7 +6557,7 @@ const _Diacritic = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x102e0, 0x102e0, 1),
             Range32.init(0x10ae5, 0x10ae6, 1),
             Range32.init(0x110b9, 0x110ba, 1),
@@ -6601,7 +6601,7 @@ const _Diacritic = RangeTable{
 };
 const _Extender = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x00b7, 0x00b7, 1),
             Range16.init(0x02d0, 0x02d1, 1),
             Range16.init(0x0640, 0x0640, 1),
@@ -6629,7 +6629,7 @@ const _Extender = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1135d, 0x1135d, 1),
             Range32.init(0x115c6, 0x115c8, 1),
             Range32.init(0x11a98, 0x11a98, 1),
@@ -6643,7 +6643,7 @@ const _Extender = RangeTable{
 };
 const _Hex_Digit = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0030, 0x0039, 1),
             Range16.init(0x0041, 0x0046, 1),
             Range16.init(0x0061, 0x0066, 1),
@@ -6653,12 +6653,12 @@ const _Hex_Digit = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 3,
 };
 const _Hyphen = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x002d, 0x002d, 1),
             Range16.init(0x00ad, 0x00ad, 1),
             Range16.init(0x058a, 0x058a, 1),
@@ -6672,31 +6672,31 @@ const _Hyphen = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 2,
 };
 const _IDS_Binary_Operator = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x2ff0, 0x2ff1, 1),
             Range16.init(0x2ff4, 0x2ffb, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _IDS_Trinary_Operator = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0x2ff2, 0x2ff3, 1)};
+        var r = [_]Range16{Range16.init(0x2ff2, 0x2ff3, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Ideographic = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x3006, 0x3007, 1),
             Range16.init(0x3021, 0x3029, 1),
             Range16.init(0x3038, 0x303a, 1),
@@ -6708,7 +6708,7 @@ const _Ideographic = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x17000, 0x187ec, 1),
             Range32.init(0x18800, 0x18af2, 1),
             Range32.init(0x1b170, 0x1b2fb, 1),
@@ -6725,15 +6725,15 @@ const _Ideographic = RangeTable{
 };
 const _Join_Control = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0x200c, 0x200d, 1)};
+        var r = [_]Range16{Range16.init(0x200c, 0x200d, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Logical_Order_Exception = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0e40, 0x0e44, 1),
             Range16.init(0x0ec0, 0x0ec4, 1),
             Range16.init(0x19b5, 0x19b7, 1),
@@ -6744,19 +6744,19 @@ const _Logical_Order_Exception = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Noncharacter_Code_Point = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0xfdd0, 0xfdef, 1),
             Range16.init(0xfffe, 0xffff, 1),
         };
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1fffe, 0x1ffff, 1),
             Range32.init(0x2fffe, 0x2ffff, 1),
             Range32.init(0x3fffe, 0x3ffff, 1),
@@ -6780,7 +6780,7 @@ const _Noncharacter_Code_Point = RangeTable{
 };
 const _Other_Alphabetic = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0345, 0x0345, 1),
             Range16.init(0x05b0, 0x05bd, 1),
             Range16.init(0x05bf, 0x05bf, 1),
@@ -6932,7 +6932,7 @@ const _Other_Alphabetic = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10376, 0x1037a, 1),
             Range32.init(0x10a01, 0x10a03, 1),
             Range32.init(0x10a05, 0x10a06, 1),
@@ -6999,7 +6999,7 @@ const _Other_Alphabetic = RangeTable{
 };
 const _Other_Default_Ignorable_Code_Point = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x034f, 0x034f, 1),
             Range16.init(0x115f, 0x1160, 1),
             Range16.init(0x17b4, 0x17b5, 1),
@@ -7011,7 +7011,7 @@ const _Other_Default_Ignorable_Code_Point = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0xe0000, 0xe0000, 1),
             Range32.init(0xe0002, 0xe001f, 1),
             Range32.init(0xe0080, 0xe00ff, 1),
@@ -7023,7 +7023,7 @@ const _Other_Default_Ignorable_Code_Point = RangeTable{
 };
 const _Other_Grapheme_Extend = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x09be, 0x09be, 1),
             Range16.init(0x09d7, 0x09d7, 1),
             Range16.init(0x0b3e, 0x0b3e, 1),
@@ -7043,7 +7043,7 @@ const _Other_Grapheme_Extend = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1133e, 0x1133e, 1),
             Range32.init(0x11357, 0x11357, 1),
             Range32.init(0x114b0, 0x114b0, 1),
@@ -7059,7 +7059,7 @@ const _Other_Grapheme_Extend = RangeTable{
 };
 const _Other_ID_Continue = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x00b7, 0x00b7, 1),
             Range16.init(0x0387, 0x0387, 1),
             Range16.init(0x1369, 0x1371, 1),
@@ -7067,12 +7067,12 @@ const _Other_ID_Continue = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 1,
 };
 const _Other_ID_Start = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x1885, 0x1886, 1),
             Range16.init(0x2118, 0x2118, 1),
             Range16.init(0x212e, 0x212e, 1),
@@ -7080,12 +7080,12 @@ const _Other_ID_Start = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Other_Lowercase = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x00aa, 0x00aa, 1),
             Range16.init(0x00ba, 0x00ba, 1),
             Range16.init(0x02b0, 0x02b8, 1),
@@ -7109,12 +7109,12 @@ const _Other_Lowercase = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 2,
 };
 const _Other_Math = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x005e, 0x005e, 1),
             Range16.init(0x03d0, 0x03d2, 1),
             Range16.init(0x03d5, 0x03d5, 1),
@@ -7189,7 +7189,7 @@ const _Other_Math = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1d400, 0x1d454, 1),
             Range32.init(0x1d456, 0x1d49c, 1),
             Range32.init(0x1d49e, 0x1d49f, 1),
@@ -7261,14 +7261,14 @@ const _Other_Math = RangeTable{
 };
 const _Other_Uppercase = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x2160, 0x216f, 1),
             Range16.init(0x24b6, 0x24cf, 1),
         };
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1f130, 0x1f149, 1),
             Range32.init(0x1f150, 0x1f169, 1),
             Range32.init(0x1f170, 0x1f189, 1),
@@ -7279,7 +7279,7 @@ const _Other_Uppercase = RangeTable{
 };
 const _Pattern_Syntax = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0021, 0x002f, 1),
             Range16.init(0x003a, 0x0040, 1),
             Range16.init(0x005b, 0x005e, 1),
@@ -7311,12 +7311,12 @@ const _Pattern_Syntax = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 15,
 };
 const _Pattern_White_Space = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0009, 0x000d, 1),
             Range16.init(0x0020, 0x0020, 1),
             Range16.init(0x0085, 0x0085, 1),
@@ -7325,12 +7325,12 @@ const _Pattern_White_Space = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 3,
 };
 const _Prepended_Concatenation_Mark = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0600, 0x0605, 1),
             Range16.init(0x06dd, 0x06dd, 1),
             Range16.init(0x070f, 0x070f, 1),
@@ -7339,14 +7339,14 @@ const _Prepended_Concatenation_Mark = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{Range32.init(0x110bd, 0x110bd, 1)};
+        var r = [_]Range32{Range32.init(0x110bd, 0x110bd, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Quotation_Mark = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0022, 0x0022, 1),
             Range16.init(0x0027, 0x0027, 1),
             Range16.init(0x00ab, 0x00ab, 1),
@@ -7363,32 +7363,32 @@ const _Quotation_Mark = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 4,
 };
 const _Radical = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x2e80, 0x2e99, 1),
             Range16.init(0x2e9b, 0x2ef3, 1),
             Range16.init(0x2f00, 0x2fd5, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const _Regional_Indicator = RangeTable{
-    .r16 = []Range16{},
+    .r16 = [_]Range16{},
     .r32 = init: {
-        var r = []Range32{Range32.init(0x1f1e6, 0x1f1ff, 1)};
+        var r = [_]Range32{Range32.init(0x1f1e6, 0x1f1ff, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _Sentence_Terminal = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0021, 0x0021, 1),
             Range16.init(0x002e, 0x002e, 1),
             Range16.init(0x003f, 0x003f, 1),
@@ -7437,7 +7437,7 @@ const _Sentence_Terminal = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10a56, 0x10a57, 1),
             Range32.init(0x11047, 0x11048, 1),
             Range32.init(0x110be, 0x110c1, 1),
@@ -7469,7 +7469,7 @@ const _Sentence_Terminal = RangeTable{
 };
 const _Soft_Dotted = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0069, 0x006a, 1),
             Range16.init(0x012f, 0x012f, 1),
             Range16.init(0x0249, 0x0249, 1),
@@ -7492,7 +7492,7 @@ const _Soft_Dotted = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1d422, 0x1d423, 1),
             Range32.init(0x1d456, 0x1d457, 1),
             Range32.init(0x1d48a, 0x1d48b, 1),
@@ -7513,7 +7513,7 @@ const _Soft_Dotted = RangeTable{
 };
 const _Terminal_Punctuation = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0021, 0x0021, 1),
             Range16.init(0x002c, 0x002c, 1),
             Range16.init(0x002e, 0x002e, 1),
@@ -7581,7 +7581,7 @@ const _Terminal_Punctuation = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x1039f, 0x1039f, 1),
             Range32.init(0x103d0, 0x103d0, 1),
             Range32.init(0x10857, 0x10857, 1),
@@ -7623,7 +7623,7 @@ const _Terminal_Punctuation = RangeTable{
 };
 const _Unified_Ideograph = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x3400, 0x4db5, 1),
             Range16.init(0x4e00, 0x9fea, 1),
             Range16.init(0xfa0e, 0xfa0f, 1),
@@ -7637,7 +7637,7 @@ const _Unified_Ideograph = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x20000, 0x2a6d6, 1),
             Range32.init(0x2a700, 0x2b734, 1),
             Range32.init(0x2b740, 0x2b81d, 1),
@@ -7650,21 +7650,21 @@ const _Unified_Ideograph = RangeTable{
 };
 const _Variation_Selector = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x180b, 0x180d, 1),
             Range16.init(0xfe00, 0xfe0f, 1),
         };
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{Range32.init(0xe0100, 0xe01ef, 1)};
+        var r = [_]Range32{Range32.init(0xe0100, 0xe01ef, 1)};
         break :init r[0..];
     },
     .latin_offset = 0,
 };
 const _White_Space = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0009, 0x000d, 1),
             Range16.init(0x0020, 0x0020, 1),
             Range16.init(0x0085, 0x0085, 1),
@@ -7678,7 +7678,7 @@ const _White_Space = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 4,
 };
 // These variables have type *RangeTable.
@@ -7725,316 +7725,316 @@ pub const White_Space = &_White_Space; // White_Space is the set of Unicode char
 // non-self mappings.
 pub const CaseRanges = _CaseRanges;
 const _CaseRanges = init: {
-    var cs = []CaseRange{
-        CaseRange.init(0x0041, 0x005A, []const i32{ 0, 32, 0 }),
-        CaseRange.init(0x0061, 0x007A, []const i32{ -32, 0, -32 }),
-        CaseRange.init(0x00B5, 0x00B5, []const i32{ 743, 0, 743 }),
-        CaseRange.init(0x00C0, 0x00D6, []const i32{ 0, 32, 0 }),
-        CaseRange.init(0x00D8, 0x00DE, []const i32{ 0, 32, 0 }),
-        CaseRange.init(0x00E0, 0x00F6, []const i32{ -32, 0, -32 }),
-        CaseRange.init(0x00F8, 0x00FE, []const i32{ -32, 0, -32 }),
-        CaseRange.init(0x00FF, 0x00FF, []const i32{ 121, 0, 121 }),
-        CaseRange.init(0x0100, 0x012F, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x0130, 0x0130, []const i32{ 0, -199, 0 }),
-        CaseRange.init(0x0131, 0x0131, []const i32{ -232, 0, -232 }),
-        CaseRange.init(0x0132, 0x0137, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x0139, 0x0148, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x014A, 0x0177, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x0178, 0x0178, []const i32{ 0, -121, 0 }),
-        CaseRange.init(0x0179, 0x017E, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x017F, 0x017F, []const i32{ -300, 0, -300 }),
-        CaseRange.init(0x0180, 0x0180, []const i32{ 195, 0, 195 }),
-        CaseRange.init(0x0181, 0x0181, []const i32{ 0, 210, 0 }),
-        CaseRange.init(0x0182, 0x0185, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x0186, 0x0186, []const i32{ 0, 206, 0 }),
-        CaseRange.init(0x0187, 0x0188, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x0189, 0x018A, []const i32{ 0, 205, 0 }),
-        CaseRange.init(0x018B, 0x018C, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x018E, 0x018E, []const i32{ 0, 79, 0 }),
-        CaseRange.init(0x018F, 0x018F, []const i32{ 0, 202, 0 }),
-        CaseRange.init(0x0190, 0x0190, []const i32{ 0, 203, 0 }),
-        CaseRange.init(0x0191, 0x0192, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x0193, 0x0193, []const i32{ 0, 205, 0 }),
-        CaseRange.init(0x0194, 0x0194, []const i32{ 0, 207, 0 }),
-        CaseRange.init(0x0195, 0x0195, []const i32{ 97, 0, 97 }),
-        CaseRange.init(0x0196, 0x0196, []const i32{ 0, 211, 0 }),
-        CaseRange.init(0x0197, 0x0197, []const i32{ 0, 209, 0 }),
-        CaseRange.init(0x0198, 0x0199, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x019A, 0x019A, []const i32{ 163, 0, 163 }),
-        CaseRange.init(0x019C, 0x019C, []const i32{ 0, 211, 0 }),
-        CaseRange.init(0x019D, 0x019D, []const i32{ 0, 213, 0 }),
-        CaseRange.init(0x019E, 0x019E, []const i32{ 130, 0, 130 }),
-        CaseRange.init(0x019F, 0x019F, []const i32{ 0, 214, 0 }),
-        CaseRange.init(0x01A0, 0x01A5, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x01A6, 0x01A6, []const i32{ 0, 218, 0 }),
-        CaseRange.init(0x01A7, 0x01A8, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x01A9, 0x01A9, []const i32{ 0, 218, 0 }),
-        CaseRange.init(0x01AC, 0x01AD, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x01AE, 0x01AE, []const i32{ 0, 218, 0 }),
-        CaseRange.init(0x01AF, 0x01B0, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x01B1, 0x01B2, []const i32{ 0, 217, 0 }),
-        CaseRange.init(0x01B3, 0x01B6, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x01B7, 0x01B7, []const i32{ 0, 219, 0 }),
-        CaseRange.init(0x01B8, 0x01B9, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x01BC, 0x01BD, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x01BF, 0x01BF, []const i32{ 56, 0, 56 }),
-        CaseRange.init(0x01C4, 0x01C4, []const i32{ 0, 2, 1 }),
-        CaseRange.init(0x01C5, 0x01C5, []const i32{ -1, 1, 0 }),
-        CaseRange.init(0x01C6, 0x01C6, []const i32{ -2, 0, -1 }),
-        CaseRange.init(0x01C7, 0x01C7, []const i32{ 0, 2, 1 }),
-        CaseRange.init(0x01C8, 0x01C8, []const i32{ -1, 1, 0 }),
-        CaseRange.init(0x01C9, 0x01C9, []const i32{ -2, 0, -1 }),
-        CaseRange.init(0x01CA, 0x01CA, []const i32{ 0, 2, 1 }),
-        CaseRange.init(0x01CB, 0x01CB, []const i32{ -1, 1, 0 }),
-        CaseRange.init(0x01CC, 0x01CC, []const i32{ -2, 0, -1 }),
-        CaseRange.init(0x01CD, 0x01DC, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x01DD, 0x01DD, []const i32{ -79, 0, -79 }),
-        CaseRange.init(0x01DE, 0x01EF, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x01F1, 0x01F1, []const i32{ 0, 2, 1 }),
-        CaseRange.init(0x01F2, 0x01F2, []const i32{ -1, 1, 0 }),
-        CaseRange.init(0x01F3, 0x01F3, []const i32{ -2, 0, -1 }),
-        CaseRange.init(0x01F4, 0x01F5, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x01F6, 0x01F6, []const i32{ 0, -97, 0 }),
-        CaseRange.init(0x01F7, 0x01F7, []const i32{ 0, -56, 0 }),
-        CaseRange.init(0x01F8, 0x021F, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x0220, 0x0220, []const i32{ 0, -130, 0 }),
-        CaseRange.init(0x0222, 0x0233, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x023A, 0x023A, []const i32{ 0, 10795, 0 }),
-        CaseRange.init(0x023B, 0x023C, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x023D, 0x023D, []const i32{ 0, -163, 0 }),
-        CaseRange.init(0x023E, 0x023E, []const i32{ 0, 10792, 0 }),
-        CaseRange.init(0x023F, 0x0240, []const i32{ 10815, 0, 10815 }),
-        CaseRange.init(0x0241, 0x0242, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x0243, 0x0243, []const i32{ 0, -195, 0 }),
-        CaseRange.init(0x0244, 0x0244, []const i32{ 0, 69, 0 }),
-        CaseRange.init(0x0245, 0x0245, []const i32{ 0, 71, 0 }),
-        CaseRange.init(0x0246, 0x024F, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x0250, 0x0250, []const i32{ 10783, 0, 10783 }),
-        CaseRange.init(0x0251, 0x0251, []const i32{ 10780, 0, 10780 }),
-        CaseRange.init(0x0252, 0x0252, []const i32{ 10782, 0, 10782 }),
-        CaseRange.init(0x0253, 0x0253, []const i32{ -210, 0, -210 }),
-        CaseRange.init(0x0254, 0x0254, []const i32{ -206, 0, -206 }),
-        CaseRange.init(0x0256, 0x0257, []const i32{ -205, 0, -205 }),
-        CaseRange.init(0x0259, 0x0259, []const i32{ -202, 0, -202 }),
-        CaseRange.init(0x025B, 0x025B, []const i32{ -203, 0, -203 }),
-        CaseRange.init(0x025C, 0x025C, []const i32{ 42319, 0, 42319 }),
-        CaseRange.init(0x0260, 0x0260, []const i32{ -205, 0, -205 }),
-        CaseRange.init(0x0261, 0x0261, []const i32{ 42315, 0, 42315 }),
-        CaseRange.init(0x0263, 0x0263, []const i32{ -207, 0, -207 }),
-        CaseRange.init(0x0265, 0x0265, []const i32{ 42280, 0, 42280 }),
-        CaseRange.init(0x0266, 0x0266, []const i32{ 42308, 0, 42308 }),
-        CaseRange.init(0x0268, 0x0268, []const i32{ -209, 0, -209 }),
-        CaseRange.init(0x0269, 0x0269, []const i32{ -211, 0, -211 }),
-        CaseRange.init(0x026A, 0x026A, []const i32{ 42308, 0, 42308 }),
-        CaseRange.init(0x026B, 0x026B, []const i32{ 10743, 0, 10743 }),
-        CaseRange.init(0x026C, 0x026C, []const i32{ 42305, 0, 42305 }),
-        CaseRange.init(0x026F, 0x026F, []const i32{ -211, 0, -211 }),
-        CaseRange.init(0x0271, 0x0271, []const i32{ 10749, 0, 10749 }),
-        CaseRange.init(0x0272, 0x0272, []const i32{ -213, 0, -213 }),
-        CaseRange.init(0x0275, 0x0275, []const i32{ -214, 0, -214 }),
-        CaseRange.init(0x027D, 0x027D, []const i32{ 10727, 0, 10727 }),
-        CaseRange.init(0x0280, 0x0280, []const i32{ -218, 0, -218 }),
-        CaseRange.init(0x0283, 0x0283, []const i32{ -218, 0, -218 }),
-        CaseRange.init(0x0287, 0x0287, []const i32{ 42282, 0, 42282 }),
-        CaseRange.init(0x0288, 0x0288, []const i32{ -218, 0, -218 }),
-        CaseRange.init(0x0289, 0x0289, []const i32{ -69, 0, -69 }),
-        CaseRange.init(0x028A, 0x028B, []const i32{ -217, 0, -217 }),
-        CaseRange.init(0x028C, 0x028C, []const i32{ -71, 0, -71 }),
-        CaseRange.init(0x0292, 0x0292, []const i32{ -219, 0, -219 }),
-        CaseRange.init(0x029D, 0x029D, []const i32{ 42261, 0, 42261 }),
-        CaseRange.init(0x029E, 0x029E, []const i32{ 42258, 0, 42258 }),
-        CaseRange.init(0x0345, 0x0345, []const i32{ 84, 0, 84 }),
-        CaseRange.init(0x0370, 0x0373, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x0376, 0x0377, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x037B, 0x037D, []const i32{ 130, 0, 130 }),
-        CaseRange.init(0x037F, 0x037F, []const i32{ 0, 116, 0 }),
-        CaseRange.init(0x0386, 0x0386, []const i32{ 0, 38, 0 }),
-        CaseRange.init(0x0388, 0x038A, []const i32{ 0, 37, 0 }),
-        CaseRange.init(0x038C, 0x038C, []const i32{ 0, 64, 0 }),
-        CaseRange.init(0x038E, 0x038F, []const i32{ 0, 63, 0 }),
-        CaseRange.init(0x0391, 0x03A1, []const i32{ 0, 32, 0 }),
-        CaseRange.init(0x03A3, 0x03AB, []const i32{ 0, 32, 0 }),
-        CaseRange.init(0x03AC, 0x03AC, []const i32{ -38, 0, -38 }),
-        CaseRange.init(0x03AD, 0x03AF, []const i32{ -37, 0, -37 }),
-        CaseRange.init(0x03B1, 0x03C1, []const i32{ -32, 0, -32 }),
-        CaseRange.init(0x03C2, 0x03C2, []const i32{ -31, 0, -31 }),
-        CaseRange.init(0x03C3, 0x03CB, []const i32{ -32, 0, -32 }),
-        CaseRange.init(0x03CC, 0x03CC, []const i32{ -64, 0, -64 }),
-        CaseRange.init(0x03CD, 0x03CE, []const i32{ -63, 0, -63 }),
-        CaseRange.init(0x03CF, 0x03CF, []const i32{ 0, 8, 0 }),
-        CaseRange.init(0x03D0, 0x03D0, []const i32{ -62, 0, -62 }),
-        CaseRange.init(0x03D1, 0x03D1, []const i32{ -57, 0, -57 }),
-        CaseRange.init(0x03D5, 0x03D5, []const i32{ -47, 0, -47 }),
-        CaseRange.init(0x03D6, 0x03D6, []const i32{ -54, 0, -54 }),
-        CaseRange.init(0x03D7, 0x03D7, []const i32{ -8, 0, -8 }),
-        CaseRange.init(0x03D8, 0x03EF, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x03F0, 0x03F0, []const i32{ -86, 0, -86 }),
-        CaseRange.init(0x03F1, 0x03F1, []const i32{ -80, 0, -80 }),
-        CaseRange.init(0x03F2, 0x03F2, []const i32{ 7, 0, 7 }),
-        CaseRange.init(0x03F3, 0x03F3, []const i32{ -116, 0, -116 }),
-        CaseRange.init(0x03F4, 0x03F4, []const i32{ 0, -60, 0 }),
-        CaseRange.init(0x03F5, 0x03F5, []const i32{ -96, 0, -96 }),
-        CaseRange.init(0x03F7, 0x03F8, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x03F9, 0x03F9, []const i32{ 0, -7, 0 }),
-        CaseRange.init(0x03FA, 0x03FB, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x03FD, 0x03FF, []const i32{ 0, -130, 0 }),
-        CaseRange.init(0x0400, 0x040F, []const i32{ 0, 80, 0 }),
-        CaseRange.init(0x0410, 0x042F, []const i32{ 0, 32, 0 }),
-        CaseRange.init(0x0430, 0x044F, []const i32{ -32, 0, -32 }),
-        CaseRange.init(0x0450, 0x045F, []const i32{ -80, 0, -80 }),
-        CaseRange.init(0x0460, 0x0481, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x048A, 0x04BF, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x04C0, 0x04C0, []const i32{ 0, 15, 0 }),
-        CaseRange.init(0x04C1, 0x04CE, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x04CF, 0x04CF, []const i32{ -15, 0, -15 }),
-        CaseRange.init(0x04D0, 0x052F, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x0531, 0x0556, []const i32{ 0, 48, 0 }),
-        CaseRange.init(0x0561, 0x0586, []const i32{ -48, 0, -48 }),
-        CaseRange.init(0x10A0, 0x10C5, []const i32{ 0, 7264, 0 }),
-        CaseRange.init(0x10C7, 0x10C7, []const i32{ 0, 7264, 0 }),
-        CaseRange.init(0x10CD, 0x10CD, []const i32{ 0, 7264, 0 }),
-        CaseRange.init(0x13A0, 0x13EF, []const i32{ 0, 38864, 0 }),
-        CaseRange.init(0x13F0, 0x13F5, []const i32{ 0, 8, 0 }),
-        CaseRange.init(0x13F8, 0x13FD, []const i32{ -8, 0, -8 }),
-        CaseRange.init(0x1C80, 0x1C80, []const i32{ -6254, 0, -6254 }),
-        CaseRange.init(0x1C81, 0x1C81, []const i32{ -6253, 0, -6253 }),
-        CaseRange.init(0x1C82, 0x1C82, []const i32{ -6244, 0, -6244 }),
-        CaseRange.init(0x1C83, 0x1C84, []const i32{ -6242, 0, -6242 }),
-        CaseRange.init(0x1C85, 0x1C85, []const i32{ -6243, 0, -6243 }),
-        CaseRange.init(0x1C86, 0x1C86, []const i32{ -6236, 0, -6236 }),
-        CaseRange.init(0x1C87, 0x1C87, []const i32{ -6181, 0, -6181 }),
-        CaseRange.init(0x1C88, 0x1C88, []const i32{ 35266, 0, 35266 }),
-        CaseRange.init(0x1D79, 0x1D79, []const i32{ 35332, 0, 35332 }),
-        CaseRange.init(0x1D7D, 0x1D7D, []const i32{ 3814, 0, 3814 }),
-        CaseRange.init(0x1E00, 0x1E95, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x1E9B, 0x1E9B, []const i32{ -59, 0, -59 }),
-        CaseRange.init(0x1E9E, 0x1E9E, []const i32{ 0, -7615, 0 }),
-        CaseRange.init(0x1EA0, 0x1EFF, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x1F00, 0x1F07, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1F08, 0x1F0F, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1F10, 0x1F15, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1F18, 0x1F1D, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1F20, 0x1F27, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1F28, 0x1F2F, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1F30, 0x1F37, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1F38, 0x1F3F, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1F40, 0x1F45, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1F48, 0x1F4D, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1F51, 0x1F51, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1F53, 0x1F53, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1F55, 0x1F55, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1F57, 0x1F57, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1F59, 0x1F59, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1F5B, 0x1F5B, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1F5D, 0x1F5D, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1F5F, 0x1F5F, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1F60, 0x1F67, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1F68, 0x1F6F, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1F70, 0x1F71, []const i32{ 74, 0, 74 }),
-        CaseRange.init(0x1F72, 0x1F75, []const i32{ 86, 0, 86 }),
-        CaseRange.init(0x1F76, 0x1F77, []const i32{ 100, 0, 100 }),
-        CaseRange.init(0x1F78, 0x1F79, []const i32{ 128, 0, 128 }),
-        CaseRange.init(0x1F7A, 0x1F7B, []const i32{ 112, 0, 112 }),
-        CaseRange.init(0x1F7C, 0x1F7D, []const i32{ 126, 0, 126 }),
-        CaseRange.init(0x1F80, 0x1F87, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1F88, 0x1F8F, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1F90, 0x1F97, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1F98, 0x1F9F, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1FA0, 0x1FA7, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1FA8, 0x1FAF, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1FB0, 0x1FB1, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1FB3, 0x1FB3, []const i32{ 9, 0, 9 }),
-        CaseRange.init(0x1FB8, 0x1FB9, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1FBA, 0x1FBB, []const i32{ 0, -74, 0 }),
-        CaseRange.init(0x1FBC, 0x1FBC, []const i32{ 0, -9, 0 }),
-        CaseRange.init(0x1FBE, 0x1FBE, []const i32{ -7205, 0, -7205 }),
-        CaseRange.init(0x1FC3, 0x1FC3, []const i32{ 9, 0, 9 }),
-        CaseRange.init(0x1FC8, 0x1FCB, []const i32{ 0, -86, 0 }),
-        CaseRange.init(0x1FCC, 0x1FCC, []const i32{ 0, -9, 0 }),
-        CaseRange.init(0x1FD0, 0x1FD1, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1FD8, 0x1FD9, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1FDA, 0x1FDB, []const i32{ 0, -100, 0 }),
-        CaseRange.init(0x1FE0, 0x1FE1, []const i32{ 8, 0, 8 }),
-        CaseRange.init(0x1FE5, 0x1FE5, []const i32{ 7, 0, 7 }),
-        CaseRange.init(0x1FE8, 0x1FE9, []const i32{ 0, -8, 0 }),
-        CaseRange.init(0x1FEA, 0x1FEB, []const i32{ 0, -112, 0 }),
-        CaseRange.init(0x1FEC, 0x1FEC, []const i32{ 0, -7, 0 }),
-        CaseRange.init(0x1FF3, 0x1FF3, []const i32{ 9, 0, 9 }),
-        CaseRange.init(0x1FF8, 0x1FF9, []const i32{ 0, -128, 0 }),
-        CaseRange.init(0x1FFA, 0x1FFB, []const i32{ 0, -126, 0 }),
-        CaseRange.init(0x1FFC, 0x1FFC, []const i32{ 0, -9, 0 }),
-        CaseRange.init(0x2126, 0x2126, []const i32{ 0, -7517, 0 }),
-        CaseRange.init(0x212A, 0x212A, []const i32{ 0, -8383, 0 }),
-        CaseRange.init(0x212B, 0x212B, []const i32{ 0, -8262, 0 }),
-        CaseRange.init(0x2132, 0x2132, []const i32{ 0, 28, 0 }),
-        CaseRange.init(0x214E, 0x214E, []const i32{ -28, 0, -28 }),
-        CaseRange.init(0x2160, 0x216F, []const i32{ 0, 16, 0 }),
-        CaseRange.init(0x2170, 0x217F, []const i32{ -16, 0, -16 }),
-        CaseRange.init(0x2183, 0x2184, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x24B6, 0x24CF, []const i32{ 0, 26, 0 }),
-        CaseRange.init(0x24D0, 0x24E9, []const i32{ -26, 0, -26 }),
-        CaseRange.init(0x2C00, 0x2C2E, []const i32{ 0, 48, 0 }),
-        CaseRange.init(0x2C30, 0x2C5E, []const i32{ -48, 0, -48 }),
-        CaseRange.init(0x2C60, 0x2C61, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x2C62, 0x2C62, []const i32{ 0, -10743, 0 }),
-        CaseRange.init(0x2C63, 0x2C63, []const i32{ 0, -3814, 0 }),
-        CaseRange.init(0x2C64, 0x2C64, []const i32{ 0, -10727, 0 }),
-        CaseRange.init(0x2C65, 0x2C65, []const i32{ -10795, 0, -10795 }),
-        CaseRange.init(0x2C66, 0x2C66, []const i32{ -10792, 0, -10792 }),
-        CaseRange.init(0x2C67, 0x2C6C, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x2C6D, 0x2C6D, []const i32{ 0, -10780, 0 }),
-        CaseRange.init(0x2C6E, 0x2C6E, []const i32{ 0, -10749, 0 }),
-        CaseRange.init(0x2C6F, 0x2C6F, []const i32{ 0, -10783, 0 }),
-        CaseRange.init(0x2C70, 0x2C70, []const i32{ 0, -10782, 0 }),
-        CaseRange.init(0x2C72, 0x2C73, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x2C75, 0x2C76, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x2C7E, 0x2C7F, []const i32{ 0, -10815, 0 }),
-        CaseRange.init(0x2C80, 0x2CE3, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x2CEB, 0x2CEE, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x2CF2, 0x2CF3, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0x2D00, 0x2D25, []const i32{ -7264, 0, -7264 }),
-        CaseRange.init(0x2D27, 0x2D27, []const i32{ -7264, 0, -7264 }),
-        CaseRange.init(0x2D2D, 0x2D2D, []const i32{ -7264, 0, -7264 }),
-        CaseRange.init(0xA640, 0xA66D, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0xA680, 0xA69B, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0xA722, 0xA72F, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0xA732, 0xA76F, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0xA779, 0xA77C, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0xA77D, 0xA77D, []const i32{ 0, -35332, 0 }),
-        CaseRange.init(0xA77E, 0xA787, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0xA78B, 0xA78C, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0xA78D, 0xA78D, []const i32{ 0, -42280, 0 }),
-        CaseRange.init(0xA790, 0xA793, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0xA796, 0xA7A9, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0xA7AA, 0xA7AA, []const i32{ 0, -42308, 0 }),
-        CaseRange.init(0xA7AB, 0xA7AB, []const i32{ 0, -42319, 0 }),
-        CaseRange.init(0xA7AC, 0xA7AC, []const i32{ 0, -42315, 0 }),
-        CaseRange.init(0xA7AD, 0xA7AD, []const i32{ 0, -42305, 0 }),
-        CaseRange.init(0xA7AE, 0xA7AE, []const i32{ 0, -42308, 0 }),
-        CaseRange.init(0xA7B0, 0xA7B0, []const i32{ 0, -42258, 0 }),
-        CaseRange.init(0xA7B1, 0xA7B1, []const i32{ 0, -42282, 0 }),
-        CaseRange.init(0xA7B2, 0xA7B2, []const i32{ 0, -42261, 0 }),
-        CaseRange.init(0xA7B3, 0xA7B3, []const i32{ 0, 928, 0 }),
-        CaseRange.init(0xA7B4, 0xA7B7, []const i32{ upper_lower, upper_lower, upper_lower }),
-        CaseRange.init(0xAB53, 0xAB53, []const i32{ -928, 0, -928 }),
-        CaseRange.init(0xAB70, 0xABBF, []const i32{ -38864, 0, -38864 }),
-        CaseRange.init(0xFF21, 0xFF3A, []const i32{ 0, 32, 0 }),
-        CaseRange.init(0xFF41, 0xFF5A, []const i32{ -32, 0, -32 }),
-        CaseRange.init(0x10400, 0x10427, []const i32{ 0, 40, 0 }),
-        CaseRange.init(0x10428, 0x1044F, []const i32{ -40, 0, -40 }),
-        CaseRange.init(0x104B0, 0x104D3, []const i32{ 0, 40, 0 }),
-        CaseRange.init(0x104D8, 0x104FB, []const i32{ -40, 0, -40 }),
-        CaseRange.init(0x10C80, 0x10CB2, []const i32{ 0, 64, 0 }),
-        CaseRange.init(0x10CC0, 0x10CF2, []const i32{ -64, 0, -64 }),
-        CaseRange.init(0x118A0, 0x118BF, []const i32{ 0, 32, 0 }),
-        CaseRange.init(0x118C0, 0x118DF, []const i32{ -32, 0, -32 }),
-        CaseRange.init(0x1E900, 0x1E921, []const i32{ 0, 34, 0 }),
-        CaseRange.init(0x1E922, 0x1E943, []const i32{ -34, 0, -34 }),
+    var cs = [_]CaseRange{
+        CaseRange.init(0x0041, 0x005A, [_]i32{ 0, 32, 0 }),
+        CaseRange.init(0x0061, 0x007A, [_]i32{ -32, 0, -32 }),
+        CaseRange.init(0x00B5, 0x00B5, [_]i32{ 743, 0, 743 }),
+        CaseRange.init(0x00C0, 0x00D6, [_]i32{ 0, 32, 0 }),
+        CaseRange.init(0x00D8, 0x00DE, [_]i32{ 0, 32, 0 }),
+        CaseRange.init(0x00E0, 0x00F6, [_]i32{ -32, 0, -32 }),
+        CaseRange.init(0x00F8, 0x00FE, [_]i32{ -32, 0, -32 }),
+        CaseRange.init(0x00FF, 0x00FF, [_]i32{ 121, 0, 121 }),
+        CaseRange.init(0x0100, 0x012F, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x0130, 0x0130, [_]i32{ 0, -199, 0 }),
+        CaseRange.init(0x0131, 0x0131, [_]i32{ -232, 0, -232 }),
+        CaseRange.init(0x0132, 0x0137, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x0139, 0x0148, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x014A, 0x0177, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x0178, 0x0178, [_]i32{ 0, -121, 0 }),
+        CaseRange.init(0x0179, 0x017E, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x017F, 0x017F, [_]i32{ -300, 0, -300 }),
+        CaseRange.init(0x0180, 0x0180, [_]i32{ 195, 0, 195 }),
+        CaseRange.init(0x0181, 0x0181, [_]i32{ 0, 210, 0 }),
+        CaseRange.init(0x0182, 0x0185, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x0186, 0x0186, [_]i32{ 0, 206, 0 }),
+        CaseRange.init(0x0187, 0x0188, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x0189, 0x018A, [_]i32{ 0, 205, 0 }),
+        CaseRange.init(0x018B, 0x018C, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x018E, 0x018E, [_]i32{ 0, 79, 0 }),
+        CaseRange.init(0x018F, 0x018F, [_]i32{ 0, 202, 0 }),
+        CaseRange.init(0x0190, 0x0190, [_]i32{ 0, 203, 0 }),
+        CaseRange.init(0x0191, 0x0192, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x0193, 0x0193, [_]i32{ 0, 205, 0 }),
+        CaseRange.init(0x0194, 0x0194, [_]i32{ 0, 207, 0 }),
+        CaseRange.init(0x0195, 0x0195, [_]i32{ 97, 0, 97 }),
+        CaseRange.init(0x0196, 0x0196, [_]i32{ 0, 211, 0 }),
+        CaseRange.init(0x0197, 0x0197, [_]i32{ 0, 209, 0 }),
+        CaseRange.init(0x0198, 0x0199, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x019A, 0x019A, [_]i32{ 163, 0, 163 }),
+        CaseRange.init(0x019C, 0x019C, [_]i32{ 0, 211, 0 }),
+        CaseRange.init(0x019D, 0x019D, [_]i32{ 0, 213, 0 }),
+        CaseRange.init(0x019E, 0x019E, [_]i32{ 130, 0, 130 }),
+        CaseRange.init(0x019F, 0x019F, [_]i32{ 0, 214, 0 }),
+        CaseRange.init(0x01A0, 0x01A5, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x01A6, 0x01A6, [_]i32{ 0, 218, 0 }),
+        CaseRange.init(0x01A7, 0x01A8, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x01A9, 0x01A9, [_]i32{ 0, 218, 0 }),
+        CaseRange.init(0x01AC, 0x01AD, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x01AE, 0x01AE, [_]i32{ 0, 218, 0 }),
+        CaseRange.init(0x01AF, 0x01B0, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x01B1, 0x01B2, [_]i32{ 0, 217, 0 }),
+        CaseRange.init(0x01B3, 0x01B6, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x01B7, 0x01B7, [_]i32{ 0, 219, 0 }),
+        CaseRange.init(0x01B8, 0x01B9, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x01BC, 0x01BD, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x01BF, 0x01BF, [_]i32{ 56, 0, 56 }),
+        CaseRange.init(0x01C4, 0x01C4, [_]i32{ 0, 2, 1 }),
+        CaseRange.init(0x01C5, 0x01C5, [_]i32{ -1, 1, 0 }),
+        CaseRange.init(0x01C6, 0x01C6, [_]i32{ -2, 0, -1 }),
+        CaseRange.init(0x01C7, 0x01C7, [_]i32{ 0, 2, 1 }),
+        CaseRange.init(0x01C8, 0x01C8, [_]i32{ -1, 1, 0 }),
+        CaseRange.init(0x01C9, 0x01C9, [_]i32{ -2, 0, -1 }),
+        CaseRange.init(0x01CA, 0x01CA, [_]i32{ 0, 2, 1 }),
+        CaseRange.init(0x01CB, 0x01CB, [_]i32{ -1, 1, 0 }),
+        CaseRange.init(0x01CC, 0x01CC, [_]i32{ -2, 0, -1 }),
+        CaseRange.init(0x01CD, 0x01DC, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x01DD, 0x01DD, [_]i32{ -79, 0, -79 }),
+        CaseRange.init(0x01DE, 0x01EF, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x01F1, 0x01F1, [_]i32{ 0, 2, 1 }),
+        CaseRange.init(0x01F2, 0x01F2, [_]i32{ -1, 1, 0 }),
+        CaseRange.init(0x01F3, 0x01F3, [_]i32{ -2, 0, -1 }),
+        CaseRange.init(0x01F4, 0x01F5, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x01F6, 0x01F6, [_]i32{ 0, -97, 0 }),
+        CaseRange.init(0x01F7, 0x01F7, [_]i32{ 0, -56, 0 }),
+        CaseRange.init(0x01F8, 0x021F, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x0220, 0x0220, [_]i32{ 0, -130, 0 }),
+        CaseRange.init(0x0222, 0x0233, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x023A, 0x023A, [_]i32{ 0, 10795, 0 }),
+        CaseRange.init(0x023B, 0x023C, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x023D, 0x023D, [_]i32{ 0, -163, 0 }),
+        CaseRange.init(0x023E, 0x023E, [_]i32{ 0, 10792, 0 }),
+        CaseRange.init(0x023F, 0x0240, [_]i32{ 10815, 0, 10815 }),
+        CaseRange.init(0x0241, 0x0242, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x0243, 0x0243, [_]i32{ 0, -195, 0 }),
+        CaseRange.init(0x0244, 0x0244, [_]i32{ 0, 69, 0 }),
+        CaseRange.init(0x0245, 0x0245, [_]i32{ 0, 71, 0 }),
+        CaseRange.init(0x0246, 0x024F, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x0250, 0x0250, [_]i32{ 10783, 0, 10783 }),
+        CaseRange.init(0x0251, 0x0251, [_]i32{ 10780, 0, 10780 }),
+        CaseRange.init(0x0252, 0x0252, [_]i32{ 10782, 0, 10782 }),
+        CaseRange.init(0x0253, 0x0253, [_]i32{ -210, 0, -210 }),
+        CaseRange.init(0x0254, 0x0254, [_]i32{ -206, 0, -206 }),
+        CaseRange.init(0x0256, 0x0257, [_]i32{ -205, 0, -205 }),
+        CaseRange.init(0x0259, 0x0259, [_]i32{ -202, 0, -202 }),
+        CaseRange.init(0x025B, 0x025B, [_]i32{ -203, 0, -203 }),
+        CaseRange.init(0x025C, 0x025C, [_]i32{ 42319, 0, 42319 }),
+        CaseRange.init(0x0260, 0x0260, [_]i32{ -205, 0, -205 }),
+        CaseRange.init(0x0261, 0x0261, [_]i32{ 42315, 0, 42315 }),
+        CaseRange.init(0x0263, 0x0263, [_]i32{ -207, 0, -207 }),
+        CaseRange.init(0x0265, 0x0265, [_]i32{ 42280, 0, 42280 }),
+        CaseRange.init(0x0266, 0x0266, [_]i32{ 42308, 0, 42308 }),
+        CaseRange.init(0x0268, 0x0268, [_]i32{ -209, 0, -209 }),
+        CaseRange.init(0x0269, 0x0269, [_]i32{ -211, 0, -211 }),
+        CaseRange.init(0x026A, 0x026A, [_]i32{ 42308, 0, 42308 }),
+        CaseRange.init(0x026B, 0x026B, [_]i32{ 10743, 0, 10743 }),
+        CaseRange.init(0x026C, 0x026C, [_]i32{ 42305, 0, 42305 }),
+        CaseRange.init(0x026F, 0x026F, [_]i32{ -211, 0, -211 }),
+        CaseRange.init(0x0271, 0x0271, [_]i32{ 10749, 0, 10749 }),
+        CaseRange.init(0x0272, 0x0272, [_]i32{ -213, 0, -213 }),
+        CaseRange.init(0x0275, 0x0275, [_]i32{ -214, 0, -214 }),
+        CaseRange.init(0x027D, 0x027D, [_]i32{ 10727, 0, 10727 }),
+        CaseRange.init(0x0280, 0x0280, [_]i32{ -218, 0, -218 }),
+        CaseRange.init(0x0283, 0x0283, [_]i32{ -218, 0, -218 }),
+        CaseRange.init(0x0287, 0x0287, [_]i32{ 42282, 0, 42282 }),
+        CaseRange.init(0x0288, 0x0288, [_]i32{ -218, 0, -218 }),
+        CaseRange.init(0x0289, 0x0289, [_]i32{ -69, 0, -69 }),
+        CaseRange.init(0x028A, 0x028B, [_]i32{ -217, 0, -217 }),
+        CaseRange.init(0x028C, 0x028C, [_]i32{ -71, 0, -71 }),
+        CaseRange.init(0x0292, 0x0292, [_]i32{ -219, 0, -219 }),
+        CaseRange.init(0x029D, 0x029D, [_]i32{ 42261, 0, 42261 }),
+        CaseRange.init(0x029E, 0x029E, [_]i32{ 42258, 0, 42258 }),
+        CaseRange.init(0x0345, 0x0345, [_]i32{ 84, 0, 84 }),
+        CaseRange.init(0x0370, 0x0373, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x0376, 0x0377, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x037B, 0x037D, [_]i32{ 130, 0, 130 }),
+        CaseRange.init(0x037F, 0x037F, [_]i32{ 0, 116, 0 }),
+        CaseRange.init(0x0386, 0x0386, [_]i32{ 0, 38, 0 }),
+        CaseRange.init(0x0388, 0x038A, [_]i32{ 0, 37, 0 }),
+        CaseRange.init(0x038C, 0x038C, [_]i32{ 0, 64, 0 }),
+        CaseRange.init(0x038E, 0x038F, [_]i32{ 0, 63, 0 }),
+        CaseRange.init(0x0391, 0x03A1, [_]i32{ 0, 32, 0 }),
+        CaseRange.init(0x03A3, 0x03AB, [_]i32{ 0, 32, 0 }),
+        CaseRange.init(0x03AC, 0x03AC, [_]i32{ -38, 0, -38 }),
+        CaseRange.init(0x03AD, 0x03AF, [_]i32{ -37, 0, -37 }),
+        CaseRange.init(0x03B1, 0x03C1, [_]i32{ -32, 0, -32 }),
+        CaseRange.init(0x03C2, 0x03C2, [_]i32{ -31, 0, -31 }),
+        CaseRange.init(0x03C3, 0x03CB, [_]i32{ -32, 0, -32 }),
+        CaseRange.init(0x03CC, 0x03CC, [_]i32{ -64, 0, -64 }),
+        CaseRange.init(0x03CD, 0x03CE, [_]i32{ -63, 0, -63 }),
+        CaseRange.init(0x03CF, 0x03CF, [_]i32{ 0, 8, 0 }),
+        CaseRange.init(0x03D0, 0x03D0, [_]i32{ -62, 0, -62 }),
+        CaseRange.init(0x03D1, 0x03D1, [_]i32{ -57, 0, -57 }),
+        CaseRange.init(0x03D5, 0x03D5, [_]i32{ -47, 0, -47 }),
+        CaseRange.init(0x03D6, 0x03D6, [_]i32{ -54, 0, -54 }),
+        CaseRange.init(0x03D7, 0x03D7, [_]i32{ -8, 0, -8 }),
+        CaseRange.init(0x03D8, 0x03EF, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x03F0, 0x03F0, [_]i32{ -86, 0, -86 }),
+        CaseRange.init(0x03F1, 0x03F1, [_]i32{ -80, 0, -80 }),
+        CaseRange.init(0x03F2, 0x03F2, [_]i32{ 7, 0, 7 }),
+        CaseRange.init(0x03F3, 0x03F3, [_]i32{ -116, 0, -116 }),
+        CaseRange.init(0x03F4, 0x03F4, [_]i32{ 0, -60, 0 }),
+        CaseRange.init(0x03F5, 0x03F5, [_]i32{ -96, 0, -96 }),
+        CaseRange.init(0x03F7, 0x03F8, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x03F9, 0x03F9, [_]i32{ 0, -7, 0 }),
+        CaseRange.init(0x03FA, 0x03FB, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x03FD, 0x03FF, [_]i32{ 0, -130, 0 }),
+        CaseRange.init(0x0400, 0x040F, [_]i32{ 0, 80, 0 }),
+        CaseRange.init(0x0410, 0x042F, [_]i32{ 0, 32, 0 }),
+        CaseRange.init(0x0430, 0x044F, [_]i32{ -32, 0, -32 }),
+        CaseRange.init(0x0450, 0x045F, [_]i32{ -80, 0, -80 }),
+        CaseRange.init(0x0460, 0x0481, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x048A, 0x04BF, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x04C0, 0x04C0, [_]i32{ 0, 15, 0 }),
+        CaseRange.init(0x04C1, 0x04CE, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x04CF, 0x04CF, [_]i32{ -15, 0, -15 }),
+        CaseRange.init(0x04D0, 0x052F, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x0531, 0x0556, [_]i32{ 0, 48, 0 }),
+        CaseRange.init(0x0561, 0x0586, [_]i32{ -48, 0, -48 }),
+        CaseRange.init(0x10A0, 0x10C5, [_]i32{ 0, 7264, 0 }),
+        CaseRange.init(0x10C7, 0x10C7, [_]i32{ 0, 7264, 0 }),
+        CaseRange.init(0x10CD, 0x10CD, [_]i32{ 0, 7264, 0 }),
+        CaseRange.init(0x13A0, 0x13EF, [_]i32{ 0, 38864, 0 }),
+        CaseRange.init(0x13F0, 0x13F5, [_]i32{ 0, 8, 0 }),
+        CaseRange.init(0x13F8, 0x13FD, [_]i32{ -8, 0, -8 }),
+        CaseRange.init(0x1C80, 0x1C80, [_]i32{ -6254, 0, -6254 }),
+        CaseRange.init(0x1C81, 0x1C81, [_]i32{ -6253, 0, -6253 }),
+        CaseRange.init(0x1C82, 0x1C82, [_]i32{ -6244, 0, -6244 }),
+        CaseRange.init(0x1C83, 0x1C84, [_]i32{ -6242, 0, -6242 }),
+        CaseRange.init(0x1C85, 0x1C85, [_]i32{ -6243, 0, -6243 }),
+        CaseRange.init(0x1C86, 0x1C86, [_]i32{ -6236, 0, -6236 }),
+        CaseRange.init(0x1C87, 0x1C87, [_]i32{ -6181, 0, -6181 }),
+        CaseRange.init(0x1C88, 0x1C88, [_]i32{ 35266, 0, 35266 }),
+        CaseRange.init(0x1D79, 0x1D79, [_]i32{ 35332, 0, 35332 }),
+        CaseRange.init(0x1D7D, 0x1D7D, [_]i32{ 3814, 0, 3814 }),
+        CaseRange.init(0x1E00, 0x1E95, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x1E9B, 0x1E9B, [_]i32{ -59, 0, -59 }),
+        CaseRange.init(0x1E9E, 0x1E9E, [_]i32{ 0, -7615, 0 }),
+        CaseRange.init(0x1EA0, 0x1EFF, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x1F00, 0x1F07, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1F08, 0x1F0F, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1F10, 0x1F15, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1F18, 0x1F1D, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1F20, 0x1F27, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1F28, 0x1F2F, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1F30, 0x1F37, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1F38, 0x1F3F, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1F40, 0x1F45, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1F48, 0x1F4D, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1F51, 0x1F51, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1F53, 0x1F53, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1F55, 0x1F55, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1F57, 0x1F57, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1F59, 0x1F59, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1F5B, 0x1F5B, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1F5D, 0x1F5D, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1F5F, 0x1F5F, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1F60, 0x1F67, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1F68, 0x1F6F, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1F70, 0x1F71, [_]i32{ 74, 0, 74 }),
+        CaseRange.init(0x1F72, 0x1F75, [_]i32{ 86, 0, 86 }),
+        CaseRange.init(0x1F76, 0x1F77, [_]i32{ 100, 0, 100 }),
+        CaseRange.init(0x1F78, 0x1F79, [_]i32{ 128, 0, 128 }),
+        CaseRange.init(0x1F7A, 0x1F7B, [_]i32{ 112, 0, 112 }),
+        CaseRange.init(0x1F7C, 0x1F7D, [_]i32{ 126, 0, 126 }),
+        CaseRange.init(0x1F80, 0x1F87, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1F88, 0x1F8F, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1F90, 0x1F97, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1F98, 0x1F9F, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1FA0, 0x1FA7, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1FA8, 0x1FAF, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1FB0, 0x1FB1, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1FB3, 0x1FB3, [_]i32{ 9, 0, 9 }),
+        CaseRange.init(0x1FB8, 0x1FB9, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1FBA, 0x1FBB, [_]i32{ 0, -74, 0 }),
+        CaseRange.init(0x1FBC, 0x1FBC, [_]i32{ 0, -9, 0 }),
+        CaseRange.init(0x1FBE, 0x1FBE, [_]i32{ -7205, 0, -7205 }),
+        CaseRange.init(0x1FC3, 0x1FC3, [_]i32{ 9, 0, 9 }),
+        CaseRange.init(0x1FC8, 0x1FCB, [_]i32{ 0, -86, 0 }),
+        CaseRange.init(0x1FCC, 0x1FCC, [_]i32{ 0, -9, 0 }),
+        CaseRange.init(0x1FD0, 0x1FD1, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1FD8, 0x1FD9, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1FDA, 0x1FDB, [_]i32{ 0, -100, 0 }),
+        CaseRange.init(0x1FE0, 0x1FE1, [_]i32{ 8, 0, 8 }),
+        CaseRange.init(0x1FE5, 0x1FE5, [_]i32{ 7, 0, 7 }),
+        CaseRange.init(0x1FE8, 0x1FE9, [_]i32{ 0, -8, 0 }),
+        CaseRange.init(0x1FEA, 0x1FEB, [_]i32{ 0, -112, 0 }),
+        CaseRange.init(0x1FEC, 0x1FEC, [_]i32{ 0, -7, 0 }),
+        CaseRange.init(0x1FF3, 0x1FF3, [_]i32{ 9, 0, 9 }),
+        CaseRange.init(0x1FF8, 0x1FF9, [_]i32{ 0, -128, 0 }),
+        CaseRange.init(0x1FFA, 0x1FFB, [_]i32{ 0, -126, 0 }),
+        CaseRange.init(0x1FFC, 0x1FFC, [_]i32{ 0, -9, 0 }),
+        CaseRange.init(0x2126, 0x2126, [_]i32{ 0, -7517, 0 }),
+        CaseRange.init(0x212A, 0x212A, [_]i32{ 0, -8383, 0 }),
+        CaseRange.init(0x212B, 0x212B, [_]i32{ 0, -8262, 0 }),
+        CaseRange.init(0x2132, 0x2132, [_]i32{ 0, 28, 0 }),
+        CaseRange.init(0x214E, 0x214E, [_]i32{ -28, 0, -28 }),
+        CaseRange.init(0x2160, 0x216F, [_]i32{ 0, 16, 0 }),
+        CaseRange.init(0x2170, 0x217F, [_]i32{ -16, 0, -16 }),
+        CaseRange.init(0x2183, 0x2184, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x24B6, 0x24CF, [_]i32{ 0, 26, 0 }),
+        CaseRange.init(0x24D0, 0x24E9, [_]i32{ -26, 0, -26 }),
+        CaseRange.init(0x2C00, 0x2C2E, [_]i32{ 0, 48, 0 }),
+        CaseRange.init(0x2C30, 0x2C5E, [_]i32{ -48, 0, -48 }),
+        CaseRange.init(0x2C60, 0x2C61, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x2C62, 0x2C62, [_]i32{ 0, -10743, 0 }),
+        CaseRange.init(0x2C63, 0x2C63, [_]i32{ 0, -3814, 0 }),
+        CaseRange.init(0x2C64, 0x2C64, [_]i32{ 0, -10727, 0 }),
+        CaseRange.init(0x2C65, 0x2C65, [_]i32{ -10795, 0, -10795 }),
+        CaseRange.init(0x2C66, 0x2C66, [_]i32{ -10792, 0, -10792 }),
+        CaseRange.init(0x2C67, 0x2C6C, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x2C6D, 0x2C6D, [_]i32{ 0, -10780, 0 }),
+        CaseRange.init(0x2C6E, 0x2C6E, [_]i32{ 0, -10749, 0 }),
+        CaseRange.init(0x2C6F, 0x2C6F, [_]i32{ 0, -10783, 0 }),
+        CaseRange.init(0x2C70, 0x2C70, [_]i32{ 0, -10782, 0 }),
+        CaseRange.init(0x2C72, 0x2C73, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x2C75, 0x2C76, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x2C7E, 0x2C7F, [_]i32{ 0, -10815, 0 }),
+        CaseRange.init(0x2C80, 0x2CE3, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x2CEB, 0x2CEE, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x2CF2, 0x2CF3, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0x2D00, 0x2D25, [_]i32{ -7264, 0, -7264 }),
+        CaseRange.init(0x2D27, 0x2D27, [_]i32{ -7264, 0, -7264 }),
+        CaseRange.init(0x2D2D, 0x2D2D, [_]i32{ -7264, 0, -7264 }),
+        CaseRange.init(0xA640, 0xA66D, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0xA680, 0xA69B, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0xA722, 0xA72F, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0xA732, 0xA76F, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0xA779, 0xA77C, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0xA77D, 0xA77D, [_]i32{ 0, -35332, 0 }),
+        CaseRange.init(0xA77E, 0xA787, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0xA78B, 0xA78C, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0xA78D, 0xA78D, [_]i32{ 0, -42280, 0 }),
+        CaseRange.init(0xA790, 0xA793, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0xA796, 0xA7A9, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0xA7AA, 0xA7AA, [_]i32{ 0, -42308, 0 }),
+        CaseRange.init(0xA7AB, 0xA7AB, [_]i32{ 0, -42319, 0 }),
+        CaseRange.init(0xA7AC, 0xA7AC, [_]i32{ 0, -42315, 0 }),
+        CaseRange.init(0xA7AD, 0xA7AD, [_]i32{ 0, -42305, 0 }),
+        CaseRange.init(0xA7AE, 0xA7AE, [_]i32{ 0, -42308, 0 }),
+        CaseRange.init(0xA7B0, 0xA7B0, [_]i32{ 0, -42258, 0 }),
+        CaseRange.init(0xA7B1, 0xA7B1, [_]i32{ 0, -42282, 0 }),
+        CaseRange.init(0xA7B2, 0xA7B2, [_]i32{ 0, -42261, 0 }),
+        CaseRange.init(0xA7B3, 0xA7B3, [_]i32{ 0, 928, 0 }),
+        CaseRange.init(0xA7B4, 0xA7B7, [_]i32{ upper_lower, upper_lower, upper_lower }),
+        CaseRange.init(0xAB53, 0xAB53, [_]i32{ -928, 0, -928 }),
+        CaseRange.init(0xAB70, 0xABBF, [_]i32{ -38864, 0, -38864 }),
+        CaseRange.init(0xFF21, 0xFF3A, [_]i32{ 0, 32, 0 }),
+        CaseRange.init(0xFF41, 0xFF5A, [_]i32{ -32, 0, -32 }),
+        CaseRange.init(0x10400, 0x10427, [_]i32{ 0, 40, 0 }),
+        CaseRange.init(0x10428, 0x1044F, [_]i32{ -40, 0, -40 }),
+        CaseRange.init(0x104B0, 0x104D3, [_]i32{ 0, 40, 0 }),
+        CaseRange.init(0x104D8, 0x104FB, [_]i32{ -40, 0, -40 }),
+        CaseRange.init(0x10C80, 0x10CB2, [_]i32{ 0, 64, 0 }),
+        CaseRange.init(0x10CC0, 0x10CF2, [_]i32{ -64, 0, -64 }),
+        CaseRange.init(0x118A0, 0x118BF, [_]i32{ 0, 32, 0 }),
+        CaseRange.init(0x118C0, 0x118DF, [_]i32{ -32, 0, -32 }),
+        CaseRange.init(0x1E900, 0x1E921, [_]i32{ 0, 34, 0 }),
+        CaseRange.init(0x1E922, 0x1E943, [_]i32{ -34, 0, -34 }),
     };
     break :init cs[0..];
 };
 pub const properties = init: {
-    var s = []u8{0} ** 1114112;
+    var s = [_]u8{0} ** 1114112;
     s[0x00] = pC; // '\x00'
     s[0x01] = pC; // '\x01'
     s[0x02] = pC; // '\x02'
@@ -8547,15 +8547,15 @@ pub const FoldCategory = enum {
 
 const foldL = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0x0345, 0x0345, 1)};
+        var r = [_]Range16{Range16.init(0x0345, 0x0345, 1)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const foldLl = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0041, 0x005a, 1),
             Range16.init(0x00c0, 0x00d6, 1),
             Range16.init(0x00d8, 0x00de, 1),
@@ -8662,7 +8662,7 @@ const foldLl = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10400, 0x10427, 1),
             Range32.init(0x104b0, 0x104d3, 1),
             Range32.init(0x10c80, 0x10cb2, 1),
@@ -8675,7 +8675,7 @@ const foldLl = RangeTable{
 };
 const foldLt = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x01c4, 0x01c6, 2),
             Range16.init(0x01c7, 0x01c9, 2),
             Range16.init(0x01ca, 0x01cc, 2),
@@ -8688,12 +8688,12 @@ const foldLt = RangeTable{
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const foldLu = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0061, 0x007a, 1),
             Range16.init(0x00b5, 0x00df, 42),
             Range16.init(0x00e0, 0x00f6, 1),
@@ -8800,7 +8800,7 @@ const foldLu = RangeTable{
         break :init r[0..];
     },
     .r32 = init: {
-        var r = []Range32{
+        var r = [_]Range32{
             Range32.init(0x10428, 0x1044f, 1),
             Range32.init(0x104d8, 0x104fb, 1),
             Range32.init(0x10cc0, 0x10cf2, 1),
@@ -8813,24 +8813,24 @@ const foldLu = RangeTable{
 };
 const foldM = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0399, 0x03b9, 32),
             Range16.init(0x1fbe, 0x1fbe, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const foldMn = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0399, 0x03b9, 32),
             Range16.init(0x1fbe, 0x1fbe, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 // FoldScript maps a script name to a table of
@@ -8858,29 +8858,29 @@ pub const FoldScript = enum {
 
 const foldCommon = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0x039c, 0x03bc, 32)};
+        var r = [_]Range16{Range16.init(0x039c, 0x03bc, 32)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const foldGreek = RangeTable{
     .r16 = init: {
-        var r = []Range16{Range16.init(0x00b5, 0x0345, 656)};
+        var r = [_]Range16{Range16.init(0x00b5, 0x0345, 656)};
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 const foldInherited = RangeTable{
     .r16 = init: {
-        var r = []Range16{
+        var r = [_]Range16{
             Range16.init(0x0399, 0x03b9, 32),
             Range16.init(0x1fbe, 0x1fbe, 1),
         };
         break :init r[0..];
     },
-    .r32 = []Range32{},
+    .r32 = [_]Range32{},
     .latin_offset = 0,
 };
 

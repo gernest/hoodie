@@ -245,11 +245,11 @@ pub fn simpleFold(r: u32) u32 {
     return toUpper(r);
 }
 
-pub const graphic_ranges = []*const tables.RangeTable{
+pub const graphic_ranges = [_]*const tables.RangeTable{
     tables.L, tables.M, tables.N, tables.P, tables.S, tables.Zs,
 };
 
-pub const print_ranges = []*const tables.RangeTable{
+pub const print_ranges = [_]*const tables.RangeTable{
     tables.L, tables.M, tables.N, tables.P, tables.S,
 };
 

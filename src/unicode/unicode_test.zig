@@ -386,7 +386,7 @@ const test_digit = [_]i32{
     0x1D7CE,
 };
 
-const test_letter = []i32{
+const test_letter = [_]i32{
     0x0041,
     0x0061,
     0x00AA,
