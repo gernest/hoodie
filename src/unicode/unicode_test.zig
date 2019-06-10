@@ -1,10 +1,11 @@
+const std = @import("std");
 const tables = @import("tables.zig");
 const unicode = @import("unicode.zig");
-const std = @import("std");
+
 const testing = std.testing;
 
 const test_failed = error.TestFailed;
-const notletterTest = []i32{
+const notletterTest = [_]i32{
     0x20,
     0x35,
     0x375,
@@ -15,7 +16,7 @@ const notletterTest = []i32{
     0x1ffff,
     0x10ffff,
 };
-const upper_test = []i32{
+const upper_test = [_]i32{
     0x41,
     0xc0,
     0xd8,
@@ -39,7 +40,7 @@ const upper_test = []i32{
     0x1d400,
     0x1d7ca,
 };
-const notupperTest = []i32{
+const notupperTest = [_]i32{
     0x40,
     0x5b,
     0x61,
@@ -52,6 +53,7 @@ const notupperTest = []i32{
     0xffff,
     0x10000,
 };
+
 test "isUpper" {
     for (upper_test) |r, i| {
         testing.expect(unicode.isUpper(r));
@@ -73,7 +75,7 @@ const caseT = struct {
     }
 };
 
-const case_test = []caseT{
+const case_test = [_]caseT{
 
     // ASCII (special-cased so test carefully)
     caseT.init(tables.Case.Upper, '\n', '\n'),
@@ -325,7 +327,7 @@ test "isSymbolLatin1" {
     }
 }
 
-const test_digit = []i32{
+const test_digit = [_]i32{
     0x0030,
     0x0039,
     0x0661,
