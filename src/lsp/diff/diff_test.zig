@@ -18,7 +18,7 @@ test "split lines" {
     const lines = try diff.splitLines(a, src);
     defer lines.deinit();
 
-    const want = [][]const u8{
+    const want = [_][]const u8{
         "A",
         "B",
         "C",
@@ -32,16 +32,16 @@ test "split lines" {
 
 test "diff" {
     var a = std.debug.global_allocator;
-    const cases = []const TestCase{
+    const cases = [_]TestCase{
         TestCase{
             .a = "A\nB\nC\n",
             .b = "A\nB\nC\n",
-            .ops = []const diff.Op{},
+            .ops = [_]diff.Op{},
         },
         TestCase{
             .a = "A\n",
             .b = "B\n",
-            .ops = []const diff.Op{
+            .ops = [_]diff.Op{
                 diff.Op{
                     .kind = .Delete,
                     .content = null,
@@ -51,7 +51,7 @@ test "diff" {
                 },
                 diff.Op{
                     .kind = .Insert,
-                    .content = []const []const u8{"B\n"},
+                    .content = [_][]const u8{"B\n"},
                     .i_1 = 1,
                     .i_2 = 1,
                     .j_2 = 0,
