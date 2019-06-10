@@ -10,7 +10,7 @@ const testCase = struct {
     valid: bool,
 };
 
-const test_cases = []testCase{
+const test_cases = [_]testCase{
     testCase{ .v = "bad", .valid = false },
     testCase{ .v = "v1-alpha.beta.gamma", .valid = false },
     testCase{ .v = "v1-pre", .valid = false },
@@ -56,7 +56,7 @@ const compareTest = struct {
     cmp: mem.Compare,
 };
 
-const compare_tests = []compareTest{
+const compare_tests = [_]compareTest{
     compareTest{ .x = "v1.0.0-alpha", .y = "v1.0.0-alpha", .cmp = .Equal },
     compareTest{ .x = "v1.0.0-alpha.1", .y = "v1.0.0-alpha", .cmp = .GreaterThan },
     compareTest{ .x = "v1.0.0-alpha.1", .y = "v1.0.0-alpha.1", .cmp = .Equal },
@@ -355,7 +355,7 @@ const printTest = struct {
     expect: []const u8,
 };
 
-const print_tests = []printTest{
+const print_tests = [_]printTest{
     printTest{ .src = "v1.0.0-alpha", .expect = "v1.0.0-alpha" },
     printTest{ .src = "v1.0.0-alpha.1", .expect = "v1.0.0-alpha.1" },
     printTest{ .src = "v1.0.0-alpha.beta", .expect = "v1.0.0-alpha.beta" },
