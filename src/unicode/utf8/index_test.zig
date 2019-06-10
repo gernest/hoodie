@@ -1,6 +1,7 @@
-const utf8 = @import("index.zig");
-const unicode = @import("../unicode.zig");
 const std = @import("std");
+const unicode = @import("../unicode.zig");
+const utf8 = @import("index.zig");
+
 const t = std.testing;
 
 test "init" {
@@ -17,7 +18,7 @@ const Utf8Map = struct {
     }
 };
 
-const utf8_map = []Utf8Map{
+const utf8_map = [_]Utf8Map{
     Utf8Map.init(0x0000, "\x00"),
     Utf8Map.init(0x0001, "\x01"),
     Utf8Map.init(0x007e, "\x7e"),
@@ -52,7 +53,7 @@ const utf8_map = []Utf8Map{
     Utf8Map.init(0xFFFD, "\xef\xbf\xbd"),
 };
 
-const surrogete_map = []Utf8Map{
+const surrogete_map = [_]Utf8Map{
     Utf8Map.init(0xd800, "\xed\xa0\x80"),
     Utf8Map.init(0xdfff, "\xed\xbf\xbf"),
 };
@@ -70,7 +71,7 @@ test "fullRune" {
     for (utf8_map) |m| {
         t.expectEqual(true, utf8.fullRune(m.str));
     }
-    const sample = [][]const u8{ "\xc0", "\xc1" };
+    const sample = [_][]const u8{ "\xc0", "\xc1" };
     for (sample) |m| {
         t.expectEqual(true, utf8.fullRune(m));
     }
@@ -78,7 +79,7 @@ test "fullRune" {
 
 test "encodeRune" {
     for (utf8_map) |m, idx| {
-        var buf = []u8{0} ** 10;
+        var buf = [_]u8{0} ** 10;
         const n = try utf8.encodeRune(buf[0..], m.r);
         const ok = std.mem.eql(u8, buf[0..n], m.str);
         t.expectEqualSlices(u8, m.str, buf[0..n]);

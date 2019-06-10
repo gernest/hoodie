@@ -1,8 +1,9 @@
+const std = @import("std");
 const unicode = @import("../unicode.zig");
 const utf16 = @import("index.zig");
-const std = @import("std");
-const testing = std.testing;
+
 const mem = std.mem;
+const testing = std.testing;
 
 test "constants" {
     testing.expectEqual(utf16.max_rune, unicode.tables.max_rune);
@@ -13,15 +14,15 @@ const encodeTest = struct {
     out: []const u16,
 };
 
-const encode_tests = []encodeTest{
-    encodeTest{ .in = []i32{ 1, 2, 3, 4 }, .out = []u16{ 1, 2, 3, 4 } },
+const encode_tests = [_]encodeTest{
+    encodeTest{ .in = [_]i32{ 1, 2, 3, 4 }, .out = [_]u16{ 1, 2, 3, 4 } },
     encodeTest{
-        .in = []i32{ 0xffff, 0x10000, 0x10001, 0x12345, 0x10ffff },
-        .out = []u16{ 0xffff, 0xd800, 0xdc00, 0xd800, 0xdc01, 0xd808, 0xdf45, 0xdbff, 0xdfff },
+        .in = [_]i32{ 0xffff, 0x10000, 0x10001, 0x12345, 0x10ffff },
+        .out = [_]u16{ 0xffff, 0xd800, 0xdc00, 0xd800, 0xdc01, 0xd808, 0xdf45, 0xdbff, 0xdfff },
     },
     encodeTest{
-        .in = []i32{ 'a', 'b', 0xd7ff, 0xd800, 0xdfff, 0xe000, 0x110000, -1 },
-        .out = []u16{ 'a', 'b', 0xd7ff, 0xfffd, 0xfffd, 0xe000, 0xfffd, 0xfffd },
+        .in = [_]i32{ 'a', 'b', 0xd7ff, 0xd800, 0xdfff, 0xe000, 0x110000, -1 },
+        .out = [_]u16{ 'a', 'b', 0xd7ff, 0xfffd, 0xfffd, 0xe000, 0xfffd, 0xfffd },
     },
 };
 

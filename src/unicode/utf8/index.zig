@@ -43,7 +43,7 @@ const s6: u8 = 0x04; // accept 0, size 4
 const s7: u8 = 0x44; // accept 4, size 4
 
 // first is information about the first byte in a UTF-8 sequence.
-const first = []u8{
+const first = [_]u8{
     //   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
     as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x00-0x0F
     as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, // 0x10-0x1F
@@ -73,7 +73,7 @@ const acceptRange = struct {
     }
 };
 
-const accept_ranges = []acceptRange{
+const accept_ranges = [_]acceptRange{
     acceptRange.init(locb, hicb),
     acceptRange.init(0xA0, hicb),
     acceptRange.init(locb, 0x9F),
@@ -310,6 +310,7 @@ pub const Iterator = struct {
 
 // runeCount returns the number of runes in p. Erroneous and short
 // encodings are treated as single runes of width 1 byte.
+
 pub fn runeCount(p: []const u8) usize {
     const np = p.len;
     var n: usize = 0;
