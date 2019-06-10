@@ -463,7 +463,7 @@ pub const GenericReplacer = struct {
     pub fn init(a: *Allocator, old_new: []const []const u8) !GenericReplacer {
         var g: GenericReplacer = undefined;
         g.arena = std.heap.ArenaAllocator.init(a);
-        g.mapping = []usize{0} ** 256;
+        g.mapping = [_]usize{0} ** 256;
         g.table_size = 0;
         g.replacer = Replacer{ .replaceFn = replaceFn };
         var i: usize = 0;

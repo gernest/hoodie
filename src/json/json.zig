@@ -1,13 +1,14 @@
-const std = @import("std");
-const Buffer = std.Buffer;
-const json = std.json;
-const Value = json.Value;
-const testing = std.testing;
+const StringReplacer = @import("../strings/strings.zig").StringReplacer;
 const builtin = @import("builtin");
-const warn = std.debug.warn;
+const std = @import("std");
+
 const Allocator = std.mem.Allocator;
 const ArenaAllocator = std.heap.ArenaAllocator;
-const StringReplacer = @import("../strings/strings.zig").StringReplacer;
+const Buffer = std.Buffer;
+const Value = json.Value;
+const json = std.json;
+const testing = std.testing;
+const warn = std.debug.warn;
 
 pub const Dump = struct {
     escape: StringReplacer,
@@ -17,7 +18,7 @@ pub const Dump = struct {
         return Dump{
             .escape = try StringReplacer.init(
                 a,
-                [][]const u8{                    
+                [_][]const u8{                    
                         \\"
                     ,                    
                         \\\"

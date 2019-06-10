@@ -1,11 +1,13 @@
+const Dump = @import("../json/json.zig").Dump;
 const std = @import("std");
-const json = std.json;
+
 const Allocator = std.mem.Allocator;
-const io = std.io;
 const event = std.event;
+const io = std.io;
+const json = std.json;
 const mem = std.mem;
 const warn = std.debug.warn;
-const Dump = @import("../json/json.zig").Dump;
+
 pub const json_rpc_version = "2.0";
 const content_length = "Content-Length";
 const default_message_size: usize = 8192;
@@ -176,9 +178,9 @@ pub const Context = struct {
 };
 
 pub const Conn = struct {
-    const channel_buffer_size = 10;
     a: *Allocator,
     handler: *const Handler,
+    const channel_buffer_size = 10;
 
     const ContextChannel = std.event.Channel(*Context);
     pub const Handler = struct {
@@ -329,6 +331,7 @@ pub const Conn = struct {
 };
 
 // simple adhoc way for removing starting and trailing whitespace.
+
 fn trimSpace(s: []const u8) []const u8 {
-    return mem.trim(u8, s, []const u8{ ' ', '\n', '\r' });
+    return mem.trim(u8, s, [_]u8{ ' ', '\n', '\r' });
 }
