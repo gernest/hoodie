@@ -5,4 +5,5 @@ test "hoodie" {
     _ = @import("strings/strings_test.zig");
     _ = @import("pkg/all_test.zig");
     _ = @import("lsp/all_test.zig");
+    _ = @import("flags/cli_test.zig");
 }

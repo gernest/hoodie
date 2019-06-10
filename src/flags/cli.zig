@@ -161,6 +161,7 @@ pub const Flag = struct {
 };
 
 pub const FlagSet = struct {
+    list: List,
     pub const List = std.ArrayList(FlagItem);
 
     /// stores the flag and the position where the flag was found. Allows easy
@@ -169,7 +170,6 @@ pub const FlagSet = struct {
         flag: Flag,
         index: usize,
     };
-    list: List,
 
     pub fn init(a: *mem.Allocator) FlagSet {
         return FlagSet{ .list = List.init(a) };
@@ -230,6 +230,8 @@ pub const Context = struct {
 };
 
 pub const Args = struct {
+    args: List,
+    a: *mem.Allocator,
     pub const List = std.ArrayList([]const u8);
 
     pub const Iterator = struct {
@@ -249,8 +251,6 @@ pub const Args = struct {
             return e;
         }
     };
-    args: List,
-    a: *mem.Allocator,
 
     pub fn init(a: *mem.Allocator) Args {
         return Args{
@@ -295,64 +295,3 @@ pub const Args = struct {
         };
     }
 };
-
-test "command" {
-    var a = std.debug.global_allocator;
-
-    const app = Cli{
-        .name = "hoodie",
-        .flags = null,
-        .commands = []const Command{
-            Command{
-                .name = "fmt",
-                .flags = []const Flag{Flag{
-                    .name = "f",
-                    .kind = .Bool,
-                }},
-                .action = nothing,
-                .sub_commands = null,
-            },
-            Command{
-                .name = "outline",
-                .flags = []const Flag{Flag{
-                    .name = "modified",
-                    .kind = .Bool,
-                }},
-                .action = nothing,
-                .sub_commands = null,
-            },
-        },
-        .action = nothing,
-    };
-
-    // check for correct commands
-    const TestCase = struct {
-        src: []const []const u8,
-        command: ?[]const u8,
-        mode: Context.Mode,
-    };
-
-    const cases = []TestCase{
-        TestCase{
-            .src = []const []const u8{},
-            .command = null,
-            .mode = .Global,
-        },
-        TestCase{
-            .src = []const []const u8{"fmt"},
-            .command = null,
-            .mode = .Local,
-        },
-    };
-
-    for (cases) |ts| {
-        var args = &try Args.initList(a, ts.src);
-        var ctx = &try app.parse(a, args);
-        testing.expectEqual(ts.mode, ctx.mode);
-        args.deinit();
-    }
-}
-
-fn nothing(
-    ctx: *const Context,
-) anyerror!void {}
