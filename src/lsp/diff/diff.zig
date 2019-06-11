@@ -14,6 +14,7 @@ pub const Diff = struct {
     fn init(a: *Allocator) Diff {
         return Diff{
             .list = OpList.init(a),
+            .arena = std.heap.ArenaAllocator.init(a),
         };
     }
 
