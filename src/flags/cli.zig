@@ -279,11 +279,6 @@ pub const Args = struct {
         return self.args.append(elem);
     }
 
-    pub fn addCopy(self: *Args, elem: []const u8) !void {
-        const cp = try mem.dupe(self.a, u8, elem);
-        return self.args.append(cp);
-    }
-
     pub fn at(self: *Args, index: usize) []const u8 {
         return self.args.toSlice()[index];
     }
