@@ -38,29 +38,33 @@ pub const Op = struct {
     };
 };
 
-pub fn applyEdits(lines: *Lines, a: [][]const u8, operations: []Op) !void {
+pub fn applyEdits(alloc: *Allocator, a: [][]const u8, operations: []const Op) !Lines {
+    var lines = Lines.init(alloc);
     var prev12: usize = 0;
     for (operations) |*op| {
-        if (op.i1 - prev12 > 0) {
-            for (a[prev12..op.i1]) |c| {
+        if (op.i_1 - prev12 > 0) {
+            for (a[prev12..op.i_1]) |c| {
                 try lines.append(c);
             }
             switch (op.kind) {
                 .Insert, .Equal => {
-                    for (op.content) |c| {
-                        try lines.append(c);
+                    if (op.content) |content| {
+                        for (content) |c| {
+                            try lines.append(c);
+                        }
                     }
                 },
                 else => {},
             }
         }
-        prev12 = op.i2;
+        prev12 = op.i_2;
     }
     if (a.len > prev12) {
         for (a[prev12..a.len]) |c| {
             try lines.append(c);
         }
     }
+    return lines;
 }
 
 pub fn Operations(allocator: *Allocator, a: [][]const u8, b: [][]const u8) !Diff {

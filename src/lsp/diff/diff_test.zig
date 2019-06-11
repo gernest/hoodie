@@ -59,4 +59,11 @@ test "diff" {
             },
         },
     };
+
+    for (cases) |ts| {
+        var arena = std.heap.ArenaAllocator.init(a);
+        var als = try diff.splitLines(&arena.allocator, ts.a);
+        var ls = try diff.applyEdits(&arena.allocator, als.toSlice(), ts.ops);
+        arena.deinit();
+    }
 }
