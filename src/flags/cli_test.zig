@@ -2,12 +2,12 @@ const cli = @import("cli.zig");
 const std = @import("std");
 
 const Args = cli.Args;
-
 const Cli = cli.Cli;
 const Command = cli.Command;
 const Context = cli.Context;
 const Flag = cli.Flag;
 const testing = std.testing;
+const warn = std.debug.warn;
 
 test "command" {
     var a = std.debug.global_allocator;
@@ -53,7 +53,17 @@ test "command" {
         },
         TestCase{
             .src = [_][]const u8{"fmt"},
-            .command = null,
+            .command = "fmt",
+            .mode = .Local,
+        },
+        TestCase{
+            .src = [_][]const u8{"outline"},
+            .command = "outline",
+            .mode = .Local,
+        },
+        TestCase{
+            .src = [_][]const u8{ "outline", "some", "args" },
+            .command = "outline",
             .mode = .Local,
         },
     };
@@ -62,6 +72,10 @@ test "command" {
         var args = &try Args.initList(a, ts.src);
         var ctx = &try app.parse(a, args);
         testing.expectEqual(ts.mode, ctx.mode);
+        if (ts.command) |cmd| {
+            testing.expectEqual(ctx.command.?.name, cmd);
+            // warn("{}\n", ctx.command);
+        }
         args.deinit();
     }
 }

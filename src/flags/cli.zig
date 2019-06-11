@@ -56,13 +56,14 @@ pub const Cli = struct {
                         var match = false;
                         for (cmd.sub_commands.?) |sub| {
                             if (mem.eql(u8, next_arg, sub.name)) {
-                                ctx.command = &sub;
+                                ctx.command = sub;
                                 match = true;
                             }
                         }
                         if (!match) {
-                            // raise the error for unknown command
+                            return error.CommandNotFound;
                         }
+                        global_scope = false;
                     } else {
                         // No need to keep going. We take everything that is
                         // left on argument list to be the arguments passed
@@ -72,21 +73,15 @@ pub const Cli = struct {
                     }
                 } else {
                     if (ctx.cli.commands) |cmds| {
+                        var match = false;
                         for (cmds) |cmd| {
-                            var match = false;
-                            if (cmd.sub_commands) |sub_cmds| {
-                                for (sub_cmds) |sub| {
-                                    if (mem.eql(u8, next_arg, sub.name)) {
-                                        ctx.command = &sub;
-                                        match = true;
-                                    }
-                                }
+                            if (mem.eql(u8, cmd.name, next_arg)) {
+                                ctx.command = cmd;
+                                match = true;
                             }
-                            if (!match) {
-                                // raise the error for unknown command
-                            } else {
-                                global_scope = false;
-                            }
+                        }
+                        if (!match) {
+                            return error.CommandNotFound;
                         }
                     } else {
                         ctx.args_position = it.position;
@@ -188,7 +183,7 @@ pub const Context = struct {
     allocator: *mem.Allocator,
     cli: *const Cli,
     args: *const Args,
-    command: ?*const Command,
+    command: ?Command,
     mode: Mode,
     args_position: usize,
     global_flags: FlagSet,
