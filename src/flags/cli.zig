@@ -170,6 +170,15 @@ pub const FlagSet = struct {
         return FlagSet{ .list = List.init(a) };
     }
 
+    pub fn get(self: FlagSet, name: []const u8) ?FlagItem {
+        for (self.list.toSlice()) |f| {
+            if (mem.eql(u8, f.flag.name, name)) {
+                return f;
+            }
+        }
+        return null;
+    }
+
     // prints all flags contained in this flag set
     pub fn format(
         self: FlagSet,
@@ -216,7 +225,6 @@ pub const Context = struct {
                 }
             }
         }
-        warn("hereeeeee {}\n ", name);
         return error.UknownFlag;
     }
 
@@ -234,8 +242,18 @@ pub const Context = struct {
         return error.UknownFlag;
     }
 
-    // Returns the value that was assigned to the flag fname.
-    pub fn flag(self: *Context, T: type, name: []const u8) !@typeOf(T) {}
+    pub fn flag(ctx: *Context, name: []const u8) ?FlagSet.FlagItem {
+        return ctx.local_flags.get(name);
+    }
+
+    pub fn boolean(ctx: *Context, name: []const u8) bool {
+        if (ctx.flag(name)) |_| {
+            // boolean flags don't carry any values. If they are present then ii
+            // implies the flag is set to true.
+            return true;
+        }
+        return false;
+    }
 };
 
 pub const Args = struct {
