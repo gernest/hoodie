@@ -248,8 +248,7 @@ pub const Context = struct {
 
     pub fn boolean(ctx: *Context, name: []const u8) bool {
         if (ctx.flag(name)) |_| {
-            // boolean flags don't carry any values. If they are present then ii
-            // implies the flag is set to true.
+            // boolean flags don't carry any values. If they are present then ii implies the flag is set to true.
             return true;
         }
         return false;
