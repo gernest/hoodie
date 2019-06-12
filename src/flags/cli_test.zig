@@ -6,6 +6,7 @@ const Cli = cli.Cli;
 const Command = cli.Command;
 const Context = cli.Context;
 const Flag = cli.Flag;
+const FlagItem = cli.FlagSet.FlagItem;
 const testing = std.testing;
 const warn = std.debug.warn;
 
@@ -43,6 +44,7 @@ test "command" {
         src: []const []const u8,
         command: ?[]const u8,
         mode: Context.Mode,
+        flags: ?[]const FlagItem,
     };
 
     const cases = [_]TestCase{
@@ -50,21 +52,37 @@ test "command" {
             .src = [_][]const u8{},
             .command = null,
             .mode = .Global,
+            .flags = null,
         },
         TestCase{
             .src = [_][]const u8{"fmt"},
             .command = "fmt",
             .mode = .Local,
+            .flags = null,
         },
         TestCase{
             .src = [_][]const u8{"outline"},
             .command = "outline",
             .mode = .Local,
+            .flags = null,
         },
         TestCase{
             .src = [_][]const u8{ "outline", "some", "args" },
             .command = "outline",
             .mode = .Local,
+            .flags = null,
+        },
+        TestCase{
+            .src = [_][]const u8{ "outline", "--modified", "args" },
+            .command = "outline",
+            .mode = .Local,
+            .flags = [_]FlagItem{FlagItem{
+                .flag = Flag{
+                    .name = "modified",
+                    .kind = .Bool,
+                },
+                .index = 1,
+            }},
         },
     };
 
@@ -74,7 +92,18 @@ test "command" {
         testing.expectEqual(ts.mode, ctx.mode);
         if (ts.command) |cmd| {
             testing.expectEqual(ctx.command.?.name, cmd);
-            // warn("{}\n", ctx.command);
+        }
+        if (ts.flags) |flags| {
+            switch (ctx.mode) {
+                .Local => {
+                    for (flags) |flag, idx| {
+                        const got = ctx.local_flags.list.at(idx);
+                        testing.expectEqual(flag, got);
+                    }
+                },
+                .Global => {},
+                else => unreachable,
+            }
         }
         args.deinit();
     }

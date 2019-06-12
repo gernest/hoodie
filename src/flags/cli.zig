@@ -63,7 +63,6 @@ pub const Cli = struct {
                         if (!match) {
                             return error.CommandNotFound;
                         }
-                        global_scope = false;
                     } else {
                         // No need to keep going. We take everything that is
                         // left on argument list to be the arguments passed
@@ -83,6 +82,7 @@ pub const Cli = struct {
                         if (!match) {
                             return error.CommandNotFound;
                         }
+                        global_scope = false;
                     } else {
                         ctx.args_position = it.position;
                         break;
@@ -170,6 +170,19 @@ pub const FlagSet = struct {
         return FlagSet{ .list = List.init(a) };
     }
 
+    // prints all flags contained in this flag set
+    pub fn format(
+        self: FlagSet,
+        comptime fmt: []const u8,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void {
+        for (self.list.toSlice()) |item| {
+            try std.fmt.format(context, Errors, output, "{}", item);
+        }
+    }
+
     pub fn addFlag(self: *FlagSet, flag: Flag, index: usize) !void {
         try self.list.append(FlagItem{
             .flag = flag,
@@ -203,6 +216,7 @@ pub const Context = struct {
                 }
             }
         }
+        warn("hereeeeee {}\n ", name);
         return error.UknownFlag;
     }
 
