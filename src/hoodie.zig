@@ -90,8 +90,14 @@ pub fn getStdoutStream() !*io.OutStream(fs.File.WriteError) {
 fn formatCmd(
     ctx: *const Context,
 ) anyerror!void {
+    var stdin_file = try io.getStdIn();
+    var stdin = &stdin_file.inStream().stream;
+    const source_code = try stdin.readAllAlloc(ctx.allocator, max_src_size);
+    defer ctx.allocator.free(source_code);
     const stdout = try getStdoutStream();
-    return format.format(ctx.allocator, stdout);
+    if (ctx.boolean("stdin")) {
+        return format.format(ctx.allocator, source_code, stdout);
+    }
 }
 
 fn outlineCmd(
