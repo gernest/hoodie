@@ -93,13 +93,13 @@ pub const Cli = struct {
                         }
                         global_scope = false;
                     } else {
-                        ctx.args_position = it.position;
                         break;
                     }
                 }
             }
             _ = it.next();
         }
+        ctx.args_position = it.position;
         return ctx;
     }
 };
