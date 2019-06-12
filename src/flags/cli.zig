@@ -9,9 +9,18 @@ pub const Cli = struct {
     name: []const u8,
     commands: ?[]const Command,
     flags: ?[]const Flag,
-    action: fn (
+    action: ?fn (
         ctx: *Context,
     ) anyerror!void,
+
+    pub fn run(self: *const Cli, a: *mem.Allocator, arg: []const []u8) !void {
+        var args = &try Args.initList(a, arg);
+        defer args.deinit();
+        const ctx = &try self.parse(a, args);
+        if (ctx.command) |cmd| {
+            try cmd.action(ctx);
+        }
+    }
 
     // parses args and finds which commands is to be invoked.
     pub fn parse(self: *const Cli, a: *mem.Allocator, args: *Args) !Context {
@@ -242,11 +251,11 @@ pub const Context = struct {
         return error.UknownFlag;
     }
 
-    pub fn flag(ctx: *Context, name: []const u8) ?FlagSet.FlagItem {
+    pub fn flag(ctx: *const Context, name: []const u8) ?FlagSet.FlagItem {
         return ctx.local_flags.get(name);
     }
 
-    pub fn boolean(ctx: *Context, name: []const u8) bool {
+    pub fn boolean(ctx: *const Context, name: []const u8) bool {
         if (ctx.flag(name)) |_| {
             // boolean flags don't carry any values. If they are present then ii implies the flag is set to true.
             return true;
