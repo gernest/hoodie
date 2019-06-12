@@ -262,6 +262,10 @@ pub const Context = struct {
         }
         return false;
     }
+
+    pub fn getArgs(self: *const Context) Args.Iterator {
+        return self.args.iterator(self.args_position);
+    }
 };
 
 pub const Args = struct {
@@ -270,7 +274,7 @@ pub const Args = struct {
     pub const List = std.ArrayList([]const u8);
 
     pub const Iterator = struct {
-        args: *Args,
+        args: *const Args,
         position: usize,
 
         pub fn next(self: *Iterator) ?[]const u8 {
@@ -314,11 +318,11 @@ pub const Args = struct {
         return self.args.append(elem);
     }
 
-    pub fn at(self: *Args, index: usize) []const u8 {
+    pub fn at(self: *const Args, index: usize) []const u8 {
         return self.args.toSlice()[index];
     }
 
-    pub fn iterator(self: *Args, index: usize) Iterator {
+    pub fn iterator(self: *const Args, index: usize) Iterator {
         return Iterator{
             .args = self,
             .position = index,
