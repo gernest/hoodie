@@ -1,8 +1,15 @@
 const std = @import("std");
 
+const fs = std.fs;
+const io = std.io;
+
 const mem = std.mem;
 const testing = std.testing;
 const warn = std.debug.warn;
+
+const StdInStream = io.InStream(fs.File.ReadError);
+const StdOutStream = io.OutStream(fs.File.WriteError);
+const StdErrStream = io.OutStream(fs.File.WriteError);
 
 /// Defines a commandline application.
 pub const Cli = struct {
@@ -13,12 +20,56 @@ pub const Cli = struct {
         ctx: *Context,
     ) anyerror!void,
 
-    pub fn run(self: *const Cli, a: *mem.Allocator, arg: []const []u8) !void {
+    pub fn format(
+        self: Cli,
+        comptime fmt: []const u8,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void {
+        try std.fmt.format(
+            context,
+            Errors,
+            output,
+            "{} - a commandline app \n",
+            self.name,
+        );
+        try output(context, "USAGE\n");
+        try std.fmt.format(
+            context,
+            Errors,
+            output,
+            "  {} [GLOBAL FLAG] command [FLAG] \n",
+            self.name,
+        );
+        try output(context, "list of commands :\n");
+        if (self.commands) |commands| {
+            for (commands) |cmd| {
+                try std.fmt.format(context, Errors, output, "    {} -\n", cmd.name);
+            }
+        }
+    }
+
+    pub fn run(
+        self: *const Cli,
+        a: *mem.Allocator,
+        arg: []const []u8,
+        stdin: ?*StdInStream,
+        stdout: ?*StdOutStream,
+        stderr: ?*StdErrStream,
+    ) !void {
         var args = &try Args.initList(a, arg);
         defer args.deinit();
-        const ctx = &try self.parse(a, args);
+        var ctx = &try self.parse(a, args);
+        ctx.stdin = stdin;
+        ctx.stdout = stdout;
+        ctx.stderr = stderr;
         if (ctx.command) |cmd| {
             try cmd.action(ctx);
+            return;
+        }
+        if (stdout != null) {
+            try stdout.?.print("{}\n", self);
         }
     }
 
@@ -37,6 +88,9 @@ pub const Cli = struct {
                 .local_flags = FlagSet.init(a),
                 .args_position = 0,
                 .command = null,
+                .stdin = null,
+                .stdout = null,
+                .stderr = null,
             };
         }
 
@@ -49,6 +103,9 @@ pub const Cli = struct {
             .local_flags = FlagSet.init(a),
             .command = null,
             .args_position = 0,
+            .stdin = null,
+            .stdout = null,
+            .stderr = null,
         };
 
         var global_scope = true;
@@ -133,6 +190,14 @@ pub const Command = struct {
     action: fn (
         ctx: *Context,
     ) anyerror!void,
+
+    pub fn format(
+        self: Command,
+        comptime fmt: []const u8,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void {}
 };
 
 /// represent a commandline flag. This is text after - or --
@@ -219,7 +284,9 @@ pub const Context = struct {
     args_position: usize,
     global_flags: FlagSet,
     local_flags: FlagSet,
-
+    stdin: ?*StdInStream,
+    stdout: ?*StdOutStream,
+    stderr: ?*StdErrStream,
     pub const Mode = enum {
         Global,
         Local,

@@ -65,54 +65,41 @@ const app = Cli{
     .action = null,
 };
 
-var stdout_file: fs.File = undefined;
-var stdout_file_out_stream: fs.File.OutStream = undefined;
-var stdout_stream: ?*io.OutStream(fs.File.WriteError) = null;
-
 pub fn main() anyerror!void {
     var direct_allocator = std.heap.DirectAllocator.init();
     const allocator = &direct_allocator.allocator;
     defer direct_allocator.deinit();
     const arg = try std.process.argsAlloc(allocator);
     defer allocator.free(arg);
-    try app.run(allocator, arg[1..]);
-}
 
-pub fn getStdoutStream() !*io.OutStream(fs.File.WriteError) {
-    if (stdout_stream) |st| {
-        return st;
-    } else {
-        stdout_file = try io.getStdOut();
-        stdout_file_out_stream = stdout_file.outStream();
-        const st = &stdout_file_out_stream.stream;
-        stdout_stream = st;
-        return st;
-    }
+    var stdin_file = try io.getStdIn();
+    var stdin = &stdin_file.inStream().stream;
+
+    var stdout_file = try io.getStdOut();
+    var stdout = &stdout_file.outStream().stream;
+
+    var stderr_file = try io.getStdErr();
+    var stderr = &stderr_file.outStream().stream;
+    try app.run(allocator, arg[1..], stdin, stdout, stderr);
 }
 
 fn formatCmd(
     ctx: *const Context,
 ) anyerror!void {
-    var stdin_file = try io.getStdIn();
-    var stdin = &stdin_file.inStream().stream;
-    const source_code = try stdin.readAllAlloc(ctx.allocator, max_src_size);
+    const source_code = try ctx.stdin.?.readAllAlloc(ctx.allocator, max_src_size);
     defer ctx.allocator.free(source_code);
-    const stdout = try getStdoutStream();
     if (ctx.boolean("stdin")) {
-        return format.format(ctx.allocator, source_code, stdout);
+        return format.format(ctx.allocator, source_code, ctx.stdout.?);
     }
 }
 
 fn outlineCmd(
     ctx: *const Context,
 ) anyerror!void {
-    var stdin_file = try io.getStdIn();
-    var stdin = &stdin_file.inStream().stream;
-    const stdout = try getStdoutStream();
     if (ctx.boolean("modified")) {
-        const source_code = try stdin.readAllAlloc(ctx.allocator, max_src_size);
+        const source_code = try ctx.stdin.?.readAllAlloc(ctx.allocator, max_src_size);
         defer ctx.allocator.free(source_code);
-        return outline(ctx.allocator, source_code, stdout);
+        return outline(ctx.allocator, source_code, ctx.stdout.?);
     }
 }
 
