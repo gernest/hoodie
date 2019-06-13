@@ -33,10 +33,12 @@ const app = Cli{
             .flags = [_]Flag{
                 Flag{
                     .name = "f",
-                    .kind = .Bool,
+                    .desc = "filename to be formated",
+                    .kind = .String,
                 },
                 Flag{
                     .name = "stdin",
+                    .desc = "reads text to format from stdin",
                     .kind = .Bool,
                 },
             },
@@ -47,6 +49,7 @@ const app = Cli{
             .name = "outline",
             .flags = [_]Flag{Flag{
                 .name = "modified",
+                .desc = "reads text to be outlined from stdin",
                 .kind = .Bool,
             }},
             .action = outlineCmd,

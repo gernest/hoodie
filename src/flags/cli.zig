@@ -142,6 +142,11 @@ pub const Command = struct {
 /// The above example `f` is the flag name and test.txt is the flag value.
 pub const Flag = struct {
     name: []const u8,
+
+    /// desc text explaining what this flag is doing.
+    desc: ?[]const u8,
+
+    /// the type of value this flag accepts.
     kind: Kind,
 
     pub const Kind = enum {
@@ -150,15 +155,10 @@ pub const Flag = struct {
         Number,
     };
 
-    pub const Type = union(enum) {
-        None,
-        Short: u8,
-        Long: []const u8,
-    };
-
     pub fn init(name: []const u8, kind: Kind) Flag {
         return Flag{
             .name = name,
+            .desc = null,
             .kind = kind,
         };
     }

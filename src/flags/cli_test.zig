@@ -21,6 +21,7 @@ test "command" {
                 .name = "fmt",
                 .flags = [_]Flag{Flag{
                     .name = "f",
+                    .desc = null,
                     .kind = .Bool,
                 }},
                 .action = nothing,
@@ -30,6 +31,7 @@ test "command" {
                 .name = "outline",
                 .flags = [_]Flag{Flag{
                     .name = "modified",
+                    .desc = null,
                     .kind = .Bool,
                 }},
                 .action = nothing,
@@ -79,6 +81,7 @@ test "command" {
             .flags = [_]FlagItem{FlagItem{
                 .flag = Flag{
                     .name = "modified",
+                    .desc = null,
                     .kind = .Bool,
                 },
                 .index = 1,
