@@ -65,6 +65,12 @@ pub const Cli = struct {
         ctx.stdout = stdout;
         ctx.stderr = stderr;
         if (ctx.command) |cmd| {
+            if (ctx.show_help) {
+                if (stdout != null) {
+                    try stdout.?.print("{}\n", cmd);
+                }
+                return;
+            }
             try cmd.action(ctx);
             return;
         }
@@ -91,6 +97,7 @@ pub const Cli = struct {
                 .stdin = null,
                 .stdout = null,
                 .stderr = null,
+                .show_help = false,
             };
         }
 
@@ -106,13 +113,18 @@ pub const Cli = struct {
             .stdin = null,
             .stdout = null,
             .stderr = null,
+            .show_help = false,
         };
 
         var global_scope = true;
         while (it.peek()) |next_arg| {
             if (checkFlag(next_arg)) |flag| {
                 if (global_scope) {
-                    try ctx.addGlobalFlag(flag, it);
+                    if (isHelpFlag(flag)) {
+                        ctx.show_help = true;
+                    } else {
+                        try ctx.addGlobalFlag(flag, it);
+                    }
                 } else {
                     try ctx.addLocalFlag(flag, it);
                 }
@@ -161,6 +173,13 @@ pub const Cli = struct {
     }
 };
 
+fn isHelpFlag(s: []const u8) bool {
+    if (mem.eql(u8, s, "h")) {
+        return true;
+    }
+    return mem.eql(u8, s, "help");
+}
+
 fn checkFlag(s: []const u8) ?[]const u8 {
     if (s.len <= 1) return null;
     var i: usize = 0;
@@ -197,7 +216,15 @@ pub const Command = struct {
         context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,
-    ) Errors!void {}
+    ) Errors!void {
+        try std.fmt.format(context, Errors, output, "{}\n", self.name);
+        try output(context, "list of flags:\n");
+        if (self.flags) |flags| {
+            for (flags) |flag| {
+                try std.fmt.format(context, Errors, output, "{}\n", flag);
+            }
+        }
+    }
 };
 
 /// represent a commandline flag. This is text after - or --
@@ -219,6 +246,34 @@ pub const Flag = struct {
         String,
         Number,
     };
+
+    pub fn format(
+        self: Flag,
+        comptime fmt: []const u8,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void {
+        if (self.name.len > 1) {
+            try std.fmt.format(
+                context,
+                Errors,
+                output,
+                "    --{}   {}\n",
+                self.name,
+                self.desc,
+            );
+        } else {
+            try std.fmt.format(
+                context,
+                Errors,
+                output,
+                "    -{}   {}\n",
+                self.name,
+                self.desc,
+            );
+        }
+    }
 
     pub fn init(name: []const u8, kind: Kind) Flag {
         return Flag{
@@ -287,6 +342,7 @@ pub const Context = struct {
     stdin: ?*StdInStream,
     stdout: ?*StdOutStream,
     stderr: ?*StdErrStream,
+    show_help: bool,
     pub const Mode = enum {
         Global,
         Local,
