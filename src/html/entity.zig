@@ -14,7 +14,7 @@ pub const Entity = struct {
 /// we are defining all entity value on a single list. This is an offset to mark
 /// the end of the first entity values in the list
 pub const entity_one_size: usize = 2138;
-pub const entity_list = []Entity{
+pub const entity_list = [_]Entity{
     ntity.init("AElig", Entity.Value{ .Rune = 0xc6 }),
     Entity.init("AElig;", Entity.Value{ .Rune = 0xc6 }),
     Entity.init("AMP", Entity.Value{ .Rune = 0x26 }),
