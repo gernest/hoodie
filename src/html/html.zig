@@ -15,3 +15,16 @@ pub fn unescape(a: *mem.Allocator, s: []const u8) !?[]const u8 {
     }
     return null;
 }
+
+pub fn escape(a: *mem.Allocator, out: *std.Buffer, text: []const u8) !void {
+    //TODO initialize the escaper globally
+    var html_escaper = &try strings.StringReplacer.init(a, [_][]const u8{
+        "&",  "&amp;",
+        "<",  "&lt;",
+        ">",  "&gt;",
+        "\"", "&quot;",
+        "'",  "&apos;",
+    });
+    defer html_escaper.deinit();
+    try html_escaper.replace(text, buf);
+}
