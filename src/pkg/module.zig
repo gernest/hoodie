@@ -1,4 +1,4 @@
-const semver = @import("../semver/semver.zig");
+const semver = @import("semver/semver.zig");
 const unicode = @import("../../unicode/unicode.zig");
 
 const utf8 = unicode.utf8;
