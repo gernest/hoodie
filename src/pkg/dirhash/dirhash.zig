@@ -1,13 +1,13 @@
 const std = @import("std");
 
-const Dir = std.os.Dir;
-const Entry = std.os.Dir.Entry;
+const Dir = std.fs.Dir;
+const Entry = std.fs.Dir.Entry;
 const Sha3_256 = std.crypto.Sha3_256;
 const base64 = std.base64.standard_encoder;
 const io = std.io;
 const json = std.json;
 const mem = std.mem;
-const path = std.os.path;
+const path = std.fs.path;
 const warn = std.debug.warn;
 
 pub fn hashDir(allocator: *std.mem.Allocator, output_buf: *std.Buffer, full_path: []const u8) !void {
