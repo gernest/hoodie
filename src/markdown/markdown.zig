@@ -511,7 +511,7 @@ pub const Lexer = struct {
         fn lexFn(self: *lexState, lx: *Lexer) anyerror!?*lexState {
             if (findHorizontalRules(lx.input[lx.current_pos..])) |pos| {
                 lx.current_pos += pos;
-                try lx.emit(LexMe.Id.Hr);
+                try lx.emit(.Hr);
                 return lex_any;
             }
             return lex_list;
@@ -547,20 +547,20 @@ pub const Lexer = struct {
                             _ = try lx.next();
                             continue;
                         }
-                        if (lx.current_pos > ls.start_pos) {
-                            try lx.emit(LexMe.Text);
+                        if (lx.current_pos > lx.start_pos) {
+                            try lx.emit(.Text);
                         }
-                        lx.pos += lx.width;
-                        try lx.emit(LexMe.NewLine);
+                        lx.current_pos += lx.width;
+                        try lx.emit(.NewLine);
                         break;
                     },
                     else => {
                         if (findSetextHeading(lx.input[lx.current_pos..])) |pos| {
                             if (lx.current_pos > lx.start_pos) {
-                                try lx.emit(LexMe.Text);
+                                try lx.emit(.Text);
                             }
-                            lx.current_pos += end;
-                            try lx.emit(LexMe.Heading);
+                            lx.current_pos += pos;
+                            try lx.emit(.Heading);
                             break;
                         }
                         _ = try lx.next();
@@ -758,6 +758,10 @@ const Util = struct {
     pub fn hasSuffix(s: []const u8, suffix: []const u8) bool {
         return s.len >= suffix.len and
             equal(s[s.len - suffix.len ..], suffix);
+    }
+
+    pub fn equal(a: []const u8, b: []const u8) bool {
+        return mem.eql(u8, a, b);
     }
 
     pub fn trimPrefix(s: []const u8, prefix: []const u8) []const u8 {
