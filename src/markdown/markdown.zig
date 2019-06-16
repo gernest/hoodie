@@ -492,7 +492,12 @@ pub const Lexer = struct {
             };
         }
         fn lexFn(self: *lexState, lx: *Lexer) !?*lexState {
-            return error.TODO;
+            if (findAtxHeading(lx.input[lx.current_pos..])) |pos| {
+                lx.current_pos += pos;
+                try lx.emit(.Heading);
+                return lex_any;
+            }
+            return lex_text;
         }
     };
 
