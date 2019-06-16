@@ -163,6 +163,8 @@ pub const Lexer = struct {
         self.start_pos = self.current_pos;
     }
 
+    /// returns the offset of an atx heading found in input.
+    ///
     /// An ATX heading consists of a string of characters, parsed as inline content,
     /// between an opening sequence of 1–6 unescaped # characters and an optional
     /// closing sequence of any number of unescaped # characters. The opening
