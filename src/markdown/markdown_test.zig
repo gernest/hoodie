@@ -5,6 +5,7 @@ const suite = @import("test_suite.zig");
 const Lexer = markdown.Lexer;
 const TestCase = suite.TestCase;
 const warn = std.debug.warn;
+const testing = std.testing;
 
 test "Lexer" {
     var lx = &Lexer.init(std.debug.global_allocator);
@@ -70,3 +71,56 @@ test "Lexer.findSetextHeading" {
 }
 
 test "Lexer.findFencedCodeBlock" {}
+test "Lexer.findAtxHeader" {
+    const cases = suite.all_cases[31..49];
+    const Case = struct {
+        src: []const u8,
+        pos: ?usize,
+    };
+
+    const case_list = [_]Case{
+        Case{ .src = "# foo", .pos = 5 },
+        Case{ .src = "## foo", .pos = 6 },
+        Case{ .src = "### foo", .pos = 7 },
+        Case{ .src = "#### foo", .pos = 8 },
+        Case{ .src = "##### foo", .pos = 9 },
+        Case{ .src = "###### foo", .pos = 10 },
+        Case{ .src = "####### foo", .pos = null },
+        Case{ .src = "#5 bolt", .pos = null },
+        Case{ .src = "#hashtag", .pos = null },
+        Case{
+            .src =
+                \\\## foo
+            ,
+            .pos = null,
+        },
+        Case{
+            .src =
+                \\# foo *bar* \*baz\*
+            ,
+            .pos = 19,
+        },
+        Case{
+            .src =
+                \\#                  foo                     
+            ,
+            .pos = 43,
+        },
+        Case{
+            .src =
+                \\ ### foo
+            ,
+            .pos = 8,
+        },
+        Case{ .src = "  ## foo", .pos = 8 },
+        Case{ .src = "   # foo", .pos = 8 },
+        Case{ .src = "    # foo", .pos = null },
+        Case{ .src = "## foo ##", .pos = 9 },
+        Case{ .src = "  ###   bar    ###", .pos = 18 },
+    };
+
+    for (case_list) |case| {
+        const got = Lexer.findAtxHeading(case.src);
+        testing.expectEqual(got, case.pos);
+    }
+}

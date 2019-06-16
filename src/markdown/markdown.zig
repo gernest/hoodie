@@ -31,7 +31,7 @@ pub const Lexer = struct {
     lexme_list: LexMeList,
     allocator: *Allocator,
 
-   pub fn init(allocator: *Allocator) Lexer {
+    pub fn init(allocator: *Allocator) Lexer {
         var lx: Lexer = undefined;
         lx.allocator = allocator;
         lx.lexme_list = LexMeList.init(allocator);
@@ -161,6 +161,45 @@ pub const Lexer = struct {
             },
         });
         self.start_pos = self.current_pos;
+    }
+
+    /// An ATX heading consists of a string of characters, parsed as inline content,
+    /// between an opening sequence of 1–6 unescaped # characters and an optional
+    /// closing sequence of any number of unescaped # characters. The opening
+    /// sequence of # characters must be followed by a space or by the end of line.
+    /// The optional closing sequence of #s must be preceded by a space and may be
+    /// followed by spaces only. The opening # character may be indented 0-3 spaces.
+    /// The raw contents of the heading are stripped of leading and trailing spaces
+    /// before being parsed as inline content. The heading level is equal to the
+    /// number of # characters in the opening sequence.
+    pub fn findAtxHeading(in: []const u8) ?usize {
+        const indent = Util.indentation(in);
+        if (indent > 3) {
+            return null;
+        }
+        const n = Util.countStartsWith(in[indent..], '#');
+        if (n == 0 or n > 6) {
+            return null;
+        }
+        const x = n + indent;
+        switch (in[x]) {
+            ' ' => {},
+
+            '\n', '\r' => {
+                return x;
+            },
+            else => {
+                return null;
+            },
+        }
+        if (mem.indexOfScalar(u8, in[x..], '\r')) |end_of_line| {
+            return x + end_of_line;
+        }
+        if (mem.indexOfScalar(u8, in[x..], '\n')) |end_of_line| {
+            return x + end_of_line;
+        }
+        // the header ends at the end of input.
+        return in.len;
     }
 
     /// findSetextHeading checks if in is begins with a setext heading. Returns
@@ -512,6 +551,9 @@ pub const Lexer = struct {
                     },
                     else => {
                         if (findSetextHeading(lx.input[lx.current_pos..])) |pos| {
+                            if (lx.current_pos > lx.start_pos) {
+                                try lx.emit(LexMe.Text);
+                            }
                             lx.current_pos += end;
                             try lx.emit(LexMe.Heading);
                             break;
@@ -685,7 +727,7 @@ const Util = struct {
             return 0;
         }
         var i: usize = 0;
-        while (i < data.len) {
+        while (i < data.len) : (i += 1) {
             if (c != data[i]) {
                 break;
             }
@@ -756,8 +798,6 @@ const Util = struct {
         return false;
     }
 };
-
-
 
 const Parser = struct {
     const Node = struct {
