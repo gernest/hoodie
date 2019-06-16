@@ -759,6 +759,7 @@ const Util = struct {
 
 const suite = @import("test_suite.zig");
 const TestCase = suite.TestCase;
+
 test "Lexer" {
     var lx = &Lexer.init(std.debug.global_allocator);
     defer lx.deinit();
@@ -819,7 +820,7 @@ test "Lexer.findSetextHeading" {
     const two = Helper.testTwo;
     const three = Helper.testThree;
     const cases = suite.all_cases[49..75];
-    two(&cases[0], []?usize{ 19, 40 });
+    two(&cases[0], [_]?usize{ 19, 40 });
 }
 
 test "Lexer.findFencedCodeBlock" {}
