@@ -184,7 +184,7 @@ pub const Declaration = struct {
     fn encode(self: *Declaration, a: *Allocator) anyerror!json.Value {
         var m = json.ObjectMap.init(a);
         _ = try m.put("label", json.Value{
-            .String = self.label,
+            .String = if (self.label.len == 0) "-" else self.label,
         });
         if (self.typ == .TopAssign) {
             if (self.is_mutable) {
