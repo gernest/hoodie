@@ -636,7 +636,7 @@ pub const Time = struct {
         }
     }
 
-    pub fn setLoc(self: *Time, l: Location) void {
+    pub fn setLoc(self: *Time, l: *Location) void {
         self.stripMono();
         self.loc = l;
     }
@@ -644,12 +644,12 @@ pub const Time = struct {
     fn setMono(self: *Time, m: i64) void {
         if ((self.wall & has_monotonic) == 0) {
             const s = self.ext;
-            if (sec < min_wall or max_wall < sec) {
+            if (s < min_wall or max_wall < s) {
                 return;
             }
-            self.wall |= has_monotonic | @intCast(u64, sec - min_wall) << nsec_shift;
+            self.wall |= has_monotonic | @intCast(u64, s - min_wall) << nsec_shift;
         }
-        t.ext = m;
+        self.ext = m;
     }
     // mono returns t's monotonic clock reading.
     // It returns 0 for a missing reading.
@@ -821,12 +821,12 @@ pub const Time = struct {
         return Time{
             .wall = self.wall,
             .ext = self.ext,
-            .loc = utc_local,
+            .loc = &Location.utc_local,
         };
     }
 
     fn string(self: Time, out: *std.Buffer) !void {
-        try self.format(out, "2006-01-02 15:04:05.999999999 -0700 MST");
+        try self.formatBuffer(out, DefaultFormat);
         // Format monotonic clock reading as m=±ddd.nnnnnnnnn.
         if ((self.wall & has_monotonic) != 0) {
             var stream = &std.io.BufferOutStream.init(out).stream;
@@ -853,7 +853,21 @@ pub const Time = struct {
         }
     }
 
-    /// format returns a textual representation of the time value formatted
+    pub fn format(
+        self: Time,
+        comptime fmt: []const u8,
+        ctx: var,
+        comptime Errors: type,
+        output: fn (@typeOf(ctx), []const u8) Errors!void,
+    ) Errors!void {
+        var out: [DefaultFormat.len * 2]u8 = undefined;
+        var a = &std.heap.FixedBufferAllocator.init(out[0..]).allocator;
+        var buf = std.Buffer.init(a, "") catch return;
+        self.string(&buf) catch return;
+        try output(ctx, buf.toSlice());
+    }
+
+    /// formatBuffer returns a textual representation of the time value formatted
     /// according to layout, which defines the format by showing how the reference
     /// time, defined to be
     ///   Mon Jan 2 15:04:05 -0700 MST 2006
@@ -869,7 +883,7 @@ pub const Time = struct {
     /// and convenient representations of the reference time. For more information
     /// about the formats and the definition of the reference time, see the
     /// documentation for ANSIC and the other constants defined by this package.
-    pub fn format(self: Time, out: *std.Buffer, layout: []const u8) !void {
+    pub fn formatBuffer(self: Time, out: *std.Buffer, layout: []const u8) !void {
         try out.resize(0);
         var stream = std.io.BufferOutStream.init(out);
         return self.appendFormat(&stream.stream, layout);
@@ -1092,7 +1106,9 @@ pub const Time = struct {
         }
     }
 
-    pub fn parse(layout: []const u8, value: []const u8, default_location: *Location, local: *Location) !Time {}
+    pub fn parse(layout: []const u8, value: []const u8, default_location: *Location, local: *Location) !Time {
+        return error.TODO;
+    }
 
     /// add adds returns a new Time with duration added to self.
     pub fn add(self: Time, d: Duration) Time {
@@ -1163,7 +1179,7 @@ pub const Time = struct {
             res.qmod = @intCast(isize, @divTrunc(nsec_value, @intCast(i32, d.value))) & 1;
             res.r = Duration.init(@intCast(i64, @mod(nsec_value, @intCast(i32, d.value))));
         } else if (@mod(d.value, Duration.Second.value) == 0) {
-            const d1 = @divTrunc(d.value, Second.value);
+            const d1 = @divTrunc(d.value, Duration.Second.value);
             res.qmod = @intCast(isize, @divTrunc(sec_value, d1)) & 1;
             res.r = Duration.init(@mod(sec_value, d1) * Duration.Second.value + @intCast(i64, nsec_value));
         } else {
@@ -1184,7 +1200,7 @@ pub const Time = struct {
             }
             // Compute remainder by subtracting r<<k for decreasing k.
             // Quotient parity is whether we subtract on last round.
-            var d1 = d.value;
+            var d1 = @intCast(u64, d.value);
             while ((d1 >> 63) != 1) {
                 d1 <<= 1;
             }
@@ -1220,6 +1236,7 @@ pub const Time = struct {
             }
             return res;
         }
+        return res;
     }
 
     // these are utility functions that I ported from
@@ -1235,13 +1252,13 @@ pub const Time = struct {
         const c = self.clock();
         return context.date(
             d.year,
-            d.month,
+            @intCast(isize, @enumToInt(d.month)),
             d.day,
             c.hour,
             0,
             0,
             0,
-            self.loc.?,
+            self.loc,
         );
     }
 
@@ -1249,13 +1266,13 @@ pub const Time = struct {
         const d = self.date();
         return context.date(
             d.year,
-            d.month,
+            @intCast(isize, @enumToInt(d.month)),
             d.day,
             0,
             0,
             0,
             0,
-            self.loc.?,
+            self.loc,
         );
     }
 
@@ -1377,8 +1394,8 @@ pub const Duration = struct {
     pub const Minute = init(60 * Second.value);
     pub const Hour = init(60 * Minute.value);
 
-    const minDuration: i64 = -1 << 63;
-    const maxDuration: i64 = (1 << 63) - 1;
+    const minDuration = init(-1 << 63);
+    const maxDuration = init((1 << 63) - 1);
 
     const fracRes = struct {
         nw: usize,
@@ -2083,6 +2100,8 @@ pub const Stamp = "Jan _2 15:04:05";
 pub const StampMilli = "Jan _2 15:04:05.000";
 pub const StampMicro = "Jan _2 15:04:05.000000";
 pub const StampNano = "Jan _2 15:04:05.000000000";
+
+pub const DefaultFormat = "2006-01-02 15:04:05.999999999 -0700 MST";
 
 pub const chunk = enum {
     none,

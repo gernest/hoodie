@@ -194,7 +194,7 @@ test "TestFormat" {
     var buf = try std.Buffer.init(std.debug.global_allocator, "");
     defer buf.deinit();
     for (format_tests) |value| {
-        try ts.format(&buf, value.format);
+        try ts.formatBuffer(&buf, value.format);
         const got = buf.toSlice();
         testing.expect(std.mem.eql(u8, got, value.result));
     }
@@ -217,8 +217,15 @@ test "TestFormatSingleDigits" {
     var tt = time.date(2001, 2, 3, 4, 5, 6, 700000000, &Location.utc_local);
     const ts = formatTest.init("single digit format", "3:4:5", "4:5:6");
 
-    try tt.format(buf, ts.format);
+    try tt.formatBuffer(buf, ts.format);
     testing.expect(buf.eql(ts.result));
+
+    try buf.resize(0);
+
+    var stream = &std.io.BufferOutStream.init(buf).stream;
+    try stream.print("{}", tt);
+    const want = "2001-02-03 04:05:06.7 +0000 UTC";
+    testing.expect(buf.eql(want));
 }
 
 test "TestFormatShortYear" {
@@ -249,7 +256,7 @@ test "TestFormatShortYear" {
         const x = @intCast(isize, m);
         var tt = time.date(y, x, 1, 0, 0, 0, 0, &Location.utc_local);
         try buf.resize(0);
-        try tt.format(buf, "2006.01.02");
+        try tt.formatBuffer(buf, "2006.01.02");
         try want.resize(0);
         const day: usize = 1;
         const month: usize = 1;
