@@ -21,7 +21,7 @@ pub const Export = struct {
 
     pub const Pkg = struct {
         name: []const u8,
-        path: []const u8,
+        path: [][]const u8,
     };
 
     pub fn deinit(self: *Export) void {
@@ -37,9 +37,12 @@ pub const Export = struct {
         };
     }
 
-    pub fn dump(self: *Export) void {
+    pub fn dump(self: *Export, name: []const u8) void {
         for (self.list.toSlice()) |p| {
-            warn("{} => {}\n", p.name, p.path);
+            var n = if (p.name.len == 0) name else p.name;
+            for (p.path) |path_name| {
+                warn("pub const {} =@import(\"{}\")\n", n, path_name);
+            }
         }
     }
 
@@ -47,24 +50,28 @@ pub const Export = struct {
         try self.walkTree(full_path, full_path);
     }
 
-    fn pkg(self: *Export, root: []const u8, name: []const u8, pkg_path: []const u8) !void {
+    fn pkg(self: *Export, root: []const u8, name: []const u8, pkg_path: [][]const u8) !void {
         var a = &self.arena.allocator;
         var p = try a.create(Pkg);
         p.* = Pkg{
-            .name = try mem.dupe(a, u8, name),
-            .path = try mem.dupe(a, u8, pkg_path),
+            .name = name,
+            .path = pkg_path,
         };
         try self.list.append(p);
     }
 
     fn walkTree(self: *Export, root: []const u8, full_path: []const u8) anyerror!void {
+        var a = &self.arena.allocator;
+        var ls = std.ArrayList([]const u8).init(a);
+        defer ls.deinit();
         const export_file_path = try path.join(self.allocator, [_][]const u8{
             full_path,
             export_file,
         });
         errdefer self.allocator.free(export_file_path);
         if (fileExists(export_file_path)) {
-            try self.pkg(root, full_path, export_file_path);
+            try ls.append(try path.relative(a, self.base, export_file_path));
+            try self.pkg(root, try path.relative(a, root, full_path), ls.toOwnedSlice());
             self.allocator.free(export_file_path);
             return;
         } else {
@@ -90,7 +97,8 @@ pub const Export = struct {
         errdefer self.allocator.free(ext);
 
         if (fileExists(pkg_export_file)) {
-            try self.pkg(root, full_path, pkg_export_file);
+            try ls.append(try path.relative(a, self.base, pkg_export_file));
+            try self.pkg(root, try path.relative(a, root, full_path), ls.toOwnedSlice());
             self.allocator.free(pkg_export_file);
             errdefer self.allocator.free(ext);
             return;
@@ -116,13 +124,16 @@ pub const Export = struct {
             mem.copy(u8, full_entry_path[full_path.len + 1 ..], entry.name);
             switch (entry.kind) {
                 Entry.Kind.File => {
-                    try self.pkg(root, full_path, full_entry_path);
+                    try ls.append(try path.relative(a, root, full_entry_path));
                 },
                 Entry.Kind.Directory => {
                     try self.walkTree(root, full_entry_path);
                 },
                 else => {},
             }
+        }
+        if (ls.len > 0) {
+            try self.pkg(root, try path.relative(a, root, full_path), ls.toOwnedSlice());
         }
     }
 };

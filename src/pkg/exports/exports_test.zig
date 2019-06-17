@@ -24,9 +24,9 @@ test "export" {
         "src",
     });
     defer a.free(test_src);
-
+    warn("\n");
     var exp = &exports.Export.init(a, test_dir);
     try exp.dir(test_src);
     defer exp.deinit();
-    exp.dump();
+    exp.dump("exports");
 }
