@@ -1,8 +1,7 @@
-const render = @import("imports.zig").render;
 const std = @import("std");
 
 const ast = std.zig.ast;
-
+const render = std.zig.render;
 const io = std.io;
 const mem = std.mem;
 const os = std.os;
