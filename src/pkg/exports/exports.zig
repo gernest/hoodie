@@ -44,10 +44,10 @@ pub const Export = struct {
     }
 
     pub fn dir(self: *Export, full_path: []const u8) !void {
-        try self.walkTree(full_path);
+        try self.walkTree(full_path, full_path);
     }
 
-    fn pkg(self: *Export, name: []const u8, pkg_path: []const u8) !void {
+    fn pkg(self: *Export, root: []const u8, name: []const u8, pkg_path: []const u8) !void {
         var a = &self.arena.allocator;
         var p = try a.create(Pkg);
         p.* = Pkg{
@@ -57,14 +57,14 @@ pub const Export = struct {
         try self.list.append(p);
     }
 
-    fn walkTree(self: *Export, full_path: []const u8) anyerror!void {
+    fn walkTree(self: *Export, root: []const u8, full_path: []const u8) anyerror!void {
         const export_file_path = try path.join(self.allocator, [_][]const u8{
             full_path,
             export_file,
         });
         errdefer self.allocator.free(export_file_path);
         if (fileExists(export_file_path)) {
-            try self.pkg(full_path, export_file_path);
+            try self.pkg(root, full_path, export_file_path);
             self.allocator.free(export_file_path);
             return;
         } else {
@@ -90,7 +90,7 @@ pub const Export = struct {
         errdefer self.allocator.free(ext);
 
         if (fileExists(pkg_export_file)) {
-            try self.pkg(full_path, pkg_export_file);
+            try self.pkg(root, full_path, pkg_export_file);
             self.allocator.free(pkg_export_file);
             errdefer self.allocator.free(ext);
             return;
@@ -116,10 +116,10 @@ pub const Export = struct {
             mem.copy(u8, full_entry_path[full_path.len + 1 ..], entry.name);
             switch (entry.kind) {
                 Entry.Kind.File => {
-                    try self.pkg(full_path, full_entry_path);
+                    try self.pkg(root, full_path, full_entry_path);
                 },
                 Entry.Kind.Directory => {
-                    try self.walkTree(full_entry_path);
+                    try self.walkTree(root, full_entry_path);
                 },
                 else => {},
             }
