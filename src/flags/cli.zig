@@ -71,7 +71,9 @@ pub const Cli = struct {
                 }
                 return;
             }
-            try cmd.action(ctx);
+            if (cmd.action) |action| {
+                try action(ctx);
+            }
             return;
         }
         if (stdout != null) {
@@ -206,7 +208,7 @@ pub const Command = struct {
     ///  stdin,stdout and stderr are streams for writing results. There is no
     /// need for the fucntion to call os.exit. Any error returned will result in
     /// the program to exit with os.exit(1).
-    action: fn (
+    action: ?fn (
         ctx: *Context,
     ) anyerror!void,
 

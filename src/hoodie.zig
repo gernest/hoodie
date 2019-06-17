@@ -63,7 +63,7 @@ const app = Cli{
         },
         Command{
             .name = "pkg",
-            .action = showArgs,
+            .action = null,
             .flags = null,
             .sub_commands = [_]Command{
                 Command{
