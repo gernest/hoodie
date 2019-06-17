@@ -200,7 +200,7 @@ pub const Command = struct {
     flags: ?[]const Flag,
 
     // nested commands that uses the current command as a namespace.
-    sub_commands: ?[]Command,
+    sub_commands: ?[]const Command,
 
     /// This is the function that will be called when this command is matched.
     ///  stdin,stdout and stderr are streams for writing results. There is no
