@@ -61,6 +61,37 @@ const app = Cli{
             .action = lspCmd,
             .sub_commands = null,
         },
+        Command{
+            .name = "pkg",
+            .action = showArgs,
+            .flags = null,
+            .sub_commands = [_]Command{
+                Command{
+                    .name = "export",
+                    .action = showArgs,
+                    .flags = null,
+                    .sub_commands = null,
+                },
+                Command{
+                    .name = "init",
+                    .action = showArgs,
+                    .flags = null,
+                    .sub_commands = null,
+                },
+                Command{
+                    .name = "get",
+                    .action = showArgs,
+                    .flags = null,
+                    .sub_commands = null,
+                },
+                Command{
+                    .name = "ensure",
+                    .action = showArgs,
+                    .flags = null,
+                    .sub_commands = null,
+                },
+            },
+        },
     },
     .action = null,
 };
@@ -106,3 +137,12 @@ fn outlineCmd(
 fn lspCmd(
     ctx: *const Context,
 ) anyerror!void {}
+
+fn showArgs(
+    ctx: *const Context,
+) anyerror!void {
+    var it = &ctx.getArgs();
+    while (it.next()) |arg| {
+        try ctx.stdout.?.print(" [{}]", arg);
+    }
+}
