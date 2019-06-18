@@ -37,7 +37,7 @@ fn renderJson(a: *std.mem.Allocator, ls: *outline.Declaration.List, stream: var)
     try dump.dump(v, stream);
 }
 
-pub fn exec(a: *std.mem.Allocator, src: []const u8, stream: var) anyerror!void {
+fn exec(a: *std.mem.Allocator, src: []const u8, stream: var) anyerror!void {
     var tree = try parse(a, src);
     defer tree.deinit();
     var arena = std.heap.ArenaAllocator.init(a);
