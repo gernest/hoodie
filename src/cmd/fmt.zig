@@ -6,6 +6,34 @@ const io = std.io;
 const mem = std.mem;
 const os = std.os;
 
+const cli = @import("../flags/cli.zig");
+const Args = cli.Args;
+const Cli = cli.Cli;
+const Command = cli.Command;
+const Context = cli.Context;
+const Flag = cli.Flag;
+
+/// taken from https://github.com/Hejsil/zig-clap
+const max_src_size = 2 * 1024 * 1024 * 1024; // 2 GiB
+
+pub const command = Command{
+    .name = "fmt",
+    .flags = [_]Flag{
+        Flag{
+            .name = "f",
+            .desc = "filename to be formated",
+            .kind = .String,
+        },
+        Flag{
+            .name = "stdin",
+            .desc = "reads text to format from stdin",
+            .kind = .Bool,
+        },
+    },
+    .action = formatCmd,
+    .sub_commands = null,
+};
+
 pub fn format(allocator: *mem.Allocator, source_code: []const u8, stdout: var) !void {
     var tree = std.zig.parse(allocator, source_code) catch |err| {
         std.debug.warn("error parsing stdin: {}\n", err);
@@ -53,31 +81,12 @@ fn renderError(
     );
 }
 
-pub fn formatFile(allocator: *mem.Allocator, file_path: []const u8, stdout: var) !void {
-    const source_code = try std.io.readFileAlloc(allocator, file_path);
-    defer allocator.free(source_code);
-
-    var tree = std.zig.parse(allocator, source_code) catch |err| {
-        std.debug.warn("error parsing stdin: {}\n", err);
-        os.exit(1);
-    };
-    defer tree.deinit();
-    if (tree.errors.count() > 0) {
-        var stderr = try std.debug.getStderrStream();
-        var error_it = tree.errors.iterator(0);
-        while (error_it.next()) |parse_error| {
-            try renderError(
-                allocator,
-                file_path,
-                tree,
-                parse_error,
-                stderr,
-            );
-        }
-        os.exit(1);
+fn formatCmd(
+    ctx: *const Context,
+) anyerror!void {
+    const source_code = try ctx.stdin.?.readAllAlloc(ctx.allocator, max_src_size);
+    defer ctx.allocator.free(source_code);
+    if (ctx.boolean("stdin")) {
+        return format(ctx.allocator, source_code, ctx.stdout.?);
     }
-    const baf = try io.BufferedAtomicFile.create(allocator, file_path);
-    defer baf.destroy();
-    _ = try render(allocator, baf.stream(), tree);
-    try baf.finish();
 }
