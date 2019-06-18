@@ -14,7 +14,7 @@ pub const Export = struct {
     base: []const u8,
     arena: std.heap.ArenaAllocator,
     allocator: *mem.Allocator,
-    package: ?*Pkg,
+    list: List,
 
     pub const List = std.ArrayList(*Pkg);
     pub const export_file = "exports.zig";
@@ -22,19 +22,8 @@ pub const Export = struct {
     pub const Pkg = struct {
         name: []const u8,
         path: []const u8,
-        children: ?List,
 
-        pub fn dump(self: *Pkg, level: usize) void {
-            pad(level);
-            warn("{}=>\n", self.name);
-            pad(level + 2);
-            warn("{}\n", self.path);
-            if (self.children) |ls| {
-                for (ls.toSlice()) |ch| {
-                    ch.dump(level + 2);
-                }
-            }
-        }
+        pub fn dump(self: *Pkg, level: usize) void {}
 
         fn pad(times: usize) void {
             var i: usize = 0;
@@ -46,6 +35,7 @@ pub const Export = struct {
 
     pub fn deinit(self: *Export) void {
         self.arena.deinit();
+        self.list.deinit();
     }
 
     pub fn init(a: *mem.Allocator, base: []const u8) Export {
@@ -53,48 +43,53 @@ pub const Export = struct {
             .base = base,
             .arena = std.heap.ArenaAllocator.init(a),
             .allocator = a,
-            .package = null,
+            .list = List.init(a),
         };
     }
 
-    pub fn dump(self: *Export, name: []const u8) void {
-        if (self.package) |p| {
-            p.dump(0);
+    pub fn dump(self: *Export) !void {
+        var buf = &try std.Buffer.init(self.allocator, "");
+        defer buf.deinit();
+        for (self.list.toSlice()) |p| {
+            try buf.resize(0);
+            try buf.append("Pkg{.name=\"");
+            try buf.append(p.name);
+            try buf.append("\",.path=\"");
+            try buf.append(p.path);
+            try buf.append("\"},");
+            warn("{}\n", buf.toSlice());
         }
     }
 
     pub fn dir(self: *Export, full_path: []const u8) !void {
-        self.package = try self.walkTree(full_path, full_path);
+        try self.walkTree(full_path, full_path);
     }
 
-    fn pkg(self: *Export, root: []const u8, name: []const u8, pkg_path: []const u8) !*Pkg {
+    fn pkg(self: *Export, root: []const u8, name: []const u8, pkg_path: []const u8) !void {
         var a = &self.arena.allocator;
         var p = try a.create(Pkg);
         p.* = Pkg{
-            .name = name,
+            .name = stripExtension(name),
             .path = pkg_path,
-            .children = null,
         };
-        return p;
+        try self.list.append(p);
     }
 
-    fn walkTree(self: *Export, root: []const u8, full_path: []const u8) anyerror!?*Pkg {
+    fn walkTree(self: *Export, root: []const u8, full_path: []const u8) anyerror!void {
         var a = &self.arena.allocator;
-        var ls = List.init(a);
-        defer ls.deinit();
         const export_file_path = try path.join(self.allocator, [_][]const u8{
             full_path,
             export_file,
         });
         errdefer self.allocator.free(export_file_path);
         if (fileExists(export_file_path)) {
-            const p = try self.pkg(
+            try self.pkg(
                 root,
                 try path.relative(a, root, full_path),
                 try path.relative(a, self.base, export_file_path),
             );
             self.allocator.free(export_file_path);
-            return p;
+            return;
         } else {
             // we immediately free this, since we will recurse the momory will
             // pile up for no reason
@@ -118,14 +113,14 @@ pub const Export = struct {
         errdefer self.allocator.free(ext);
 
         if (fileExists(pkg_export_file)) {
-            const p = try self.pkg(
+            try self.pkg(
                 root,
                 try path.relative(a, root, full_path),
                 try path.relative(a, self.base, pkg_export_file),
             );
             self.allocator.free(pkg_export_file);
             errdefer self.allocator.free(ext);
-            return p;
+            return;
         } else {
             // we immediately free this, since we will recurse the momory will
             // pile up for no reason
@@ -148,32 +143,24 @@ pub const Export = struct {
             mem.copy(u8, full_entry_path[full_path.len + 1 ..], entry.name);
             switch (entry.kind) {
                 Entry.Kind.File => {
-                    try ls.append(try self.pkg(
+                    try self.pkg(
                         root,
                         try path.relative(a, root, full_entry_path),
                         try path.relative(a, self.base, full_entry_path),
-                    ));
+                    );
                 },
                 Entry.Kind.Directory => {
-                    if (try self.walkTree(root, full_entry_path)) |p| {
-                        try ls.append(p);
-                    }
+                    try self.walkTree(root, full_entry_path);
                 },
                 else => {},
             }
         }
-        if (ls.len > 0) {
-            var p = try self.pkg(
-                root,
-                try path.relative(a, root, full_path),
-                try path.relative(a, self.base, full_path),
-            );
-            p.children = ls;
-            return p;
-        }
-        return null;
     }
 };
+
+fn stripExtension(s: []const u8) []const u8 {
+    return mem.trimRight(u8, s, ".zig");
+}
 
 fn accept(e: Entry) bool {
     switch (e.kind) {

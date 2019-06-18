@@ -28,5 +28,5 @@ test "export" {
     var exp = &exports.Export.init(a, test_dir);
     try exp.dir(test_src);
     defer exp.deinit();
-    exp.dump("exports");
+    try exp.dump();
 }
