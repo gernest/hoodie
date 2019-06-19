@@ -2,6 +2,7 @@ const std = @import("std");
 const format = @import("fmt.zig");
 const outline = @import("outline.zig");
 const lsp = @import("lsp.zig");
+const pkg = @import("pkg.zig");
 
 const cli = @import("../flags/cli.zig");
 const Args = cli.Args;
@@ -17,6 +18,7 @@ pub const app = Cli{
         format.command,
         outline.command,
         lsp.command,
+        pkg.command,
     },
     .action = null,
 };

@@ -391,6 +391,11 @@ pub const Context = struct {
     pub fn getArgs(self: *const Context) Args.Iterator {
         return self.args.iterator(self.args_position);
     }
+
+    pub fn firstArg(self: *const Context) ?[]const u8 {
+        if (self.args_position >= self.args.args.len) return null;
+        return self.args.args.at(self.args_position);
+    }
 };
 
 pub const Args = struct {

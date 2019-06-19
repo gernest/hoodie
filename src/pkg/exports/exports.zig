@@ -61,6 +61,20 @@ pub const Export = struct {
         }
     }
 
+    pub fn dumpStream(self: *Export, stream: var) !void {
+        var buf = &try std.Buffer.init(self.allocator, "");
+        defer buf.deinit();
+        for (self.list.toSlice()) |p| {
+            try buf.resize(0);
+            try buf.append("Pkg{.name=\"");
+            try buf.append(p.name);
+            try buf.append("\",.path=\"");
+            try buf.append(p.path);
+            try buf.append("\"},");
+            try stream.print("{}\n", buf.toSlice());
+        }
+    }
+
     pub fn dir(self: *Export, full_path: []const u8) !void {
         try self.walkTree(full_path, full_path);
     }

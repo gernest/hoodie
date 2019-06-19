@@ -1,13 +1,14 @@
 const std = @import("std");
-const exports = @import("../pkg/exports/exports.zig");
 const flags = @import("../flags/cli.zig");
 
+const exports = @import("pkg/exports.zig");
 const Command = flags.Command;
 const Flag = flags.Flag;
 const Context = flags.Context;
 
 pub const command = Command{
-    .name = "exports",
+    .name = "pkg",
     .flags = null,
     .action = null,
+    .sub_commands = [_]Command{exports.command},
 };
