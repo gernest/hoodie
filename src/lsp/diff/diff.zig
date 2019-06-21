@@ -252,7 +252,7 @@ pub fn splitLines(a: *Allocator, text: []const u8) !Lines {
     var start: usize = 0;
     for (text) |ch, i| {
         if (ch == '\n') {
-            try arr.append(text[start..i]);
+            try arr.append(text[start .. i + 1]);
             start = i + 1;
         }
     }
