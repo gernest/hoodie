@@ -27,9 +27,9 @@ pub const Diff = struct {
 pub const Op = struct {
     kind: Kind,
     content: ?[]const []const u8,
-    i_1: usize,
-    i_2: usize,
-    j_2: usize,
+    i_1: isize,
+    i_2: isize,
+    j_2: isize,
 
     pub const Kind = enum {
         Delete,
@@ -40,10 +40,10 @@ pub const Op = struct {
 
 pub fn applyEdits(alloc: *Allocator, a: [][]const u8, operations: []const Op) !Lines {
     var lines = Lines.init(alloc);
-    var prev12: usize = 0;
+    var prev12: isize = 0;
     for (operations) |*op| {
         if (op.i_1 - prev12 > 0) {
-            for (a[prev12..op.i_1]) |c| {
+            for (a[@intCast(usize, prev12)..@intCast(usize, op.i_1)]) |c| {
                 try lines.append(c);
             }
             switch (op.kind) {
@@ -59,8 +59,8 @@ pub fn applyEdits(alloc: *Allocator, a: [][]const u8, operations: []const Op) !L
         }
         prev12 = op.i_2;
     }
-    if (a.len > prev12) {
-        for (a[prev12..a.len]) |c| {
+    if (@intCast(isize, a.len) > prev12) {
+        for (a[@intCast(usize, prev12)..a.len]) |c| {
             try lines.append(c);
         }
     }
@@ -262,3 +262,225 @@ pub fn splitLines(a: *Allocator, text: []const u8) !Lines {
     }
     return lines;
 }
+
+pub const Unified = struct {
+    from: []const u8,
+    to: []const u8,
+    hunks: ?std.ArrayList(*Hunk),
+
+    const edge = 3;
+    const gap = edge * 2;
+    pub fn init(
+        a: *mem.Allocator,
+        form: []const u8,
+        to: []const u8,
+        lines: [][]const u8,
+        ops: []const Op,
+    ) !Unified {
+        var u = Unified{
+            .from = form,
+            .to = to,
+            .hunks = null,
+        };
+        if (ops.len == 0) {
+            return u;
+        }
+        u.hunks = std.ArrayList(*Hunk).init(a);
+        var last: isize = -(gap + 2);
+        var h: ?Hunk = null;
+        for (ops) |op| {
+            if (op.i_1 < last) {
+                return error.UnsortedOp;
+            } else if (op.i_1 == last) {} else if (op.i_1 <= last + gap) {
+                _ = try Hunk.addEqualLines(&h.?, lines, last, op.i_1);
+            } else {
+                if (h != null) {
+                    _ = try Hunk.addEqualLines(&h.?, lines, last, last + edge);
+                    var ha = try a.create(Hunk);
+                    ha.* = h.?;
+                    try u.hunks.?.append(ha);
+                }
+                h = Hunk{
+                    .form_line = op.i_1 + 1,
+                    .to_line = op.j_2 + 1,
+                    .lines = std.ArrayList(Line).init(a),
+                };
+                const delta = try Hunk.addEqualLines(&h.?, lines, op.i_1 - edge, op.i_1);
+                h.?.form_line -= delta;
+                h.?.to_line -= delta;
+            }
+            last = op.i_1;
+            switch (op.kind) {
+                .Delete => {
+                    var i = op.i_1;
+                    while (i < op.i_2) : (i += 1) {
+                        warn("HEREE {} {}\n", i, lines.len);
+                        try (&h.?).lines.append(Line{
+                            .kind = .Delete,
+                            .content = lines[@intCast(usize, i)],
+                        });
+                        last += 1;
+                    }
+                },
+                .Insert => {
+                    if (op.content) |content| {
+                        for (content) |c| {
+                            try (&h.?).lines.append(Line{
+                                .kind = .Insert,
+                                .content = c,
+                            });
+                        }
+                    }
+                },
+                else => {},
+            }
+        }
+        if (h != null) {
+            _ = try Hunk.addEqualLines(&h.?, lines, last, last + edge);
+            var ha = try a.create(Hunk);
+            ha.* = h.?;
+            try u.hunks.?.append(ha);
+        }
+        return u;
+    }
+
+    pub fn format(
+        self: Unified,
+        comptime fmt: []const u8,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void {
+        try std.fmt.format(
+            context,
+            Errors,
+            output,
+            "--- {}\n",
+            self.from,
+        );
+        try std.fmt.format(
+            context,
+            Errors,
+            output,
+            "+++ {}\n",
+            self.to,
+        );
+        if (self.hunks) |hunks| {
+            for (hunks.toSlice()) |hunk| {
+                var from_count: usize = 0;
+                var to_count: usize = 0;
+                for (hunk.lines.toSlice()) |ln| {
+                    switch (ln.kind) {
+                        .Delete => {
+                            from_count += 1;
+                        },
+                        .Insert => {
+                            to_count += 1;
+                        },
+                        else => {
+                            from_count += 1;
+                            to_count += 1;
+                        },
+                    }
+                }
+                try output(context, "@@");
+                if (from_count > 0) {
+                    try std.fmt.format(
+                        context,
+                        Errors,
+                        output,
+                        " -{},{}",
+                        hunk.form_line,
+                        from_count,
+                    );
+                } else {
+                    try std.fmt.format(
+                        context,
+                        Errors,
+                        output,
+                        " -{}",
+                        hunk.form_line,
+                    );
+                }
+                if (to_count > 0) {
+                    try std.fmt.format(
+                        context,
+                        Errors,
+                        output,
+                        " +{},{}",
+                        hunk.to_line,
+                        to_count,
+                    );
+                } else {
+                    try std.fmt.format(
+                        context,
+                        Errors,
+                        output,
+                        " +{}",
+                        hunk.to_line,
+                    );
+                }
+                try output(context, "@@\n");
+                for (hunk.lines.toSlice()) |ln| {
+                    switch (ln.kind) {
+                        .Delete => {
+                            try output(context, "-");
+                            try output(context, ln.content);
+                        },
+                        .Insert => {
+                            try output(context, "+");
+                            try output(context, ln.content);
+                        },
+                        else => {
+                            try output(context, ln.content);
+                        },
+                    }
+                    warn("HERE {} {}", ln.content, ln.content.len);
+                    if (!mem.endsWith(u8, ln.content, "\n")) {
+                        try std.fmt.format(
+                            context,
+                            Errors,
+                            output,
+                            "\n\\ No newline at end of file\n",
+                        );
+                    }
+                }
+            }
+        }
+    }
+};
+
+pub const Hunk = struct {
+    form_line: isize,
+    to_line: isize,
+    lines: std.ArrayList(Line),
+
+    fn addEqualLines(
+        self: *Hunk,
+        lines: [][]const u8,
+        start: isize,
+        end: isize,
+    ) !isize {
+        var delta: isize = 0;
+        var i = start;
+        while (i < end) : (i += 1) {
+            if (i < 0) {
+                continue;
+            }
+            if (i >= @intCast(isize, lines.len)) {
+                return delta;
+            }
+            try self.lines.append(Line{
+                .kind = .Equal,
+                .content = lines[@intCast(usize, i)],
+            });
+            delta += 1;
+        }
+        return delta;
+    }
+};
+
+pub const Line = struct {
+    kind: Op.Kind,
+    content: []const u8,
+};
