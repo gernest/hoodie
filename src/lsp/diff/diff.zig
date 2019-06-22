@@ -68,10 +68,10 @@ pub fn applyEdits(alloc: *Allocator, a: [][]const u8, operations: []const Op) !L
 }
 
 pub fn Operations(allocator: *Allocator, a: [][]const u8, b: [][]const u8) !Diff {
-    var ops = init(allocator);
+    var ops = Diff.init(allocator);
     var seq = &Sequence.init(allocator);
     defer seq.deinit();
-    try seq.process();
+    try seq.process(a, b);
     try ops.list.resize(a.len + b.len);
     var i: usize = 0;
     var solution = ops.list.toSlice();
@@ -123,6 +123,7 @@ pub fn Operations(allocator: *Allocator, a: [][]const u8, b: [][]const u8) !Diff
         }
     }
     try (&ops.list).shrink(i);
+    return ops;
 }
 
 fn add(
@@ -146,10 +147,9 @@ fn add(
 
 const Sequence = struct {
     edits: Edits,
-    offser: usize,
-    arena: std.ArenaAllocator,
+    offset: usize,
+    arena: std.heap.ArenaAllocator,
     allocator: *Allocator,
-    edits: Edits,
     snakes: Edits,
     const Edits = std.ArrayList([]usize);
 
@@ -162,49 +162,58 @@ const Sequence = struct {
     }
 
     fn shortestEdit(self: *Sequence, a: [][]const u8, b: [][]const u8) !void {
-        const m = a.len;
-        const n = b.len;
-        var arena = std.heap.ArenaAllocator.init(a);
-        defer arena.deinit();
-        var alloc = &arena.alloc;
-        var base_alloc = &self.arena.alloc;
+        const m = @intCast(isize, a.len);
+        const n = @intCast(isize, b.len);
+        var alloc = &self.arena.allocator;
 
-        var v = try alloc.alloc(usize, 2 * (m + n) + 1);
+        var v = try alloc.alloc(isize, 2 * (a.len + b.len) + 1);
         var offset = @intCast(isize, n + m);
 
-        try (&self.edits).resize(n + m + 1);
-        var trace = (&self.edits).toSlice();
+        try self.edits.resize(b.len + a.len + 1);
+        var trace = self.edits.toSlice();
 
-        var d: usize = 0;
+        comptime var d = 0;
         while (d <= (n + m)) : (d += 1) {
             var k: isize = -d;
             while (k < d) : (k += 2) {
                 var x: isize = 0;
-                if (k == -d or (k != d and v[@intCast(usize, k - 1 + offset)]) < v[@intCast(usize, k + 1 + offset)]) {
-                    x = v[k + 1 + offset];
+                if (k == -d or (k != d and v[@intCast(usize, k - 1 + offset)] < v[@intCast(usize, k + 1 + offset)])) {
+                    x = v[@intCast(usize, k + 1 + offset)];
                 } else {
-                    x = v[k - 1 + offset];
+                    x = v[@intCast(usize, k - 1 + offset)];
                 }
                 var y = x - k;
-                while (x < m and y < n and a[x] == b[y]) {
+                while (x < m and y < n and
+                    mem.eql(u8, a[@intCast(usize, x)], b[@intCast(usize, y)]))
+                {
                     x += 1;
                     y += 1;
                 }
-                v[k + offset] = x;
-                trace[d] = try mem.dupe(base_alloc, v);
+                v[@intCast(usize, k + offset)] = x;
                 if (x == m and y == n) {
-                    self.offset = offser;
+                    trace[d] = try copy(alloc, v);
+                    self.offset = @intCast(usize, offset);
                     return;
                 }
             }
+            trace[d] = try copy(alloc, v);
         }
+    }
+
+    fn copy(allocator: *mem.Allocator, v: []isize) ![]usize {
+        var o = try allocator.alloc(usize, v.len);
+        var i: usize = 0;
+        while (i < v.len) : (i += 1) {
+            o[i] = @intCast(usize, v[i]);
+        }
+        return o;
     }
 
     fn deinit(self: *Sequence) void {
         self.arena.deinit();
     }
 
-    fn process(self: *Sequence, a: []const 8, b: []const u8) !void {
+    fn process(self: *Sequence, a: [][]const u8, b: [][]const u8) !void {
         try self.shortestEdit(a, b);
         try self.backtrack(a.len, b.len);
     }

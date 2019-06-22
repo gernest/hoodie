@@ -34,7 +34,7 @@ const file_a = "a/a.go";
 const file_b = "b/b.go";
 const unified_prefix = "--- " ++ file_a ++ "\n+++ " ++ file_b ++ "\n";
 test "diff" {
-    var a = std.debug.global_allocator;
+    var allocator = std.debug.global_allocator;
     const cases = [_]TestCase{
         TestCase{
             .a = "A\nB\nC\n",
@@ -67,15 +67,18 @@ test "diff" {
         if (i == 0) {
             continue;
         }
-        var arena = std.heap.ArenaAllocator.init(a);
-        var als = try diff.splitLines(&arena.allocator, ts.a);
-        var ls = try diff.applyEdits(&arena.allocator, als.toSlice(), ts.ops);
-        warn("lines {}\n", ls.len);
+        var arena = std.heap.ArenaAllocator.init(allocator);
+        var a = try diff.splitLines(&arena.allocator, ts.a);
+        var b = try diff.splitLines(&arena.allocator, ts.b);
+
+        var ops = try diff.Operations(&arena.allocator, a.toSlice(), b.toSlice());
+
+        var ls = try diff.applyEdits(&arena.allocator, a.toSlice(), ts.ops);
         var u = try diff.Unified.init(
             &arena.allocator,
             file_a,
             file_b,
-            als.toSlice(),
+            a.toSlice(),
             ts.ops,
         );
         warn("{}\n", u);
