@@ -314,7 +314,6 @@ pub const Unified = struct {
                 .Delete => {
                     var i = op.i_1;
                     while (i < op.i_2) : (i += 1) {
-                        warn("HEREE {} {}\n", i, lines.len);
                         try (&h.?).lines.append(Line{
                             .kind = .Delete,
                             .content = lines[@intCast(usize, i)],
@@ -384,7 +383,7 @@ pub const Unified = struct {
                     }
                 }
                 try output(context, "@@");
-                if (from_count > 0) {
+                if (from_count > 1) {
                     try std.fmt.format(
                         context,
                         Errors,
@@ -402,7 +401,7 @@ pub const Unified = struct {
                         hunk.form_line,
                     );
                 }
-                if (to_count > 0) {
+                if (to_count > 1) {
                     try std.fmt.format(
                         context,
                         Errors,
@@ -420,7 +419,7 @@ pub const Unified = struct {
                         hunk.to_line,
                     );
                 }
-                try output(context, "@@\n");
+                try output(context, " @@\n");
                 for (hunk.lines.toSlice()) |ln| {
                     switch (ln.kind) {
                         .Delete => {
@@ -435,7 +434,6 @@ pub const Unified = struct {
                             try output(context, ln.content);
                         },
                     }
-                    warn("HERE {} {}", ln.content, ln.content.len);
                     if (!mem.endsWith(u8, ln.content, "\n")) {
                         try std.fmt.format(
                             context,
