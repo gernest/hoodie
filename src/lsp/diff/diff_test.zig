@@ -19,9 +19,9 @@ test "split lines" {
     defer lines.deinit();
 
     const want = [_][]const u8{
-        "A",
-        "B",
-        "C",
+        "A\n",
+        "B\n",
+        "C\n",
     };
 
     testing.expectEqual(lines.len, want.len);
