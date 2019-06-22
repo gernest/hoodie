@@ -29,7 +29,7 @@ pub const Op = struct {
     content: ?[]const []const u8,
     i_1: isize,
     i_2: isize,
-    j_2: isize,
+    j_1: isize,
 
     pub const Kind = enum {
         Delete,
@@ -87,10 +87,11 @@ pub fn Operations(allocator: *Allocator, a: [][]const u8, b: [][]const u8) !Diff
             if (op == null) {
                 op = try ops.newOp();
                 op.?.* = Op{
-                    .kind = Kind.Delete,
-                    .i_1 = x,
-                    .j1 = y,
-                    .j2 = 0,
+                    .kind = .Delete,
+                    .i_1 = @intCast(isize, x),
+                    .j_1 = @intCast(isize, y),
+                    .i_2 = 0,
+                    .content = null,
                 };
             }
             x += 1;
@@ -104,10 +105,11 @@ pub fn Operations(allocator: *Allocator, a: [][]const u8, b: [][]const u8) !Diff
             if (op == null) {
                 op = try ops.newOp();
                 op.?.* = Op{
-                    .kind = Kind.Insert,
-                    .i_1 = x,
-                    .j1 = y,
-                    .j2 = 0,
+                    .kind = .Insert,
+                    .i_1 = @intCast(isize, x),
+                    .j_1 = @intCast(isize, y),
+                    .i_2 = 0,
+                    .content = null,
                 };
             }
             y += 1;
@@ -122,7 +124,7 @@ pub fn Operations(allocator: *Allocator, a: [][]const u8, b: [][]const u8) !Diff
             break;
         }
     }
-    try (&ops.list).shrink(i);
+    ops.list.shrink(i);
     return ops;
 }
 
@@ -130,18 +132,20 @@ fn add(
     solution: []*Op,
     b: [][]const u8,
     i: *usize,
-    op: ?*Op,
+    ops: ?*Op,
     i_2: usize,
     j2: usize,
 ) void {
-    if (op == null) {
+    if (ops == null) {
         return;
     }
-    op.i_2 = i_2;
-    if (op.kind == Kin.Insert) {
-        op.content = b[op.j1..j2];
+    var op = ops.?;
+    op.i_2 = @intCast(isize, i_2);
+    if (op.kind == .Insert) {
+        op.content = b[@intCast(usize, op.j_1)..j2];
     }
     solution[i.*] = op;
+
     i.* = i.* + 1;
 }
 
@@ -215,23 +219,24 @@ const Sequence = struct {
 
     fn process(self: *Sequence, a: [][]const u8, b: [][]const u8) !void {
         try self.shortestEdit(a, b);
-        try self.backtrack(a.len, b.len);
+        try self.backtrack(a.len, b.len, self.offset);
     }
 
-    fn backtrack(self: *Sequence, x: usize, y: usize) !void {
-        try out.resize(self.edits.len);
-        var snakes = out.toSlice();
+    fn backtrack(self: *Sequence, xx: usize, yy: usize, offset: usize) !void {
+        try self.snakes.resize(self.edits.len);
+        var snakes = self.snakes.toSlice();
         const trace = self.edits.toSlice();
 
         var alloc = &self.arena.allocator;
-
         var d = self.edits.len - 1;
+        var x = xx;
+        var y = yy;
         while (x > 0 and y > 0 and d > 0) : (d -= 1) {
             const v = trace[d];
             if (v.len == 0) {
                 continue;
             }
-            var value = try alloc.alloc(u8, 2);
+            var value = try alloc.alloc(usize, 2);
             value[0] = x;
             value[1] = y;
             snakes[d] = value;
@@ -248,7 +253,7 @@ const Sequence = struct {
         if (x < 0 or y < 0) {
             return;
         }
-        var value = try alloc.alloc(u8, 2);
+        var value = try alloc.alloc(usize, 2);
         value[0] = x;
         value[1] = y;
         snakes[d] = value;
@@ -311,7 +316,7 @@ pub const Unified = struct {
                 }
                 h = Hunk{
                     .form_line = op.i_1 + 1,
-                    .to_line = op.j_2 + 1,
+                    .to_line = op.j_1 + 1,
                     .lines = std.ArrayList(Line).init(a),
                 };
                 const delta = try Hunk.addEqualLines(&h.?, lines, op.i_1 - edge, op.i_1);
