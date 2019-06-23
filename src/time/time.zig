@@ -662,6 +662,8 @@ pub const Time = struct {
         return self.ext;
     }
 
+    /// reports whether self represents the zero time instant,
+    /// January 1, year 1, 00:00:00 UTC.
     pub fn isZero(self: Time) bool {
         return self.sec() == 0 and self.nsec() == 0;
     }
@@ -687,7 +689,7 @@ pub const Time = struct {
         return self.sec() == u.sec() and self.nsec() == u.nsec();
     }
 
-    /// abs returns the time t as an absolute time, adjusted by the zone offset.
+    /// abs returns the time self as an absolute time, adjusted by the zone offset.
     /// It is called when computing a presentation property like Month or Hour.
     fn abs(self: Time) u64 {
         var usec = self.unixSec();
@@ -717,6 +719,7 @@ pub const Time = struct {
         return d.day;
     }
 
+    /// returns the day of the week specified by self.
     pub fn weekday(self: Time) Weekday {
         return absWeekday(self.abs());
     }
@@ -782,37 +785,37 @@ pub const Time = struct {
         return Clock.absClock(self.abs());
     }
 
-    /// hour returns the hour within the day specified by t, in the range [0, 23].
+    /// returns the hour within the day specified by self, in the range [0, 23].
     pub fn hour(self: Time) isize {
         return @divTrunc(@intCast(isize, self.abs() % seconds_per_day), seconds_per_hour);
     }
 
-    /// Minute returns the minute offset within the hour specified by t, in the
+    /// returns the minute offset within the hour specified by self, in the
     /// range [0, 59].
     pub fn minute(self: Time) isize {
         return @divTrunc(@intCast(isize, self.abs() % seconds_per_hour), seconds_per_minute);
     }
 
-    /// second returns the second offset within the minute specified by t, in the
+    /// returns the second offset within the minute specified by self, in the
     /// range [0, 59].
     pub fn second(self: Time) isize {
         return @intCast(isize, self.abs() % seconds_per_minute);
     }
 
-    /// Nanosecond returns the nanosecond offset within the second specified by t,
+    /// returns the nanosecond offset within the second specified by self,
     /// in the range [0, 999999999].
     pub fn nanosecond(self: Time) isize {
         return @intCast(isize, self.nsec());
     }
 
-    /// yearDay returns the day of the year specified by t, in the range [1,365] for non-leap years,
+    /// returns the day of the year specified by self, in the range [1,365] for non-leap years,
     /// and [1,366] in leap years.
     pub fn yearDay(self: Time) isize {
         const d = absDate(self.abs(), false);
         return d.yday + 1;
     }
 
-    /// zone computes the time zone in effect at time t, returning the abbreviated
+    /// computes the time zone in effect at time t, returning the abbreviated
     /// name of the zone (such as "CET") and its offset in seconds east of UTC.
     pub fn zone(self: Time) ZoneDetail {
         const zn = self.loc.lookup(self.unixSec());
@@ -873,7 +876,7 @@ pub const Time = struct {
         try output(ctx, buf.toSlice());
     }
 
-    /// formatBuffer returns a textual representation of the time value formatted
+    /// writes into out a textual representation of the time value formatted
     /// according to layout, which defines the format by showing how the reference
     /// time, defined to be
     ///   Mon Jan 2 15:04:05 -0700 MST 2006
