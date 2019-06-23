@@ -8,4 +8,5 @@ test "hoodie" {
     _ = @import("flags/cli_test.zig");
     _ = @import("html/html_test.zig");
     _ = @import("markdown/markdown_test.zig");
+    _ = @import("image/all_test.zig");
 }
