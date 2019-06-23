@@ -1,6 +1,8 @@
 const Builder = @import("std").build.Builder;
+const hoodie = @import("HOODIE.zig");
 
 pub fn build(b: *Builder) void {
+    hoodie.build(b);
     const mode = b.standardReleaseOptions();
     const exe = b.addExecutable("hoodie", "src/hoodie.zig");
     exe.setBuildMode(mode);
