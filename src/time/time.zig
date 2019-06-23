@@ -1931,6 +1931,16 @@ pub const Weekday = enum(usize) {
         }
         unreachable;
     }
+
+    pub fn format(
+        self: Weekday,
+        comptime fmt: []const u8,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void {
+        try output(context, self.string());
+    }
 };
 
 const days = [_][]const u8{
