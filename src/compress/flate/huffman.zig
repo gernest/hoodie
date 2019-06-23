@@ -7,8 +7,8 @@ const reverseU16 = @import("bits.zig").reverseU16;
 pub const max_num_lit = 286;
 pub const max_bits_limit = 16;
 
-pub const fixed_literal_encoding = Huffman.generateFixedLiteralEncoding();
-pub const fixed_offset_encoding = Huffman.generateFixedOffsetEncoding();
+pub var fixed_literal_encoding = &Huffman.generateFixedLiteralEncoding();
+pub var fixed_offset_encoding = &Huffman.generateFixedOffsetEncoding();
 
 pub const Huffman = struct {
     codes: [max_num_lit]Code,
