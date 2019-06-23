@@ -1788,6 +1788,19 @@ pub const Month = enum(usize) {
         }
         unreachable;
     }
+
+    pub fn format(
+        self: Month,
+        comptime fmt: []const u8,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void {
+        const m = @enumToInt(self);
+        if (@enumToInt(Month.January) <= m and m <= @enumToInt(Month.December)) {
+            try output(context, months[m - 1]);
+        }
+    }
 };
 
 pub const DateDetail = struct {
