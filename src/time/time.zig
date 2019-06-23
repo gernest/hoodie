@@ -1162,14 +1162,37 @@ pub const Time = struct {
             }
             return d;
         }
-        var d = Duration.init((self.sec() - u.sec()) * Duration.Second.value + (self.nsec() - u.nsec()));
-        if (u.add(d).equal(self)) {
-            return d; // d is correct
-        } else if (self.before(u)) {
-            return Duration.minDuration; // self - u is negative out of range
+        const ts = self.sec();
+        const us = u.sec();
+        const ssub = ts - us;
+        if ((ssub < ts) != (us > 0)) {
+            if (self.before(u)) {
+                return Duration.minDuration;
+            }
+            return Duration.maxDuration;
         }
-        return Duration.maxDuration; // self - u is positive out of range
+        if ((ssub < @divFloor(Duration.minDuration.value, Duration.Second.value)) or
+            (ssub > @divFloor(Duration.maxDuration.value, Duration.Second.value)))
+        {
+            if (self.before(u)) {
+                return Duration.minDuration;
+            }
+            return Duration.maxDuration;
+        }
+        var ssec: i64 = 0;
+        var nnsec: i64 = 0;
+        var d: i64 = 0;
+        ssec = ssub * Duration.Second.value;
+        nnsec = @intCast(i64, self.nsec() - u.nsec());
+        if ((d > ssec) != (nnsec > 0)) {
+            if (self.before(u)) {
+                return Duration.minDuration;
+            }
+            return Duration.maxDuration;
+        }
+        return Duration.init(d);
     }
+
     fn div(self: Time, d: Duration) divResult {
         var neg = false;
         var nsec_value = self.nsec();
