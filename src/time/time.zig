@@ -604,8 +604,8 @@ pub const Time = struct {
         self.ext += d;
     }
 
-    /// addDate returns the time corresponding to adding the
-    /// given number of years, months, and days to t.
+    /// returns the time corresponding to adding the
+    /// given number of years, months, and days to self.
     /// For example, addDate(-1, 2, 3) applied to January 1, 2011
     /// returns March 4, 2010.
     ///
