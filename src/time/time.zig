@@ -19,7 +19,7 @@ const windows = std.os.windows;
 pub const Location = struct {
     name: []const u8,
     zone: ?[]zone,
-    tx: ?[]zoneTrans,
+    tx: ?[]ZoneTrans,
     // Most lookups will be for the current time.
     // To avoid the binary search through tx, keep a
     // static one-element cache that gives the correct
@@ -57,7 +57,7 @@ pub const Location = struct {
         is_dst: bool,
     };
 
-    const zoneTrans = struct {
+    const ZoneTrans = struct {
         when: i64,
         index: usize,
         is_std: bool,
@@ -403,10 +403,10 @@ pub const Location = struct {
         // Now the transition time info.
         i = 0;
         const tx_n = n[@enumToInt(n_value.Time)];
-        var tx_list = try zalloc.alloc(zoneTrans, tx_n);
+        var tx_list = try zalloc.alloc(ZoneTrans, tx_n);
         if (tx_n != 0) {
             while (i < n[@enumToInt(n_value.Time)]) : (i += 1) {
-                var tx: zoneTrans = undefined;
+                var tx: ZoneTrans = undefined;
                 const w = try tx_times_data.big4();
                 tx.when = @intCast(i64, w);
                 if (@intCast(usize, tx_zone[i]) >= zones.len) {
@@ -423,7 +423,7 @@ pub const Location = struct {
             }
             loc.tx = tx_list;
         } else {
-            var ls = [_]zoneTrans{zoneTrans{
+            var ls = [_]ZoneTrans{ZoneTrans{
                 .when = alpha,
                 .index = 0,
                 .is_std = false,
