@@ -28,7 +28,7 @@ fn exprtsCmd(ctx: *const Context) anyerror!void {
 
 const build_file = "build.zig";
 const src_dir = "src";
-const exports_file = "exports.zig";
+const exports_file = "EXPORTS.zig";
 
 fn generate(ctx: *const Context, root: []const u8) anyerror!void {
     const stdout = ctx.stdout.?;
