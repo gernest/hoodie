@@ -666,16 +666,23 @@ pub const Time = struct {
         return self.sec() == 0 and self.nsec() == 0;
     }
 
+    /// returns true if time self is after time u.
     pub fn after(self: Time, u: Time) bool {
         const ts = self.sec();
         const us = u.sec();
         return ts > us or (ts == us and self.nsec() > u.nsec());
     }
 
+    /// returns true if time self is before u.
     pub fn before(self: Time, u: Time) bool {
         return (self.sec() < u.sec()) or (self.sec() == u.sec() and self.nsec() < u.nsec());
     }
 
+    /// reports whether self and u represent the same time instant.
+    /// Two times can be equal even if they are in different locations.
+    /// For example, 6:00 +0200 CEST and 4:00 UTC are Equal.
+    /// See the documentation on the Time type for the pitfalls of using == with
+    /// Time values; most code should use Equal instead.
     pub fn equal(self: Time, u: Time) bool {
         return self.sec() == u.sec() and self.nsec() == u.nsec();
     }
