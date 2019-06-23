@@ -1796,10 +1796,7 @@ pub const Month = enum(usize) {
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,
     ) Errors!void {
-        const m = @enumToInt(self);
-        if (@enumToInt(Month.January) <= m and m <= @enumToInt(Month.December)) {
-            try output(context, months[m - 1]);
-        }
+        try output(context, self.string());
     }
 };
 
