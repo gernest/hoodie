@@ -18,9 +18,7 @@ const testing = std.testing;
 const warn = std.debug.warn;
 
 pub fn main() anyerror!void {
-    var direct_allocator = std.heap.DirectAllocator.init();
-    const allocator = &direct_allocator.allocator;
-    defer direct_allocator.deinit();
+    const allocator = std.heap.direct_allocator;
     const arg = try std.process.argsAlloc(allocator);
     defer allocator.free(arg);
 

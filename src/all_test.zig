@@ -9,4 +9,5 @@ test "hoodie" {
     _ = @import("html/html_test.zig");
     _ = @import("markdown/markdown_test.zig");
     _ = @import("image/all_test.zig");
+    _ = @import("compress/all_test.zig");
 }

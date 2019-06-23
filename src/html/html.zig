@@ -17,9 +17,7 @@ pub fn unescape(a: *mem.Allocator, s: []const u8) !?[]const u8 {
     return null;
 }
 
-var global = std.heap.DirectAllocator.init();
-
-var html_escaper = strings.StringReplacer.init(&global.allocator, [_][]const u8{
+var html_escaper = strings.StringReplacer.init(std.heap.direct_allocator, [_][]const u8{
     "&",  "&amp;",
     "<",  "&lt;",
     ">",  "&gt;",

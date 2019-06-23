@@ -131,9 +131,7 @@ fn testReplacer(buf: *std.Buffer, r: *strings.StringReplacer, text: []const u8, 
 }
 
 test "Replacer" {
-    var da = std.heap.DirectAllocator.init();
-    defer da.deinit();
-    var a = &da.allocator;
+    var a = std.heap.direct_allocator;
 
     var html_escaper = &try strings.StringReplacer.init(a, [_][]const u8{
         "&",  "&amp;",

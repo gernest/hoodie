@@ -42,8 +42,7 @@ pub const Location = struct {
         Os.macosx, Os.ios => initDarwin,
         else => @compileError("Unsupported OS"),
     };
-    var dalloc = std.heap.DirectAllocator.init();
-    pub var utc_local = Location.init(&dalloc.allocator, "UTC");
+    pub var utc_local = Location.init(std.heap.direct_allocator, "UTC");
     var unix_sources = [_][]const u8{
         "/usr/share/zoneinfo/",
         "/usr/share/lib/zoneinfo/",
@@ -467,7 +466,7 @@ pub const Location = struct {
     }
 
     pub fn load(name: []const u8) !Location {
-        return loadLocationFromTZFile(&dalloc.allocator, name, unix_sources[0..]);
+        return loadLocationFromTZFile(std.heap.direct_allocator, name, unix_sources[0..]);
     }
 
     fn initDarwin() Location {
@@ -476,20 +475,20 @@ pub const Location = struct {
 
     fn initLinux() Location {
         var tz: ?[]const u8 = null;
-        if (std.process.getEnvMap(&dalloc.allocator)) |value| {
+        if (std.process.getEnvMap(std.heap.direct_allocator)) |value| {
             var env = value;
             defer env.deinit();
             tz = env.get("TZ");
         } else |err| {}
         if (tz) |name| {
             if (name.len != 0 and !mem.eql(u8, name, "UTC")) {
-                if (loadLocationFromTZFile(&dalloc.allocator, name, unix_sources[0..])) |tzone| {
+                if (loadLocationFromTZFile(std.heap.direct_allocator, name, unix_sources[0..])) |tzone| {
                     return tzone;
                 } else |err| {}
             }
         } else {
             var etc = [_][]const u8{"/etc/"};
-            if (loadLocationFromTZFile(&dalloc.allocator, "localtime", etc[0..])) |tzone| {
+            if (loadLocationFromTZFile(std.heap.direct_allocator, "localtime", etc[0..])) |tzone| {
                 var zz = tzone;
                 zz.name = "local";
                 return zz;

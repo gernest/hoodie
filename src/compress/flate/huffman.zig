@@ -188,8 +188,3 @@ pub const Huffman = struct {
 fn reverseBits(number: u16, bit_length: u16) u16 {
     return reverseU16(math.shl(u16, number, 16 - bit_length));
 }
-
-test "huffman" {
-    var h = Huffman.generateFixedLiteralEncoding();
-    _ = Huffman.generateFixedOffsetEncoding();
-}
