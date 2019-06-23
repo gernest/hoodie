@@ -1419,6 +1419,7 @@ pub const Duration = struct {
     pub fn init(v: i64) Duration {
         return Duration{ .value = v };
     }
+
     fn fmtFrac(buf: []u8, value: u64, prec: usize) fracRes {
         // Omit trailing zeros up to and including decimal point.
         var w = buf.len;
@@ -1521,6 +1522,16 @@ pub const Duration = struct {
             buf[w] = '-';
         }
         return buf[w..];
+    }
+
+    pub fn format(
+        self: Duration,
+        comptime fmt: []const u8,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void {
+        try output(context, self.string());
     }
 
     /// nanoseconds returns the duration as an integer nanosecond count.
