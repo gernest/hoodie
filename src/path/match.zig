@@ -1,6 +1,47 @@
 const std = @import("std");
 const unicode = std.unicode;
 
+const ScanChunkResult = struct {
+    star: bool,
+    chunk: []const u8,
+    rest: []const u8,
+};
+
+fn scanChunk(pattern_string: []const u8) ScanChunkResult {
+    var pattern = pattern_string;
+    var star = false;
+    while (pattern.len > 0 and pattern[0] == '*') {
+        pattern = pattern[1..];
+        star = true;
+    }
+    var in_range = false;
+    var i = 0;
+    scan: while (i < pattern.len) : (i += 1) {
+        switch (pattern[i]) {
+            '\\' => {
+                if (i + 1 < pattern.len) {
+                    i += 1;
+                }
+            },
+            '[' => {
+                in_range = true;
+            },
+            ']' => {
+                in_range = false;
+            },
+            '*' => {
+                if (in_range) {
+                    break :scan;
+                }
+            },
+        }
+    }
+    return ScanChunkResult{
+        .star = star,
+        .chunk = pattern[0..i],
+        .rest = pattern[i..],
+    };
+}
 const MatchChunkResult = struct {
     rest: []const u8,
     ok: bool,
