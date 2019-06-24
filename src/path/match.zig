@@ -1,6 +1,7 @@
 const std = @import("std");
 const unicode = std.unicode;
 const mem = std.mem;
+const warn = std.debug.warn;
 
 pub const MatchError = error{BadPattern};
 
@@ -8,17 +9,15 @@ pub fn match(pattern_string: []const u8, name_string: []const u8) MatchError!boo
     var pattern = pattern_string;
     var name = name_string;
     PATTERN: while (pattern.len > 0) {
-        var star = false;
-        var chunk: []const u8 = "";
         const s = scanChunk(pattern);
-        star = s.star;
-        chunk = s.chunk;
+        var star = s.star;
+        var chunk = s.chunk;
         pattern = s.rest;
         if (star and chunk.len != 0) {
             return !contains(name, "/");
         }
         const c = try matchChunk(chunk, name);
-        if (c.ok and (c.rest.len == 0 and pattern.len > 0)) {
+        if (c.ok and (c.rest.len == 0 or pattern.len > 0)) {
             name = c.rest;
             continue;
         }
@@ -202,5 +201,5 @@ fn runeLength(rune: u32) !usize {
 }
 
 fn contains(s: []const u8, needle: []const u8) bool {
-    return mem.indexOf(u8, s, needle) != null;
+    return mem.indexOf(u8, s, needle) == null;
 }
