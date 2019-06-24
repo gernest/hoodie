@@ -90,6 +90,9 @@ fn matchChunk(chunks: []const u8, src: []const u8) MatchError!MatchChunkResult {
     var chunk = chunks;
     var s = src;
     while (chunk.len > 0) {
+        if (s.len == 0) {
+            return MatchChunkResult{ .rest = "", .ok = false };
+        }
         switch (chunk[0]) {
             '[' => {
                 const r = unicode.utf8Decode(s) catch |err| {
