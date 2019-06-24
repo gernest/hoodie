@@ -1,12 +1,15 @@
 const std = @import("std");
 const unicode = std.unicode;
+const mem = std.mem;
 
-pub fn match(pattern_string: []const u8, name_string: []const u8) !bool {
+pub const MatchError = error{BadPattern};
+
+pub fn match(pattern_string: []const u8, name_string: []const u8) MatchError!bool {
     var pattern = pattern_string;
     var name = name_string;
     PATTERN: while (pattern.len > 0) {
         var star = false;
-        var chunk = "";
+        var chunk: []const u8 = "";
         const s = scanChunk(pattern);
         star = s.star;
         chunk = s.chunk;
@@ -20,7 +23,7 @@ pub fn match(pattern_string: []const u8, name_string: []const u8) !bool {
             continue;
         }
         if (star) {
-            var i = 0;
+            var i: usize = 0;
             while (i < name.len and name[i] != '/') : (i += 1) {
                 const cc = try matchChunk(chunk, name);
                 if (cc.ok) {
@@ -51,7 +54,7 @@ fn scanChunk(pattern_string: []const u8) ScanChunkResult {
         star = true;
     }
     var in_range = false;
-    var i = 0;
+    var i: usize = 0;
     scan: while (i < pattern.len) : (i += 1) {
         switch (pattern[i]) {
             '\\' => {
@@ -70,6 +73,7 @@ fn scanChunk(pattern_string: []const u8) ScanChunkResult {
                     break :scan;
                 }
             },
+            else => {},
         }
     }
     return ScanChunkResult{
@@ -83,14 +87,18 @@ const MatchChunkResult = struct {
     ok: bool,
 };
 
-fn matchChunk(chunks: []const u8, src: []const u8) !MatchChunkResult {
-    var chunk = chunk;
+fn matchChunk(chunks: []const u8, src: []const u8) MatchError!MatchChunkResult {
+    var chunk = chunks;
     var s = src;
-    while (e.chunk.len > 0) {
-        switch (e.chunk[0]) {
+    while (chunk.len > 0) {
+        switch (chunk[0]) {
             '[' => {
-                const r = try unicode.utf8Decode(s);
-                const n = try runeLength(r);
+                const r = unicode.utf8Decode(s) catch |err| {
+                    return error.BadPattern;
+                };
+                const n = runeLength(r) catch |e| {
+                    return error.BadPattern;
+                };
                 s = s[n..];
                 chunk = chunk[1..];
                 var not_negated = true;
@@ -98,8 +106,8 @@ fn matchChunk(chunks: []const u8, src: []const u8) !MatchChunkResult {
                     not_negated = false;
                     chunk = chunk[1..];
                 }
-                var match = false;
-                var mrange = 0;
+                var matched = false;
+                var mrange: usize = 0;
                 while (true) {
                     if (chunk.len > 0 and chunk[0] == ']' and mrange > 0) {
                         chunk = chunk[1..];
@@ -115,11 +123,11 @@ fn matchChunk(chunks: []const u8, src: []const u8) !MatchChunkResult {
                         chunk = ee.chunk;
                     }
                     if (lo <= r and r <= hi) {
-                        match = true;
+                        matched = true;
                     }
                     mrange += 1;
                 }
-                if (match != not_negated) {
+                if (matched != not_negated) {
                     return MatchChunkResult{ .rest = "", .ok = false };
                 }
             },
@@ -127,8 +135,12 @@ fn matchChunk(chunks: []const u8, src: []const u8) !MatchChunkResult {
                 if (s[0] == '/') {
                     return MatchChunkResult{ .rest = "", .ok = false };
                 }
-                const r = try unicode.utf8Decode(s);
-                const n = try runeLength(r);
+                const r = unicode.utf8Decode(s) catch |err| {
+                    return error.BadPattern;
+                };
+                const n = runeLength(r) catch |e| {
+                    return error.BadPattern;
+                };
                 s = s[n..];
                 chunk = chunk[1..];
             },
@@ -160,19 +172,24 @@ const EscapeResult = struct {
     chunk: []const u8,
 };
 
-fn getEsc(chunk: []const u8) !ExcapeResult {
+fn getEsc(chunk: []const u8) !EscapeResult {
     if (chunk.len == 0 or chunk[0] == '-' or chunk[0] == ']') {
         return error.BadPattern;
     }
-    var e = ExcapeResult{ .rune = 0, .chunk = chunk };
+    var e = EscapeResult{ .rune = 0, .chunk = chunk };
     if (chunk[0] == '\\') {
         e.chunk = chunk[1..];
         if (e.chunk.len == 0) {
             return error.BadPattern;
         }
     }
-    const r = try unicode.utf8Decode(chunk);
-    e.chunk = e.chunk[runeLength(r)..];
+    const r = unicode.utf8Decode(e.chunk) catch |err| {
+        return error.BadPattern;
+    };
+    const n = runeLength(r) catch |err| {
+        return error.BadPattern;
+    };
+    e.chunk = e.chunk[n..];
     if (e.chunk.len == 0) {
         return error.BadPattern;
     }
@@ -181,7 +198,9 @@ fn getEsc(chunk: []const u8) !ExcapeResult {
 }
 
 fn runeLength(rune: u32) !usize {
-    return @intCast(usize, try unicodeutf8CodepointSequenceLength(rune));
+    return @intCast(usize, try unicode.utf8CodepointSequenceLength(rune));
 }
 
-fn contains(s: []const u8, needle: []const u8) bool {}
+fn contains(s: []const u8, needle: []const u8) bool {
+    return mem.indexOf(u8, s, needle) != null;
+}
