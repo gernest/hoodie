@@ -95,7 +95,7 @@ fn matchChunk(chunks: []const u8, src: []const u8) MatchError!MatchChunkResult {
         }
         switch (chunk[0]) {
             '[' => {
-                const r = unicode.utf8Decode(s) catch |err| {
+                const r = decodeRune(s) catch |err| {
                     return error.BadPattern;
                 };
                 const n = runeLength(r) catch |e| {
@@ -137,7 +137,7 @@ fn matchChunk(chunks: []const u8, src: []const u8) MatchError!MatchChunkResult {
                 if (s[0] == '/') {
                     return MatchChunkResult{ .rest = "", .ok = false };
                 }
-                const r = unicode.utf8Decode(s) catch |err| {
+                const r = decodeRune(s) catch |err| {
                     return error.BadPattern;
                 };
                 const n = runeLength(r) catch |e| {
@@ -185,7 +185,7 @@ fn getEsc(chunk: []const u8) !EscapeResult {
             return error.BadPattern;
         }
     }
-    const r = unicode.utf8Decode(e.chunk) catch |err| {
+    const r = decodeRune(e.chunk) catch |err| {
         return error.BadPattern;
     };
     const n = runeLength(r) catch |err| {
@@ -205,4 +205,9 @@ fn runeLength(rune: u32) !usize {
 
 fn contains(s: []const u8, needle: []const u8) bool {
     return mem.indexOf(u8, s, needle) == null;
+}
+
+fn decodeRune(s: []const u8) !u32 {
+    const n = try unicode.utf8ByteSequenceLength(s[0]);
+    return unicode.utf8Decode(s[0..n]);
 }
