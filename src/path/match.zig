@@ -1,6 +1,42 @@
 const std = @import("std");
 const unicode = std.unicode;
 
+pub fn match(pattern_string: []const u8, name_string: []const u8) !bool {
+    var pattern = pattern_string;
+    var name = name_string;
+    PATTERN: while (pattern.len > 0) {
+        var star = false;
+        var chunk = "";
+        const s = scanChunk(pattern);
+        star = s.star;
+        chunk = s.chunk;
+        pattern = s.rest;
+        if (star and chunk.len != 0) {
+            return !contains(name, "/");
+        }
+        const c = try matchChunk(chunk, name);
+        if (c.ok and (c.rest.len == 0 and pattern.len > 0)) {
+            name = c.rest;
+            continue;
+        }
+        if (star) {
+            var i = 0;
+            while (i < name.len and name[i] != '/') : (i += 1) {
+                const cc = try matchChunk(chunk, name);
+                if (cc.ok) {
+                    if (pattern.len == 0 and cc.rest.len > 0) {
+                        continue;
+                    }
+                    name = cc.rest;
+                    continue :PATTERN;
+                }
+            }
+        }
+        return false;
+    }
+    return name.len == 0;
+}
+
 const ScanChunkResult = struct {
     star: bool,
     chunk: []const u8,
@@ -147,3 +183,5 @@ fn getEsc(chunk: []const u8) !ExcapeResult {
 fn runeLength(rune: u32) !usize {
     return @intCast(usize, try unicodeutf8CodepointSequenceLength(rune));
 }
+
+fn contains(s: []const u8, needle: []const u8) bool {}
