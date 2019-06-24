@@ -13,7 +13,7 @@ pub fn match(pattern_string: []const u8, name_string: []const u8) MatchError!boo
         var star = s.star;
         var chunk = s.chunk;
         pattern = s.rest;
-        if (star and chunk.len != 0) {
+        if (star and chunk.len == 0) {
             return !contains(name, "/");
         }
         const c = try matchChunk(chunk, name);
@@ -24,7 +24,7 @@ pub fn match(pattern_string: []const u8, name_string: []const u8) MatchError!boo
         if (star) {
             var i: usize = 0;
             while (i < name.len and name[i] != '/') : (i += 1) {
-                const cc = try matchChunk(chunk, name);
+                const cc = try matchChunk(chunk, name[i + 1 ..]);
                 if (cc.ok) {
                     if (pattern.len == 0 and cc.rest.len > 0) {
                         continue;
