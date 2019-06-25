@@ -162,6 +162,9 @@ fn accept(e: Entry) bool {
     switch (e.kind) {
         .File => {
             if (mem.endsWith(u8, e.name, ".zig")) {
+                if (mem.endsWith(u8, e.name, "_test.zig")) {
+                    return false;
+                }
                 return true;
             }
         },
