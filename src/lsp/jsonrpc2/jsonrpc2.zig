@@ -1,4 +1,4 @@
-const Dump = @import("../json/json.zig").Dump;
+const Dump = @import("json").Dump;
 const std = @import("std");
 
 const Allocator = std.mem.Allocator;
