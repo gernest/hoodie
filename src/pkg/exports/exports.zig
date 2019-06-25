@@ -91,24 +91,6 @@ pub const Export = struct {
 
     fn walkTree(self: *Export, root: []const u8, full_path: []const u8) anyerror!void {
         var a = &self.arena.allocator;
-        const export_file_path = try path.join(self.allocator, [_][]const u8{
-            full_path,
-            export_file,
-        });
-        errdefer self.allocator.free(export_file_path);
-        if (fileExists(export_file_path)) {
-            try self.pkg(
-                root,
-                try path.relative(a, root, full_path),
-                try path.relative(a, self.base, export_file_path),
-            );
-            self.allocator.free(export_file_path);
-            return;
-        } else {
-            // we immediately free this, since we will recurse the momory will
-            // pile up for no reason
-            self.allocator.free(export_file_path);
-        }
 
         // If we have a [basename].zig file then we use it as exported for the
         // given package
@@ -118,30 +100,32 @@ pub const Export = struct {
         var ext = try self.allocator.alloc(u8, base.len + 4);
         mem.copy(u8, ext, base);
         mem.copy(u8, ext[base.len..], ".zig");
-        const pkg_export_file = try path.join(self.allocator, [_][]const u8{
-            full_path,
-            ext,
-        });
-
-        errdefer self.allocator.free(pkg_export_file);
         errdefer self.allocator.free(ext);
+        defer self.allocator.free(ext);
 
-        if (fileExists(pkg_export_file)) {
-            try self.pkg(
-                root,
-                try path.relative(a, root, full_path),
-                try path.relative(a, self.base, pkg_export_file),
-            );
-            self.allocator.free(pkg_export_file);
-            errdefer self.allocator.free(ext);
-            return;
-        } else {
-            // we immediately free this, since we will recurse the momory will
-            // pile up for no reason
-            self.allocator.free(pkg_export_file);
-            errdefer self.allocator.free(ext);
+        const defaults = [_][]const u8{
+            "exports.zig",
+            "index.zig",
+            ext,
+        };
+        for (defaults) |default_file| {
+            const default_file_path = try path.join(self.allocator, [_][]const u8{
+                full_path,
+                default_file,
+            });
+            errdefer self.allocator.free(default_file_path);
+            if (fileExists(default_file_path)) {
+                try self.pkg(
+                    root,
+                    try path.relative(a, root, full_path),
+                    try path.relative(a, self.base, default_file_path),
+                );
+                self.allocator.free(default_file_path);
+                return;
+            } else {
+                self.allocator.free(default_file_path);
+            }
         }
-
         var directory = try Dir.open(self.allocator, full_path);
         defer directory.close();
         var full_entry_buf = &try std.Buffer.init(self.allocator, "");
