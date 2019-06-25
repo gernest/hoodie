@@ -1,6 +1,6 @@
 const builtin = @import("builtin");
 const std = @import("std");
-const app = @import("cmd/cmd.zig").app;
+const app = @import("cmd/commands.zig").app;
 const Args = cli.Args;
 const Cli = cli.Cli;
 const Command = cli.Command;

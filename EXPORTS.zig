@@ -7,7 +7,15 @@ pub const Pkg = struct {
 };
 pub const packages = [_]Pkg{
     Pkg{ .name = "all_test", .path = "src/all_test.zig" },
-    Pkg{ .name = "cmd", .path = "src/cmd/cmd.zig" },
+    Pkg{ .name = "cmd/commands", .path = "src/cmd/commands.zig" },
+    Pkg{ .name = "cmd/doc", .path = "src/cmd/doc.zig" },
+    Pkg{ .name = "cmd/docs/html", .path = "src/cmd/docs/html.zig" },
+    Pkg{ .name = "cmd/fmt", .path = "src/cmd/fmt.zig" },
+    Pkg{ .name = "cmd/imports", .path = "src/cmd/imports.zig" },
+    Pkg{ .name = "cmd/lsp", .path = "src/cmd/lsp.zig" },
+    Pkg{ .name = "cmd/outline", .path = "src/cmd/outline.zig" },
+    Pkg{ .name = "cmd/pk", .path = "src/cmd/pkg.zig" },
+    Pkg{ .name = "cmd/pkg/exports", .path = "src/cmd/pkg/exports.zig" },
     Pkg{ .name = "compress/all_test", .path = "src/compress/all_test.zig" },
     Pkg{ .name = "compress/flate/bits", .path = "src/compress/flate/bits.zig" },
     Pkg{ .name = "compress/flate/flate_test", .path = "src/compress/flate/flate_test.zig" },
