@@ -1,7 +1,7 @@
 const jsonrpc2 = @import("../lsp/jsonrpc2/jsonrpc2.zig");
 const std = @import("std");
 
-const cli = @import("../flags/cli.zig");
+const cli = @import("flags");
 const Command = cli.Command;
 const Flag = cli.Flag;
 

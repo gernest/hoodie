@@ -6,7 +6,7 @@ const io = std.io;
 const mem = std.mem;
 const os = std.os;
 
-const cli = @import("../flags/cli.zig");
+const cli = @import("flags");
 const Command = cli.Command;
 const Context = cli.Context;
 const Flag = cli.Flag;

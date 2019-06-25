@@ -1,5 +1,5 @@
 const std = @import("std");
-const flags = @import("../flags/cli.zig");
+const flags = @import("flags");
 
 const exports = @import("pkg/exports.zig");
 const Command = flags.Command;

@@ -4,7 +4,7 @@ const outline = @import("outline.zig");
 const lsp = @import("lsp.zig");
 const pkg = @import("pkg.zig");
 
-const cli = @import("../flags/cli.zig");
+const cli = @import("flags");
 const Args = cli.Args;
 const Cli = cli.Cli;
 const Command = cli.Command;

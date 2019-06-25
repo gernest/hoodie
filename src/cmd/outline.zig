@@ -2,7 +2,7 @@ const Dump = @import("../json/json.zig").Dump;
 const outline = @import("../outline/outline.zig");
 const std = @import("std");
 
-const cli = @import("../flags/cli.zig");
+const cli = @import("flags");
 const Command = cli.Command;
 const Context = cli.Context;
 const Flag = cli.Flag;
