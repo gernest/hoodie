@@ -68,7 +68,7 @@ fn scanChunk(pattern_string: []const u8) ScanChunkResult {
                 in_range = false;
             },
             '*' => {
-                if (in_range) {
+                if (!in_range) {
                     break :scan;
                 }
             },
