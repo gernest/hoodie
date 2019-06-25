@@ -1,4 +1,4 @@
-const cli = @import("cli.zig");
+const cli = @import("flags.zig");
 const std = @import("std");
 
 const Args = cli.Args;
