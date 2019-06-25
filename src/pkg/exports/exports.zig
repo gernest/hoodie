@@ -17,7 +17,6 @@ pub const Export = struct {
     list: List,
 
     pub const List = std.ArrayList(*Pkg);
-    pub const export_file = "exports.zig";
 
     pub const Pkg = struct {
         name: []const u8,
@@ -104,7 +103,6 @@ pub const Export = struct {
         defer self.allocator.free(ext);
 
         const defaults = [_][]const u8{
-            "exports.zig",
             "index.zig",
             ext,
         };
