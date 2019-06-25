@@ -204,7 +204,7 @@ fn runeLength(rune: u32) !usize {
 }
 
 fn contains(s: []const u8, needle: []const u8) bool {
-    return mem.indexOf(u8, s, needle) == null;
+    return mem.indexOf(u8, s, needle) != null;
 }
 
 fn decodeRune(s: []const u8) !u32 {
