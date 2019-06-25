@@ -1,4 +1,4 @@
-const StringReplacer = @import("../strings/strings.zig").StringReplacer;
+const StringReplacer = @import("strings").StringReplacer;
 const builtin = @import("builtin");
 const std = @import("std");
 
