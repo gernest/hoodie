@@ -43,6 +43,7 @@ pub const Object = struct {
     pub fn format(
         self: *Object,
         comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
         context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,
@@ -95,6 +96,7 @@ pub const Type = struct {
     pub fn format(
         self: *const Type,
         comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
         context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,

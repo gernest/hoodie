@@ -12,6 +12,7 @@ pub const Position = struct {
     pub fn format(
         self: Position,
         comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
         context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,

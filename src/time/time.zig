@@ -865,6 +865,7 @@ pub const Time = struct {
     pub fn format(
         self: Time,
         comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
         ctx: var,
         comptime Errors: type,
         output: fn (@typeOf(ctx), []const u8) Errors!void,
@@ -1550,6 +1551,7 @@ pub const Duration = struct {
     pub fn format(
         self: Duration,
         comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
         context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,
@@ -1829,6 +1831,7 @@ pub const Month = enum(usize) {
     pub fn format(
         self: Month,
         comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
         context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,
@@ -1972,6 +1975,7 @@ pub const Weekday = enum(usize) {
     pub fn format(
         self: Weekday,
         comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
         context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,

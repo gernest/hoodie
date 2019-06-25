@@ -23,6 +23,7 @@ pub const Cli = struct {
     pub fn format(
         self: Cli,
         comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
         context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,
@@ -215,6 +216,7 @@ pub const Command = struct {
     pub fn format(
         self: Command,
         comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
         context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,
@@ -252,6 +254,7 @@ pub const Flag = struct {
     pub fn format(
         self: Flag,
         comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
         context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,
@@ -314,6 +317,7 @@ pub const FlagSet = struct {
     pub fn format(
         self: FlagSet,
         comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
         context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,

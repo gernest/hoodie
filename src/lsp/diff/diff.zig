@@ -360,6 +360,7 @@ pub const Unified = struct {
     pub fn format(
         self: Unified,
         comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
         context: var,
         comptime Errors: type,
         output: fn (@typeOf(context), []const u8) Errors!void,

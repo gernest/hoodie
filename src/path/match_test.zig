@@ -83,6 +83,12 @@ const sample = [_]MatchTest{
 
 test "match" {
     for (sample) |ts, i| {
+        // if (i == 4) {
+        //     break;
+        // }
+        // if (i != 14) {
+        //     continue;
+        // }
         if (ts.err) |err| {} else {
             const ok = try match_path.match(ts.pattern, ts.s);
             if (ok != ts.match) {

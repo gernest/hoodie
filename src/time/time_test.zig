@@ -261,9 +261,9 @@ test "TestFormatShortYear" {
         const day: usize = 1;
         const month: usize = 1;
         if (y < 0) {
-            try stream.print("-{d4}.{d2}.{d2}", math.absCast(y), month, day);
+            try stream.print("-{d:4}.{d:2}.{d:2}", math.absCast(y), month, day);
         } else {
-            try stream.print("{d4}.{d2}.{d2}", math.absCast(y), month, day);
+            try stream.print("{d:4}.{d:2}.{d:2}", math.absCast(y), month, day);
         }
         if (!buf.eql(want.toSlice())) {
             std.debug.warn("case: {} expected {} got {}\n", y, want.toSlice(), buf.toSlice());
