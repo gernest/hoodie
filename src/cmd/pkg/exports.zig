@@ -2,7 +2,7 @@ const std = @import("std");
 const flags = @import("flags");
 const path = std.fs.path;
 const fmt = @import("../fmt.zig");
-const exports = @import("../../pkg/exports/exports.zig");
+const exports = @import("pkg/exports");
 
 const Export = exports.Export;
 const Pkg = Export.Pkg;
