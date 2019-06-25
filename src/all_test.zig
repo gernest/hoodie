@@ -10,4 +10,5 @@ test "hoodie" {
     _ = @import("markdown/markdown_test.zig");
     _ = @import("image/all_test.zig");
     _ = @import("compress/all_test.zig");
+    _ = @import("path/all_test.zig");
 }
