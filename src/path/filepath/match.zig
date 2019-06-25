@@ -3,6 +3,7 @@ const unicode = std.unicode;
 const mem = std.mem;
 const warn = std.debug.warn;
 const builtin = @import("builtin");
+const path = std.fs.path;
 
 const is_windows = builtin.Os == .windows;
 
@@ -17,7 +18,7 @@ pub fn match(pattern_string: []const u8, name_string: []const u8) MatchError!boo
         var chunk = s.chunk;
         pattern = s.rest;
         if (star and chunk.len == 0) {
-            return !contains(name, "/");
+            return !contains(name, path.sep_str[0..]);
         }
         const c = try matchChunk(chunk, name);
         if (c.ok and (c.rest.len == 0 or pattern.len > 0)) {
@@ -26,7 +27,7 @@ pub fn match(pattern_string: []const u8, name_string: []const u8) MatchError!boo
         }
         if (star) {
             var i: usize = 0;
-            while (i < name.len and name[i] != '/') : (i += 1) {
+            while (i < name.len and name[i] != path.sep) : (i += 1) {
                 const cc = try matchChunk(chunk, name[i + 1 ..]);
                 if (cc.ok) {
                     if (pattern.len == 0 and cc.rest.len > 0) {
@@ -60,8 +61,10 @@ fn scanChunk(pattern_string: []const u8) ScanChunkResult {
     scan: while (i < pattern.len) : (i += 1) {
         switch (pattern[i]) {
             '\\' => {
-                if (i + 1 < pattern.len) {
-                    i += 1;
+                if (!is_windows) {
+                    if (i + 1 < pattern.len) {
+                        i += 1;
+                    }
                 }
             },
             '[' => {
@@ -106,11 +109,14 @@ fn matchChunk(chunks: []const u8, src: []const u8) MatchError!MatchChunkResult {
                 };
                 s = s[n..];
                 chunk = chunk[1..];
-                var not_negated = true;
-                if (chunk.len > 0 and chunk[0] == '^') {
-                    not_negated = false;
+                if (chunk.len == 0) {
+                    return error.BadPattern;
+                }
+                var negated = chunk[0] == '^';
+                if (negated) {
                     chunk = chunk[1..];
                 }
+
                 var matched = false;
                 var mrange: usize = 0;
                 while (true) {
@@ -132,12 +138,12 @@ fn matchChunk(chunks: []const u8, src: []const u8) MatchError!MatchChunkResult {
                     }
                     mrange += 1;
                 }
-                if (matched != not_negated) {
+                if (matched == negated) {
                     return MatchChunkResult{ .rest = "", .ok = false };
                 }
             },
             '?' => {
-                if (s[0] == '/') {
+                if (s[0] == path.sep) {
                     return MatchChunkResult{ .rest = "", .ok = false };
                 }
                 const r = decodeRune(s) catch |err| {
@@ -150,10 +156,13 @@ fn matchChunk(chunks: []const u8, src: []const u8) MatchError!MatchChunkResult {
                 chunk = chunk[1..];
             },
             '\\' => {
-                chunk = chunk[1..];
-                if (chunk.len == 0) {
-                    return error.BadPattern;
+                if (!is_windows) {
+                    chunk = chunk[1..];
+                    if (chunk.len == 0) {
+                        return error.BadPattern;
+                    }
                 }
+
                 if (chunk[0] != s[0]) {
                     return MatchChunkResult{ .rest = "", .ok = false };
                 }
