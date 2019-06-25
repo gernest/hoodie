@@ -18,11 +18,11 @@ pub const Dump = struct {
         return Dump{
             .escape = try StringReplacer.init(
                 a,
-                [_][]const u8{                    
-                        \\"
-                    ,                    
-                        \\\"
-                                    },
+                [_][]const u8{
+                    \\"
+                ,
+                    \\\"
+                },
             ),
             .buf = try Buffer.init(a, ""),
         };
@@ -45,7 +45,7 @@ pub const Dump = struct {
                 try stream.print("{}", inner);
             },
             Value.Float => |inner| {
-                try stream.print("{.5}", inner);
+                try stream.print("{d:.5}", inner);
             },
             Value.String => |inner| {
                 const r = &this.escape;
