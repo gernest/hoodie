@@ -83,17 +83,11 @@ const sample = [_]MatchTest{
 
 test "match" {
     for (sample) |ts, i| {
-        // if (i == 4) {
-        //     break;
-        // }
-        // if (i != 14) {
-        //     continue;
-        // }
-        if (ts.err) |err| {} else {
+        if (ts.err) |err| {
+            testing.expectError(err, match_path.match(ts.pattern, ts.s));
+        } else {
             const ok = try match_path.match(ts.pattern, ts.s);
-            if (ok != ts.match) {
-                warn("{} expected {} got {}\n", i, ts.match, ok);
-            }
+            testing.expectEqual(ok, ts.match);
         }
     }
 }
