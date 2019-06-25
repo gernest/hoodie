@@ -14,7 +14,7 @@ pub const packages = [_]Pkg{
     Pkg{ .name = "cmd/imports", .path = "src/cmd/imports.zig" },
     Pkg{ .name = "cmd/lsp", .path = "src/cmd/lsp.zig" },
     Pkg{ .name = "cmd/outline", .path = "src/cmd/outline.zig" },
-    Pkg{ .name = "cmd/pk", .path = "src/cmd/pkg.zig" },
+    Pkg{ .name = "cmd/package", .path = "src/cmd/package.zig" },
     Pkg{ .name = "cmd/pkg/exports", .path = "src/cmd/pkg/exports.zig" },
     Pkg{ .name = "compress/all_test", .path = "src/compress/all_test.zig" },
     Pkg{ .name = "compress/flate/bits", .path = "src/compress/flate/bits.zig" },

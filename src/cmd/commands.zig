@@ -2,7 +2,7 @@ const std = @import("std");
 const format = @import("fmt.zig");
 const outline = @import("outline.zig");
 const lsp = @import("lsp.zig");
-const pkg = @import("pkg.zig");
+const pkg = @import("package.zig");
 
 const cli = @import("flags");
 const Args = cli.Args;
