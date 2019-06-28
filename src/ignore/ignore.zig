@@ -7,12 +7,14 @@ const file_info = @import("path/file_info");
 
 const mem = std.mem;
 const File = std.fs.File;
+const path = std.fs.path;
 
 pub const Rule = struct {
     patterns: std.ArrayList(Pattern),
 
     const Pattern = struct {
         raw: []const u8,
+        rule: []const u8,
         match: fn ([]const u8, []const u8, File) bool,
         must_dir: bool,
         negate: bool,
@@ -20,6 +22,7 @@ pub const Rule = struct {
         fn init(raw: []const u8) Pattern {
             return Pattern{
                 .raw = raw,
+                .rule = "",
                 .match = simpleMatch,
                 .must_dir = false,
                 .negate = false,
@@ -35,20 +38,20 @@ pub const Rule = struct {
     }
 
     fn matchRoot(rule: []const u8, path_name: []const u8, file: File) bool {
-        const ok = macth.match(rule, path_name) catch |err| {
-            return false;
-        };
-        return ok;
-    }
-    fn matchStructure(rule: []const u8, path_name: []const u8, file: File) bool {
-        const ok = macth.match(rule, path_name) catch |err| {
+        const x = if (rule.len > 0 and rule[0] == '/') rule[1..] else rule;
+        const ok = macth.match(x, path_name) catch |err| {
             return false;
         };
         return ok;
     }
 
+    fn matchStructure(rule: []const u8, path_name: []const u8, file: File) bool {
+        return simpleMatch(rule, path_name, file);
+    }
+
     fn matchFallback(rule: []const u8, path_name: []const u8, file: File) bool {
-        const ok = macth.match(rule, path_name) catch |err| {
+        const base = path.basename(path_name);
+        const ok = macth.match(x, base) catch |err| {
             return false;
         };
         return ok;
@@ -88,6 +91,7 @@ pub const Rule = struct {
         } else {
             pattern.match = matchFallback;
         }
+        pattern.rule = rule;
         try self.patterns.append(pattern);
     }
 };
