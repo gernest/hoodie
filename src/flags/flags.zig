@@ -137,7 +137,7 @@ pub const Cli = struct {
                         var match = false;
                         for (cmd.sub_commands.?) |sub| {
                             if (mem.eql(u8, next_arg, sub.name)) {
-                                ctx.command = sub;
+                                ctx.command = &sub;
                                 match = true;
                             }
                         }
@@ -156,7 +156,7 @@ pub const Cli = struct {
                         var match = false;
                         for (cmds) |cmd| {
                             if (mem.eql(u8, cmd.name, next_arg)) {
-                                ctx.command = cmd;
+                                ctx.command = &cmd;
                                 match = true;
                             }
                         }
@@ -340,7 +340,7 @@ pub const Context = struct {
     allocator: *mem.Allocator,
     cli: *const Cli,
     args: *const Args,
-    command: ?Command,
+    command: ?*const Command,
     mode: Mode,
     args_position: usize,
     global_flags: FlagSet,
