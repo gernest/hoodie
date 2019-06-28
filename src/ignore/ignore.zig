@@ -3,10 +3,9 @@
 
 const std = @import("std");
 const match = @import("path/filepath/match");
-const file_info = @import("path/file_info");
+const FileInfo = @import("path/file_info").FileInfo;
 
 const mem = std.mem;
-const File = std.fs.File;
 const path = std.fs.path;
 
 pub const Rule = struct {
@@ -15,7 +14,7 @@ pub const Rule = struct {
     const Pattern = struct {
         raw: []const u8,
         rule: []const u8,
-        match: fn ([]const u8, []const u8, File) bool,
+        match: fn ([]const u8, []const u8, FileInfo) bool,
         must_dir: bool,
         negate: bool,
 
@@ -30,14 +29,14 @@ pub const Rule = struct {
         }
     };
 
-    fn simpleMatch(rule: []const u8, path_name: []const u8, file: File) bool {
+    fn simpleMatch(rule: []const u8, path_name: []const u8, fi: File) bool {
         const ok = macth.match(rule, path_name) catch |err| {
             return false;
         };
         return ok;
     }
 
-    fn matchRoot(rule: []const u8, path_name: []const u8, file: File) bool {
+    fn matchRoot(rule: []const u8, path_name: []const u8, fi: FileInfo) bool {
         const x = if (rule.len > 0 and rule[0] == '/') rule[1..] else rule;
         const ok = macth.match(x, path_name) catch |err| {
             return false;
@@ -45,11 +44,11 @@ pub const Rule = struct {
         return ok;
     }
 
-    fn matchStructure(rule: []const u8, path_name: []const u8, file: File) bool {
+    fn matchStructure(rule: []const u8, path_name: []const u8, fi: FileInfo) bool {
         return simpleMatch(rule, path_name, file);
     }
 
-    fn matchFallback(rule: []const u8, path_name: []const u8, file: File) bool {
+    fn matchFallback(rule: []const u8, path_name: []const u8, fi: FileInfo) bool {
         const base = path.basename(path_name);
         const ok = macth.match(x, base) catch |err| {
             return false;
@@ -93,5 +92,36 @@ pub const Rule = struct {
         }
         pattern.rule = rule;
         try self.patterns.append(pattern);
+    }
+
+    fn ignore(self: *Rule, path_name: []const u8, fi: FileInfo) bool {
+        if (path_name.len == 0) {
+            return false;
+        }
+        if (mem.eql(u8, path_name, ".") or mem.eql(u8, path_name, "./")) {
+            return false;
+        }
+        for (self.patterns.toSlice()) |pattern| {
+            if (pattern.match) |match| {
+                if (p.negate) {
+                    if (pattern.must_dir and !fi.is_dir) {
+                        return true;
+                    }
+                    if (!match(p.rule, path_name, fi)) {
+                        return true;
+                    }
+                    continue;
+                }
+                if (pattern.must_dir and !fi.is_dir) {
+                    continue;
+                }
+                if (match(pattern.rule, path_name, fi)) {
+                    return true;
+                }
+            } else {
+                return false;
+            }
+        }
+        return false;
     }
 };

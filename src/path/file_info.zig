@@ -3,6 +3,27 @@ const builtin = @import("builtin");
 const File = std.fs.File;
 const os = std.os;
 
+pub const FileInfo = struct {
+    is_dir: bool,
+    mode: File.mode,
+};
+
+pub fn get(file: File) !FileInfo {
+    const stat = try os.fstat(file);
+    return FileInfo{
+        .mode = try file.mode(),
+        .is_dir = switch (builtin.os) {
+            .macosx => {
+                stat.mode & 0o170000 == 0o040000;
+            },
+            .linux => {
+                return os.S_ISDIR(stat.mode);
+            },
+            else => unreachable,
+        },
+    };
+}
+
 /// returns true if the given file is a directory.
 pub fn isDir(file: File) bool {
     switch (builtin.os) {
