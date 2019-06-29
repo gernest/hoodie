@@ -147,3 +147,36 @@ pub const Regexp = struct {
         return mem.eql(u8, x.name.?, y.name.?);
     }
 };
+
+const Prog = struct {
+    Inst: ArrayList(Inst),
+    start: usize,
+    num_cap: usize,
+
+    pub const EMPTY_BEGIN_LINE: u8 = 1;
+    pub const EMPTY_END_LINE: u8 = 2;
+    pub const EMPTY_BEGIN_TEXT: u8 = 4;
+    pub const EMPTY_END_TEXT: u8 = 8;
+    pub const EMPTY_WORD_BOUNDARY: u8 = 16;
+    pub const EMPTY_NO_WORD_BOUNDARY: u8 = 32;
+
+    const Inst = struct {
+        op: Op,
+        out: u32,
+        arg: u32,
+        rune: ?ArrayList(i32),
+        const Op = enum {
+            Alt,
+            AltMatch,
+            Capture,
+            EmptyWidth,
+            Match,
+            Fail,
+            Nop,
+            Rune,
+            Rune1,
+            RuneAny,
+            RuneAnyNotNL,
+        };
+    };
+};
