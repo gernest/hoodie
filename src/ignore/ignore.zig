@@ -21,7 +21,7 @@ pub const Rule = struct {
     const Pattern = struct {
         raw: []const u8,
         rule: []const u8,
-        match: fn ([]const u8, []const u8, FileInfo) bool,
+        match: ?fn ([]const u8, []const u8, FileInfo) bool,
         must_dir: bool,
         negate: bool,
 
@@ -115,12 +115,12 @@ pub const Rule = struct {
             return false;
         }
         for (self.patterns.toSlice()) |pattern| {
-            if (pattern.match) |match| {
-                if (p.negate) {
+            if (pattern.match) |match_fn| {
+                if (pattern.negate) {
                     if (pattern.must_dir and !fi.is_dir) {
                         return true;
                     }
-                    if (!match(p.rule, path_name, fi)) {
+                    if (!match_fn(pattern.rule, path_name, fi)) {
                         return true;
                     }
                     continue;
@@ -128,7 +128,7 @@ pub const Rule = struct {
                 if (pattern.must_dir and !fi.is_dir) {
                     continue;
                 }
-                if (match(pattern.rule, path_name, fi)) {
+                if (match_fn(pattern.rule, path_name, fi)) {
                     return true;
                 }
             } else {

@@ -5,13 +5,11 @@ const os = std.os;
 
 pub const FileInfo = struct {
     is_dir: bool,
-    mode: File.Mode,
 };
 
 pub fn get(file: File) !FileInfo {
     const stat = try os.fstat(file);
     return FileInfo{
-        .mode = try file.mode(),
         .is_dir = switch (builtin.os) {
             .macosx => {
                 stat.mode & 0o170000 == 0o040000;
