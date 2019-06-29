@@ -11,4 +11,5 @@ test "hoodie" {
     _ = @import("image/all_test.zig");
     _ = @import("compress/all_test.zig");
     _ = @import("path/all_test.zig");
+    _ = @import("ignore/ignore_test.zig");
 }

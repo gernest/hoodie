@@ -5,7 +5,7 @@ const os = std.os;
 
 pub const FileInfo = struct {
     is_dir: bool,
-    mode: File.mode,
+    mode: File.Mode,
 };
 
 pub fn get(file: File) !FileInfo {

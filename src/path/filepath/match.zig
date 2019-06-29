@@ -4,8 +4,7 @@ const mem = std.mem;
 const warn = std.debug.warn;
 const builtin = @import("builtin");
 const path = std.fs.path;
-
-const is_windows = builtin.Os == .windows;
+const is_windows = builtin.os == .windows;
 
 pub const MatchError = error{BadPattern};
 
