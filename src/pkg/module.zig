@@ -1,4 +1,4 @@
-const semver = @import("semver");
+const semver = @import("pkg/semver");
 const unicode = @import("unicode");
 
 const utf8 = unicode.utf8;
