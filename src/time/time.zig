@@ -1116,8 +1116,92 @@ pub const Time = struct {
         }
     }
 
-    pub fn parse(layout: []const u8, value: []const u8, default_location: *Location, local: *Location) !Time {
-        return error.TODO;
+    fn parseInternal(layout: []const u8, value: []const u8, default_location: *Location, local: *Location) !Time {
+        var alayout = layout;
+        var avalue = value;
+        var am_set = false;
+        var pm_set = false;
+
+        var year: isize = 0;
+        var month: isize = -1;
+        var day: isize = -1;
+        var yday: isize = -1;
+        var hour: isize = 0;
+        var min: isize = 0;
+        var sec: isize = 0;
+        var nsec: isize = 0;
+        var z: ?*Location = null;
+        var zone_offset: isize = -1;
+        var zone_name = "";
+
+        var lay = layout;
+        var val = value;
+        while (true) {
+            const ctx = nextStdChunk(lay);
+            const std_str = lay[ctx.prefix.len..(lay.len - ctx.suffix.len)];
+            val = try skip(val, ctx.prefix);
+
+            if (ctx.chunk == .none) {
+                if (val.len != 0) {
+                    return error.ExtraText;
+                }
+            }
+            lay = ctx.suffix;
+            switch (ctx.chunk) {
+                .stdYear => {
+                    if (val.len < 2) {
+                        return error.BadValue;
+                    }
+                    const p = val[0..2];
+                    val = val[2..];
+                    var has_err = false;
+                    year = try fmt.parseInt(isize, p, 10);
+                    if (year >= 69) {
+                        // Unix time starts Dec 31 1969 in some time zones
+                        year += 1900;
+                    } else {
+                        year += 2000;
+                    }
+                },
+                .stdLongYear => {
+                    if (val.len < 4 or !isDigit(val, 0)) {
+                        return error.BadValue;
+                    }
+                    const p = val[0..4];
+                    val = val[4..];
+                    year = try fmt.parseInt(isize, p, 10);
+                },
+            }
+        }
+    }
+
+    /// skip removes the given prefix from value,
+    /// treating runs of space characters as equivalent.
+    fn skip(value: []const u8, prefix: []const u8) ![]const u8 {
+        var v = value;
+        var p = prefix;
+        while (p.len > 0) {
+            if (p[0] == ' ') {
+                if (v.len > 0 and v[0] != ' ') {
+                    return error.BadValue;
+                }
+                p = cutSpace(p);
+                v = cutSpace(v);
+                continue;
+            }
+            if (v.len == 0 or v[0] != p[0]) {
+                return error.BadValue;
+            }
+            p = p[1..];
+            v = v[1..];
+        }
+        return v;
+    }
+
+    fn cutSpace(str: []const u8) []const u8 {
+        var s = str;
+        while (s.len > 0 and s[0] == ' ') : (s = s[1..]) {}
+        return s;
     }
 
     /// add adds returns a new Time with duration added to self.
