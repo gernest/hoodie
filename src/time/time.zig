@@ -960,53 +960,53 @@ pub const Time = struct {
             }
             lay = ctx.suffix;
             switch (ctx.chunk) {
-                chunk.none => return,
-                chunk.stdYear => {
+                .none => return,
+                .stdYear => {
                     var y = ddate.year;
                     if (y < 0) {
                         y = -y;
                     }
                     try appendInt(stream, @mod(y, 100), 2);
                 },
-                chunk.stdLongYear => {
+                .stdLongYear => {
                     try appendInt(stream, ddate.year, 4);
                 },
-                chunk.stdMonth => {
+                .stdMonth => {
                     try stream.print("{}", ddate.month.string()[0..3]);
                 },
-                chunk.stdLongMonth => {
+                .stdLongMonth => {
                     try stream.print("{}", ddate.month.string());
                 },
-                chunk.stdNumMonth => {
+                .stdNumMonth => {
                     try appendInt(stream, @intCast(isize, @enumToInt(ddate.month)), 0);
                 },
-                chunk.stdZeroMonth => {
+                .stdZeroMonth => {
                     try appendInt(stream, @intCast(isize, @enumToInt(ddate.month)), 2);
                 },
-                chunk.stdWeekDay => {
+                .stdWeekDay => {
                     const wk = self.weekday();
                     try stream.print("{}", wk.string()[0..3]);
                 },
-                chunk.stdLongWeekDay => {
+                .stdLongWeekDay => {
                     const wk = self.weekday();
                     try stream.print("{}", wk.string());
                 },
-                chunk.stdDay => {
+                .stdDay => {
                     try appendInt(stream, ddate.day, 0);
                 },
-                chunk.stdUnderDay => {
+                .stdUnderDay => {
                     if (ddate.day < 10) {
                         try stream.print("{}", " ");
                     }
                     try appendInt(stream, ddate.day, 0);
                 },
-                chunk.stdZeroDay => {
+                .stdZeroDay => {
                     try appendInt(stream, ddate.day, 2);
                 },
-                chunk.stdHour => {
+                .stdHour => {
                     try appendInt(stream, clock_value.hour, 2);
                 },
-                chunk.stdHour12 => {
+                .stdHour12 => {
                     // Noon is 12PM, midnight is 12AM.
                     var hr = @mod(clock_value.hour, 12);
                     if (hr == 0) {
@@ -1014,7 +1014,7 @@ pub const Time = struct {
                     }
                     try appendInt(stream, hr, 0);
                 },
-                chunk.stdZeroHour12 => {
+                .stdZeroHour12 => {
                     // Noon is 12PM, midnight is 12AM.
                     var hr = @mod(clock_value.hour, 12);
                     if (hr == 0) {
@@ -1022,33 +1022,33 @@ pub const Time = struct {
                     }
                     try appendInt(stream, hr, 2);
                 },
-                chunk.stdMinute => {
+                .stdMinute => {
                     try appendInt(stream, clock_value.min, 0);
                 },
-                chunk.stdZeroMinute => {
+                .stdZeroMinute => {
                     try appendInt(stream, clock_value.min, 2);
                 },
-                chunk.stdSecond => {
+                .stdSecond => {
                     try appendInt(stream, clock_value.sec, 0);
                 },
-                chunk.stdZeroSecond => {
+                .stdZeroSecond => {
                     try appendInt(stream, clock_value.sec, 2);
                 },
-                chunk.stdPM => {
+                .stdPM => {
                     if (clock_value.hour >= 12) {
                         try stream.print("{}", "PM");
                     } else {
                         try stream.print("{}", "AM");
                     }
                 },
-                chunk.stdpm => {
+                .stdpm => {
                     if (clock_value.hour >= 12) {
                         try stream.print("{}", "pm");
                     } else {
                         try stream.print("{}", "am");
                     }
                 },
-                chunk.stdISO8601TZ, chunk.stdISO8601ColonTZ, chunk.stdISO8601SecondsTZ, chunk.stdISO8601ShortTZ, chunk.stdISO8601ColonSecondsTZ, chunk.stdNumTZ, chunk.stdNumColonTZ, chunk.stdNumSecondsTz, chunk.stdNumShortTZ, chunk.stdNumColonSecondsTZ => {
+                .stdISO8601TZ, .stdISO8601ColonTZ, .stdISO8601SecondsTZ, .stdISO8601ShortTZ, .stdISO8601ColonSecondsTZ, .stdNumTZ, .stdNumColonTZ, .stdNumSecondsTz, .stdNumShortTZ, .stdNumColonSecondsTZ => {
                     // Ugly special case. We cheat and take the "Z" variants
                     // to mean "the time zone as formatted for ISO 8601".
                     const cond = tz.offset == 0 and (ctx.chunk.eql(chunk.stdISO8601TZ) or
@@ -1093,7 +1093,7 @@ pub const Time = struct {
                         try appendInt(stream, @mod(abs_offset, 60), 2);
                     }
                 },
-                chunk.stdTZ => {
+                .stdTZ => {
                     if (tz.name.len != 0) {
                         try stream.print("{}", tz.name);
                         continue;
@@ -1108,7 +1108,7 @@ pub const Time = struct {
                     try appendInt(stream, @divTrunc(z, 60), 2);
                     try appendInt(stream, @mod(z, 60), 2);
                 },
-                chunk.stdFracSecond0, chunk.stdFracSecond9 => {
+                .stdFracSecond0, .stdFracSecond9 => {
                     try formatNano(stream, @intCast(usize, self.nanosecond()), ctx.args_shift.?, ctx.chunk.eql(chunk.stdFracSecond9));
                 },
                 else => unreachable,
@@ -1122,14 +1122,14 @@ pub const Time = struct {
         var am_set = false;
         var pm_set = false;
 
-        var year: isize = 0;
-        var month: isize = -1;
-        var day: isize = -1;
-        var yday: isize = -1;
-        var hour: isize = 0;
-        var min: isize = 0;
-        var sec: isize = 0;
-        var nsec: isize = 0;
+        var parsed_year: isize = 0;
+        var parsed_month: isize = -1;
+        var parsed_day: isize = -1;
+        var parsed_yday: isize = -1;
+        var parsed_hour: isize = 0;
+        var parsed_min: isize = 0;
+        var parsed_sec: isize = 0;
+        var parsed_nsec: isize = 0;
         var z: ?*Location = null;
         var zone_offset: isize = -1;
         var zone_name = "";
@@ -1155,12 +1155,12 @@ pub const Time = struct {
                     const p = val[0..2];
                     val = val[2..];
                     var has_err = false;
-                    year = try fmt.parseInt(isize, p, 10);
-                    if (year >= 69) {
+                    parsed_year = try std.fmt.parseInt(isize, p, 10);
+                    if (parsed_year >= 69) {
                         // Unix time starts Dec 31 1969 in some time zones
-                        year += 1900;
+                        parsed_year += 1900;
                     } else {
-                        year += 2000;
+                        parsed_year += 2000;
                     }
                 },
                 .stdLongYear => {
@@ -1169,8 +1169,9 @@ pub const Time = struct {
                     }
                     const p = val[0..4];
                     val = val[4..];
-                    year = try fmt.parseInt(isize, p, 10);
+                    parsed_year = try std.fmt.parseInt(isize, p, 10);
                 },
+                else => {},
             }
         }
     }
