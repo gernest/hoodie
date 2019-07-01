@@ -1115,23 +1115,6 @@ pub const Time = struct {
             }
         }
     }
-    // match reports whether s1 and s2 match ignoring case.
-    // It is assumed s1 and s2 are the same length.
-    fn match(si: []const u8, s2: []const u8) bool {
-        var i: usize = 0;
-        while (i < s1.len) : (i += 1) {
-            var c1 = s1[i];
-            var c2 = s2[i];
-            if (c1 != c2) {
-                c1 |= 'a' - 'A';
-                c2 |= 'a' - 'A';
-                if (c1 != c2 or c1 < 'a' or c1 > 'z') {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
 
     fn parseInternal(layout: []const u8, value: []const u8, default_location: *Location, local: *Location) !Time {
         var alayout = layout;
@@ -1187,6 +1170,18 @@ pub const Time = struct {
                     const p = val[0..4];
                     val = val[4..];
                     parsed_year = try std.fmt.parseInt(isize, p, 10);
+                },
+                .stdMonth => {
+                    const idx = try lookup(short_month_names, val);
+                    parsed_month = @intCast(isize, idx);
+                    val = val[short_month_names[idx].len..];
+                    parsed_month += 1;
+                },
+                .stdLongMonth => {
+                    const idx = try lookup(long_month_names, val);
+                    parsed_month = @intCast(isize, idx);
+                    val = val[long_month_names[idx].len..];
+                    parsed_month += 1;
                 },
                 else => {},
             }
