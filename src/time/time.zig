@@ -1183,6 +1183,11 @@ pub const Time = struct {
                     val = val[long_month_names[idx].len..];
                     parsed_month += 1;
                 },
+                .stdNumMonth, .stdZeroMonth => {
+                    const n = try getNum(val, ctx.chunk == .stdZeroMonth);
+                    parsed_month = n.value;
+                    val = n.string;
+                },
                 else => {},
             }
         }
