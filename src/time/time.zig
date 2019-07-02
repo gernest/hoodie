@@ -2702,3 +2702,31 @@ fn lookup(tab: [][]const u8, val: []const u8) !usize {
     }
     return error.BadValue;
 }
+
+const Number = struct {
+    value: isize,
+    string: []const u8,
+};
+
+/// getnum3 parses s[0:1], s[0:2], or s[0:3] (fixed forces s[0:3])
+/// as a decimal integer and returns the integer and the remainder
+/// of the string as value and string fields of Number.
+fn getNum(s: []const u8, fixde: bool) !Number {
+    if (!isDigit(s, 0)) {
+        return error.BadData;
+    }
+    if (!isDigit(s, 1)) {
+        if (fixed) {
+            return error.BadData;
+        }
+        return Number{
+            .value = @intCast(isize, s[0]) - '0',
+            .string = s[1..],
+        };
+    }
+    const n = (@intCast(isize, s[0]) - '0') * 10 + (@intCast(isize, s[1]) - '0');
+    return Number{
+        .value = n,
+        .string = s[1..],
+    };
+}
