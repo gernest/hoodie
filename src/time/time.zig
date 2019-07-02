@@ -1188,6 +1188,10 @@ pub const Time = struct {
                     parsed_month = n.value;
                     val = n.string;
                 },
+                .stdWeekDay => {
+                    const idx = try lookup(short_day_names, val);
+                    val = val[short_day_names[idx].len..];
+                },
                 else => {},
             }
         }
