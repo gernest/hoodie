@@ -1192,6 +1192,10 @@ pub const Time = struct {
                     const idx = try lookup(short_day_names, val);
                     val = val[short_day_names[idx].len..];
                 },
+                .stdLongWeekDay => {
+                    const idx = try lookup(long_day_names, val);
+                    val = val[long_day_names[idx].len..];
+                },
                 else => {},
             }
         }
