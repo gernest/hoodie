@@ -1,3 +1,10 @@
+const std = @import("std");
+const message = @import("message.zig");
+const proto = @import("protocol.zig");
+
+const Offset = message.Offset;
+const MessageWriter = message.Writer;
+
 pub const Severity = enum {
     Fatal,
     Panic,
@@ -8,24 +15,24 @@ pub const Severity = enum {
     Log,
 };
 
-pub const Field = enum(u8) {
-    Severity = 'S',
-    Code = 'C',
-    Message = 'M',
-    MessageDetail = 'D',
-    MessageHint = 'H',
-    Position = 'P',
-    InternalPosition = 'p',
-    InternalQuery = 'q',
-    Where = 'W',
-    SchemaName = 's',
-    TableName = 't',
-    ColumnName = 'c',
-    DataTypeName = 'd',
-    ConstraintName = 'n',
-    File = 'F',
-    Line = 'L',
-    Routine = 'R',
+pub const Field = struct {
+    pub const SEVERITY: u8 = 'S';
+    pub const CODE: u8 = 'C';
+    pub const MESSAGE: u8 = 'M';
+    pub const MESSAGE_DETAIL: u8 = 'D';
+    pub const MESSAGE_HINT: u8 = 'H';
+    pub const POSITION: u8 = 'P';
+    pub const INTERNAL_POSITION: u8 = 'p';
+    pub const INTERNAL_QUERY: u8 = 'q';
+    pub const WHERE: u8 = 'W';
+    pub const SCHEME_NAME: u8 = 's';
+    pub const TABLE_NAME: u8 = 't';
+    pub const COLUMN_NAME: u8 = 'c';
+    pub const DETAIL_TYPE_NAME: u8 = 'd';
+    pub const CONSTRAINT_NAME: u8 = 'n';
+    pub const FILE: u8 = 'F';
+    pub const LINE: u8 = 'L';
+    pub const ROUTINE: u8 = 'R';
 };
 
 const Code = struct {
@@ -313,20 +320,47 @@ const Code = struct {
 };
 
 pub const Error = struct {
-    severity: Severity,
+    severity: []const u8,
     code: []const u8,
     message: []const u8,
     detail: ?[]const u8,
     hint: ?[]const u8,
-    position: []const u8,
-    internal_position: []const u8,
-    where: []const u8,
-    schema_name: []const u8,
-    table_name: []const u8,
-    column_name: []const u8,
-    data_type_name: []const u8,
-    constraint: []const u8,
-    file: []const u8,
-    line: []const u8,
-    routine: []const u8,
+    position: ?[]const u8,
+    internal_position: ?[]const u8,
+    where: ?[]const u8,
+    schema_name: ?[]const u8,
+    table_name: ?[]const u8,
+    column_name: ?[]const u8,
+    data_type_name: ?[]const u8,
+    constraint: ?[]const u8,
+    file: ?[]const u8,
+    line: ?[]const u8,
+    routine: ?[]const u8,
+
+    pub fn getMessage(buf: *std.Buffer) !void {
+        var w = &MessageWriter.init(buf);
+
+        try w.writeByte(proto.Type.ERROR_MESSAGE);
+        try w.writeInt32(0);
+
+        try w.writeByte(Field.SEVERITY);
+        try w.writeString(self.severity);
+
+        try w.writeByte(Field.CODE);
+        try w.writeString(self.code);
+
+        try w.writeByte(Field.MESSAGE);
+        try w.writeString(self.message);
+
+        if (self.detail) |detail| {
+            try w.writeByte(Field.MESSAGE_DETAIL);
+            try w.writeString(self.detail);
+        }
+        if (self.hint) |hint| {
+            try w.writeByte(Field.MESSAGE_HINT);
+            try w.writeString(self.hint);
+        }
+        try w.writeByte(0x00);
+        try w.resetLength(.Base);
+    }
 };
