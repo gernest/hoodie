@@ -32,6 +32,14 @@ const Auth = struct {
     pub const GSS = 7;
     pub const GSS_CONTINUE = 8;
     pub const SSPI = 9;
+
+    pub fn createPasswordMessage(buf: *std.Buffer, password: []const u8) !void {
+        var w = &Writer.init(buf);
+        try w.writeByte(Type.PASSWORD);
+        try w.writeInt32(0);
+        try w.writeString(password);
+        try w.resetLength(.Base);
+    }
 };
 
 pub const Offset = enum {
