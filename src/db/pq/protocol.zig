@@ -548,9 +548,13 @@ pub const Message = struct {
     }
 
     pub fn length(msg: []const u8) ui32 {
-        var bytes: [(u32.bit_count + 7) / 8]u8 = undefined;
-        mem.copy(u8, bytes[0..], msg[1..5]);
-        return mem.readIntBig(u32, &bytes);
+        return readInt(u32, msg[1..5]);
+    }
+
+    pub fn readInt(T: type, out: []const u8) T {
+        var bytes: [(T.bit_count + 7) / 8]u8 = undefined;
+        mem.copy(u8, bytes[0..], out);
+        return mem.readIntBig(T, &bytes);
     }
 
     pub const terminate_message = blk: {
