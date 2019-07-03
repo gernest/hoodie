@@ -449,4 +449,22 @@ pub const Error = struct {
         try w.writeByte(0x00);
         try w.resetLength(.Base);
     }
+
+    pub fn format(
+        self: Error,
+        comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
+        ctx: var,
+        comptime Errors: type,
+        output: fn (@typeOf(ctx), []const u8) Errors!void,
+    ) Errors!void {
+        try std.fmt.format(
+            context,
+            Errors,
+            output,
+            "pq: {}: {}",
+            self.severity,
+            self.message,
+        );
+    }
 };
