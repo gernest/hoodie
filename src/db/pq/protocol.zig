@@ -70,7 +70,7 @@ pub const Field = struct {
     pub const SCHEME_NAME: u8 = 's';
     pub const TABLE_NAME: u8 = 't';
     pub const COLUMN_NAME: u8 = 'c';
-    pub const DETAIL_TYPE_NAME: u8 = 'd';
+    pub const DATA_TYPE_NAME: u8 = 'd';
     pub const CONSTRAINT_NAME: u8 = 'n';
     pub const FILE: u8 = 'F';
     pub const LINE: u8 = 'L';
@@ -413,6 +413,7 @@ pub const Error = struct {
     hint: ?[]const u8,
     position: ?[]const u8,
     internal_position: ?[]const u8,
+    internal_query: ?[]const u8,
     where: ?[]const u8,
     schema_name: ?[]const u8,
     table_name: ?[]const u8,
@@ -466,5 +467,77 @@ pub const Error = struct {
             self.severity,
             self.message,
         );
+    }
+
+    pub fn parse(e: []const u8) !Error {
+        var s = e[5..];
+        var idx: usize = 0;
+        var o: Error = undefined;
+        while (idx < s.len) {
+            const field = s[idx];
+            const end = idx + 1;
+            inner: while (end < s.len) : (end += 1) {
+                if (s[end] == 0x00) {
+                    break inner;
+                }
+            }
+            const value = s[idx..end];
+            idx = end + 1;
+            switch (field) {
+                Field.SEVERITY => {
+                    o.severity = value;
+                },
+                Field.CODE => {
+                    o.code = value;
+                },
+                Field.MESSAGE => {
+                    o.message = value;
+                },
+                Field.MESSAGE_DETAIL => {
+                    o.detail = value;
+                },
+                Field.MESSAGE_HINT => {
+                    o.hint = value;
+                },
+                Field.POSITION => {
+                    o.position = value;
+                },
+                Field.INTERNAL_POSITION => {
+                    o.internal_position = value;
+                },
+                Field.INTERNAL_QUERY => {
+                    o.internal_query = value;
+                },
+                Field.WHERE => {
+                    o.where = value;
+                },
+                Field.SCHEME_NAME => {
+                    o.schema_name = value;
+                },
+                Field.TABLE_NAME => {
+                    o.table_name = value;
+                },
+                Field.COLUMN_NAME => {
+                    o.column_name = value;
+                },
+                Field.DATA_TYPE_NAME => {
+                    o.data_type_name = value;
+                },
+                Field.CONSTRAINT_NAME => {
+                    o.constraint = value;
+                },
+                Field.FILE => {
+                    o.file = value;
+                },
+                Field.LINE => {
+                    o.line = value;
+                },
+                Field.ROUTINE => {
+                    o.routine = value;
+                },
+                else => unreachable,
+            }
+        }
+        return o;
     }
 };
