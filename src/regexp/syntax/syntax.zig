@@ -31,7 +31,8 @@ pub const Regexp = struct {
     op: Op,
     flags: u16,
     sub: ?ArrayList(*Regexp),
-    rune: ?ArrayList(i32),
+    sub0: [1]?*Regexp,
+    rune: ArrayList(i32),
     rune0: [2]i32,
     min: isize,
     max: isize,
@@ -66,7 +67,8 @@ pub const Regexp = struct {
             .op = .NoMatch,
             .flags = 0,
             .sub = null,
-            .rune = null,
+            .sub9 = [_]?*Regexp{null},
+            .rune = ArrayList(i32).init(ctx.ga()),
             .rune0 = [_]i32{ 0, 0 },
             .min = 0,
             .max = 0,
@@ -191,10 +193,25 @@ const Parser = struct {
 
     // creates a new Regext object on the arena allocator help by self and
     // resurns it.
-    fn newRexep(self: *Parser, op: Op) *Regexp {
-        var r = self.ctx.ar().create(Regexp);
-        r.* = Regexp.init(self.ctx);
+    fn newRexep(self: *Parser, op: Op) !*Regexp {
+        var re = self.free;
+        if (re != null) {
+            self.free = re.sub0[0];
+            re.?.* = Regexp.init(self.ctx);
+        } else {
+            re = try self.ctx.ar().create(Regexp);
+            re.?.* = Regexp.init(self.ctx);
+        }
         r.op = op;
         return r;
+    }
+
+    fn reuse(self: *Parser, re: *Regexp) void {
+        re.sub0[0] = self.free;
+        self.free = re;
+    }
+
+    fn push(self: *Parser, re: *Regexp) !Regexp {
+        if (re.op == .CharClass and re.rune.len == 2 and re.run.at(0) == re.rune.at(1)) {}
     }
 };
