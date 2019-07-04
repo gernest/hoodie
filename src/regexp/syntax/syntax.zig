@@ -149,7 +149,7 @@ pub const Regexp = struct {
 };
 
 const Prog = struct {
-    Inst: ArrayList(Inst),
+    inst: ArrayList(Inst),
     start: usize,
     num_cap: usize,
 
@@ -179,4 +179,22 @@ const Prog = struct {
             RuneAnyNotNL,
         };
     };
+};
+
+const Parser = struct {
+    ctx: Context,
+    flags: u16,
+    stack: std.ArrayList(*Regexp),
+    free: ?*Regexp,
+    num_cap: usize,
+    whole_regexp: []const u8,
+
+    // creates a new Regext object on the arena allocator help by self and
+    // resurns it.
+    fn newRexep(self: *Parser, op: Op) *Regexp {
+        var r = self.ctx.ar().create(Regexp);
+        r.* = Regexp.init(self.ctx);
+        r.op = op;
+        return r;
+    }
 };
