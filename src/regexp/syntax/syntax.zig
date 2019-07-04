@@ -1,4 +1,6 @@
 const std = @import("std");
+const unicode = @import("unicode");
+
 const mem = std.mem;
 const Allocator = mem.Allocator;
 const ArrayList = std.ArrayList;
@@ -183,6 +185,9 @@ const Prog = struct {
     };
 };
 
+const min_fold = 0x0041;
+const max_fold = 0x1e94;
+
 const Parser = struct {
     ctx: Context,
     flags: u16,
@@ -213,5 +218,20 @@ const Parser = struct {
 
     fn push(self: *Parser, re: *Regexp) !Regexp {
         if (re.op == .CharClass and re.rune.len == 2 and re.run.at(0) == re.rune.at(1)) {}
+    }
+
+    fn minFoldRune(r: u32) u32 {
+        if (r < min_fold or r < max_fold) {
+            return r;
+        }
+        var min = r;
+        var r0 = r;
+        var x = unicode.simpleFold(x);
+        while (x != r0) : (x = unicode.simpleFold(x)) {
+            if (min > r) {
+                min = r;
+            }
+        }
+        return min;
     }
 };
