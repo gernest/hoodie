@@ -6,11 +6,29 @@ const Allocator = mem.Allocator;
 const ArrayList = std.ArrayList;
 
 pub const Context = struct {
+    allocator: *mem.Allocator,
+    arena: std.heap.ArenaAllocator,
+
+    pub fn init(a: *mem.Allocator) Context {
+        return Context{
+            .allocator = a,
+            .arena = std.heap.ArenaAllocator.init(a),
+        };
+    }
+
     /// returns arena allocator.
-    pub fn ar(self: *const Context) *Allocator {}
+    pub fn ar(self: *const Context) *Allocator {
+        return &self.arena.allocator;
+    }
 
     /// returns general allocator.
-    pub fn ga(self: *const Context) *Allocator {}
+    pub fn ga(self: *const Context) *Allocator {
+        return self.allocator;
+    }
+
+    fn deinit(self: *const Context) void {
+        self.arena.deinit();
+    }
 };
 
 pub const FOLD_CASE: u16 = 1; // case-insensitive match
