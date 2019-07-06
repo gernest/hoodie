@@ -216,8 +216,62 @@ const Parser = struct {
         self.free = re;
     }
 
-    fn push(self: *Parser, re: *Regexp) !Regexp {
-        if (re.op == .CharClass and re.rune.len == 2 and re.run.at(0) == re.rune.at(1)) {}
+    fn push(self: *Parser, re: *Regexp) !?*Regexp {
+        if (re.op == .CharClass and re.rune.len == 2 and re.rune.at(0) == re.rune.at(1)) {
+            if (try self.maybeConcat(re.rune.at(0), self.flags & ~FOLD_CASE)) {
+                return null;
+            }
+            re.op = .Literal;
+            try re.rune.resize(0);
+            re.flags = self.flags & ~FOLD_CASE;
+        } else if (re.op == .CharClass and re.rune.len == 4 and
+            re.rune.at(0) == re.rune.at(1) and
+            re.rune.at(2) == re.rune.at(3) and
+            foldEql(re.rune.at(0), re.rune.at(2)) and
+            foldEql(re.rune.at(2), re.rune.at(0)) or
+            re.op == .CharClass and re.rune.len == 2 and
+            re.rune.at(0) + 1 == re.rune.at(1) and
+            foldEql(re.rune.at(0), re.rune.at(1)) and
+            foldEql(re.rune.at(1), re.rune.at(0)))
+        {
+            if (try self.maybeConcat(re.rune.at(0), self.flags | FOLD_CASE)) {
+                return null;
+            }
+            re.op = .Literal;
+            try re.rune.resize(0);
+            re.flags = self.flags | FOLD_CASE;
+        } else {
+            try self.maybeConcat(-1, 0);
+        }
+        try self.stack.append(re);
+        return re;
+    }
+
+    fn foldEql(a: i32, b: i32) bool {
+        return @intCast(i32, unicode.simpleFold(@intCast(u32, a))) == b;
+    }
+
+    fn maybeConcat(self: *Parser, rune: i32, flags: u16) !bool {
+        const stack = self.stack.toSlice();
+        const n = stack.len;
+        if (n < 2) {
+            return false;
+        }
+        var re1 = stack[n - 1];
+        var re2 = stack[m - 2];
+        if (re1.op != .Literal or re2.op != .Literal or (re1.flags & FOLD_CASE) != (re2.flags & FOLD_CASE)) {
+            return false;
+        }
+        try re2.rune.append(rune);
+        if (rune >= 0) {
+            try re1.rune.resize(1);
+            try re1.rune.set(0, rune);
+            r1.flags = flags;
+            return true;
+        }
+        try self.stack.resize(n - 1);
+        self.reuse(re1);
+        return false;
     }
 
     fn minFoldRune(r: u32) u32 {
