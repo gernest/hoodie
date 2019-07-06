@@ -89,7 +89,6 @@ pub const Regexp = struct {
             .op = .NoMatch,
             .flags = 0,
             .sub = null,
-            .sub9 = [_]?*Regexp{null},
             .rune = ArrayList(i32).init(ctx.ga()),
             .rune0 = [_]i32{ 0, 0 },
             .min = 0,
