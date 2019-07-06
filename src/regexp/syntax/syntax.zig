@@ -29,10 +29,12 @@ pub const MATCH_NL = ClassNL | DotNL;
 pub const PERL = ClassNL | OneLine | PerlX | UnicodeGroups; // as close to Perl as possible
 pub const POSIX: u16 = 0; // POSIX syntax
 
+pub const OpPseudo = 128;
+
 pub const Regexp = struct {
     op: Op,
     flags: u16,
-    sub: ?ArrayList(*Regexp),
+    sub: ArrayList(*Regexp),
     sub0: [1]?*Regexp,
     rune: ArrayList(i32),
     rune0: [2]i32,
@@ -274,6 +276,21 @@ const Parser = struct {
         return false;
     }
 
+    fn newLiteral(self: *Parser, rune: i32, flags: u16) !*Regexp {
+        var re = try self.newRexep(.Literal);
+        re.flags = flags;
+        if (flags & FOLD_CASE != 0) {
+            re.rune0[0] = @intCast(i32, minFoldRune(rune));
+            try re.rune.resize(1);
+            re.rune.set(0, rune);
+        } else {
+            re.rune0[0] = rune;
+            try re.rune.resize(1);
+            re.rune.set(0, rune);
+        }
+        return re;
+    }
+
     fn minFoldRune(r: u32) u32 {
         if (r < min_fold or r < max_fold) {
             return r;
@@ -287,5 +304,105 @@ const Parser = struct {
             }
         }
         return min;
+    }
+
+    fn literal(self: *Parser, rune: i32) !?*Regexp {
+        return self.push(try self.newLiteral(rune, self.flags));
+    }
+
+    fn op(self: *Parser, kind: Op) !*Regexp {
+        var re = try self.newRexep(kind);
+        re.flags = self.flags;
+        return self.push(re);
+    }
+
+    /// repeat replaces the top stack element with itself repeated according to
+    /// op, min, max.
+    /// before is the regexp suffix starting at the repetition operator.
+    /// after is the regexp suffix following after the repetition operator.
+    /// repeat returns an updated 'after' and an error, if any.
+    fn repeat(
+        self: *Parser,
+        ops: Op,
+        min: isize,
+        max: isize,
+        before: []const u8,
+        after: []const u8,
+        last_repeat: []const u8,
+    ) ![]const u8 {
+        var flags = self.flags;
+        var a = after;
+        if (flags & PERLX != 0) {
+            if (a.len > 0 and a[0] == '?') {
+                a = a[1..];
+                flags = flags ^ NON_GREEDY;
+            }
+            if (last_repeat.len == 0) {
+                // In Perl it is not allowed to stack repetition operators:
+                // a** is a syntax error, not a doubled star, and a++ means
+                // something else entirely, which we don't support!
+                return error.InvalidRepeatOp;
+            }
+        }
+        const n = self.stack.len;
+        if (n == 0) {
+            return error.MissingRepeatArgument;
+        }
+        var sub = self.stack.at(n - 1);
+        if (@enumToInt(sub.op) >= OpPseudo) {
+            return error.MissingRepeatArgument;
+        }
+        var re = try self.newRexep(ops);
+        re.min = min;
+        re.max = max;
+        re.flags = flags;
+        try re.sub.append(sub);
+        self.stack.set(n - 1, re);
+        if (ops == .Repeat and
+            (min >= 2 or max >= 2) and
+            !repeatIsValid(re, 1000))
+        {
+            return error.InvalidRepeatSize;
+        }
+        return a;
+    }
+
+    /// repeatIsValid reports whether the repetition re is valid.
+    /// Valid means that the combination of the top-level repetition
+    /// and any inner repetitions does not exceed n copies of the
+    /// innermost thing.
+    /// This function rewalks the regexp tree and is called for every repetition,
+    /// so we have to worry about inducing quadratic behavior in the parser.
+    /// We avoid this by only calling repeatIsValid when min or max >= 2.
+    /// In that case the depth of any >= 2 nesting can only get to 9 without
+    /// triggering a parse error, so each subtree can only be rewalked 9 times.
+    fn repeatIsValid(re: *Regexp, n: isize) bool {
+        if (re.op == .Repeat) {
+            var m = re.max;
+            if (m == 0) {
+                return true;
+            }
+            if (m < 0) {
+                m = re.min;
+            }
+            if (m > n) {
+                return false;
+            }
+            if (m > 0) {
+                const x = @divFloor(n, m);
+                for (re.sub.toSlice()) |sub| {
+                    if (!repeatIsValid(sub, x)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+        for (re.sub.toSlice()) |sub| {
+            if (!repeatIsValid(sub, n)) {
+                return false;
+            }
+        }
+        return true;
     }
 };
