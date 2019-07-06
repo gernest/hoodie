@@ -170,6 +170,27 @@ pub const Regexp = struct {
         return mem.eql(u8, x.name.?, y.name.?);
     }
 
+    pub fn simplify(re: *Regexp) !*Regexp {
+        switch (re.op) {
+            .Capture, .Concat, .Alternate => {
+                var nre = re;
+                const subs = re.sub.toSlice();
+                for (subs) |sub, i| {
+                    var nsub = try sub.simplify();
+                    if (nre == re and nsub != sub) {
+                        nre = try re.ctx.ar().create(Regexp);
+                        nre.* = init(re.ctx);
+                        try nre.sub.appendSlice(subs[0..i]);
+                    }
+                    if (nre != re) {
+                        try nre.sub.append(nsub);
+                    }
+                }
+                return nre;
+            },
+        }
+    }
+
     /// simplify1 implements Simplify for the unary OpStar,
     /// OpPlus, and OpQuest operators. It returns the simple regexp
     /// equivalent to
