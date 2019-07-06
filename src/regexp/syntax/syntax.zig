@@ -169,6 +169,54 @@ pub const Regexp = struct {
         }
         return mem.eql(u8, x.name.?, y.name.?);
     }
+
+    /// simplify1 implements Simplify for the unary OpStar,
+    /// OpPlus, and OpQuest operators. It returns the simple regexp
+    /// equivalent to
+    ///
+    ///  Regexp{.op=ops, .flags= flags, .sub= {sub}}
+    ///
+    /// under the assumption that sub is already simple, and
+    /// without first allocating that structure. If the regexp
+    /// to be returned turns out to be equivalent to re, simplify1
+    /// returns re instead.
+    ///
+    /// simplify1 is factored out of Simplify because the implementation
+    /// for other operators generates these unary expressions.
+    /// Letting them call simplify1 makes sure the expressions they
+    /// generate are simple.
+    fn simplify1(
+        ctx: *const Context,
+        ops: Op,
+        flags: u16,
+        sub: *Regexp,
+        re: ?*Regexp,
+    ) !*Regexp {
+        // Special case: repeat the empty string as much as
+        // you want, but it's still the empty string.
+        if (sub.op == .EmptyMatch) {
+            return sub;
+        }
+        if (ops == sub.op and
+            (flags & NON_GREEDY == sub.flags & NON_GREEDY))
+        {
+            return sub;
+        }
+        if (re) |rex| {
+            if (rex.op == ops and
+                rex.flags & NON_GREEDY == flags & NON_GREEDY and
+                sub.equal(rex.sub.at(0)))
+            {
+                return re.?;
+            }
+        }
+        var res = try ctx.ar().create(Regexp);
+        res.* = init(ctx);
+        res.op = ops;
+        res.flags = flags;
+        try res.sub.append(sub);
+        return res;
+    }
 };
 
 pub const Prog = struct {
