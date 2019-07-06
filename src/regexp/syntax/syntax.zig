@@ -5,6 +5,24 @@ const mem = std.mem;
 const Allocator = mem.Allocator;
 const ArrayList = std.ArrayList;
 
+pub const FOLD_CASE: u16 = 1; // case-insensitive match
+pub const LITERAL: u16 = 2; // treat pattern as literal string
+pub const CLASS_NL: u16 = 4; // allow character classes like [^a-z] and [[:space:]] to match newline
+pub const DOT_NL: u16 = 8; // allow . to match newline
+pub const ONE_LINE: u16 = 16; // treat ^ and $ as only matching at beginning and end of text
+pub const NON_GREEDY: u16 = 32; // make repetition operators default to non-greedy
+pub const PERLX: u16 = 64; // allow Perl extensions
+pub const UNICODE_GROUPS: u16 = 128; // allow \p{Han}, \P{Han} for Unicode group and negation
+pub const WAS_DOLLAR: u16 = 256; // regexp OpEndText was $, not \z
+pub const SIMPLE: u16 = 512; // regexp contains no counted repetition
+
+pub const MATCH_NL = ClassNL | DotNL;
+
+pub const PERL = ClassNL | OneLine | PerlX | UnicodeGroups; // as close to Perl as possible
+pub const POSIX: u16 = 0; // POSIX syntax
+
+pub const OpPseudo = 128;
+
 pub const Context = struct {
     allocator: *mem.Allocator,
     arena: std.heap.ArenaAllocator,
@@ -30,24 +48,6 @@ pub const Context = struct {
         self.arena.deinit();
     }
 };
-
-pub const FOLD_CASE: u16 = 1; // case-insensitive match
-pub const LITERAL: u16 = 2; // treat pattern as literal string
-pub const CLASS_NL: u16 = 4; // allow character classes like [^a-z] and [[:space:]] to match newline
-pub const DOT_NL: u16 = 8; // allow . to match newline
-pub const ONE_LINE: u16 = 16; // treat ^ and $ as only matching at beginning and end of text
-pub const NON_GREEDY: u16 = 32; // make repetition operators default to non-greedy
-pub const PERLX: u16 = 64; // allow Perl extensions
-pub const UNICODE_GROUPS: u16 = 128; // allow \p{Han}, \P{Han} for Unicode group and negation
-pub const WAS_DOLLAR: u16 = 256; // regexp OpEndText was $, not \z
-pub const SIMPLE: u16 = 512; // regexp contains no counted repetition
-
-pub const MATCH_NL = ClassNL | DotNL;
-
-pub const PERL = ClassNL | OneLine | PerlX | UnicodeGroups; // as close to Perl as possible
-pub const POSIX: u16 = 0; // POSIX syntax
-
-pub const OpPseudo = 128;
 
 pub const Regexp = struct {
     op: Op,
