@@ -154,7 +154,7 @@ pub const Regexp = struct {
     }
 };
 
-const Prog = struct {
+pub const Prog = struct {
     inst: ArrayList(Inst),
     start: usize,
     num_cap: usize,
@@ -184,6 +184,286 @@ const Prog = struct {
             RuneAny,
             RuneAnyNotNL,
         };
+    };
+};
+
+const PerlGroup = struct {
+    pub const code1 = [_]i32{ // /* \d */
+        0x30, 0x39,
+    };
+
+    pub const code2 = [_]i32{ // /* \s */
+        0x9,  0xa,
+        0xc,  0xd,
+        0x20, 0x20,
+    };
+
+    pub const code3 = [_]i32{ // /* \w */
+        0x30, 0x39,
+        0x41, 0x5a,
+        0x5f, 0x5f,
+        0x61, 0x7a,
+    };
+
+    pub const code4 = [_]i32{ // /* [:alnum:] */
+        0x30, 0x39,
+        0x41, 0x5a,
+        0x61, 0x7a,
+    };
+
+    pub const code5 = [_]i32{ // /* [:alpha:] */
+        0x41, 0x5a,
+        0x61, 0x7a,
+    };
+
+    pub const code6 = [_]i32{ // /* [:ascii:] */
+        0x0, 0x7f,
+    };
+
+    pub const code7 = [_]i32{ // /* [:blank:] */
+        0x9,  0x9,
+        0x20, 0x20,
+    };
+
+    pub const code8 = [_]i32{ // /* [:cntrl:] */
+        0x0,  0x1f,
+        0x7f, 0x7f,
+    };
+
+    pub const code9 = [_]i32{ // /* [:digit:] */
+        0x30, 0x39,
+    };
+
+    pub const code10 = [_]i32{ // /* [:graph:] */
+        0x21, 0x7e,
+    };
+
+    pub const code11 = [_]i32{ // /* [:lower:] */
+        0x61, 0x7a,
+    };
+
+    pub const code12 = [_]i32{ // /* [:print:] */
+        0x20, 0x7e,
+    };
+
+    pub const code13 = [_]i32{ // /* [:punct:] */
+        0x21, 0x2f,
+        0x3a, 0x40,
+        0x5b, 0x60,
+        0x7b, 0x7e,
+    };
+
+    pub const code14 = [_]i32{ // /* [:space:] */
+        0x9,  0xd,
+        0x20, 0x20,
+    };
+
+    pub const code15 = [_]i32{ // /* [:upper:] */
+        0x41, 0x5a,
+    };
+
+    pub const code16 = [_]i32{ // /* [:word:] */
+        0x30, 0x39,
+        0x41, 0x5a,
+        0x5f, 0x5f,
+        0x61, 0x7a,
+    };
+
+    pub const code17 = [_]i32{ // /* [:xdigit:] */
+        0x30, 0x39,
+        0x41, 0x46,
+        0x61, 0x66,
+    };
+
+    fn eql(a: []const u8, b: []const u8) bool {
+        return mem.eql(u8, a, b);
+    }
+
+    pub fn perl(name: []const u8) ?CharGroup {
+        if (eql(name,
+            \\\d
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code1[0..] };
+        }
+        if (eql(name,
+            \\\D
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code1[0..] };
+        }
+        if (eql(name,
+            \\\s
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code2[0..] };
+        }
+        if (eql(name,
+            \\\S
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code2[0..] };
+        }
+        if (eql(name,
+            \\\w
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code3[0..] };
+        }
+        if (eql(name,
+            \\\W
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code3[0..] };
+        }
+        return null;
+    }
+
+    pub fn posix(name: []const u8) ?CharGroup {
+        if (eql(name,
+            \\[:alnum:]
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code4[0..] };
+        }
+        if (eql(name,
+            \\[:^alnum:]
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code4[0..] };
+        }
+        if (eql(name,
+            \\[:alpha:]
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code5[0..] };
+        }
+        if (eql(name,
+            \\[:^alpha:]
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code5[0..] };
+        }
+        if (eql(name,
+            \\[:ascii:]
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code6[0..] };
+        }
+        if (eql(name,
+            \\[:^ascii:]
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code6[0..] };
+        }
+        if (eql(name,
+            \\[:blank:]
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code7[0..] };
+        }
+        if (eql(name,
+            \\[:^blank:]
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code7[0..] };
+        }
+        if (eql(name,
+            \\[:cntrl:]
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code8[0..] };
+        }
+        if (eql(name,
+            \\[:^cntrl:]
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code8[0..] };
+        }
+        if (eql(name,
+            \\[:digit:]
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code9[0..] };
+        }
+        if (eql(name,
+            \\[:^digit:]
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code9[0..] };
+        }
+        if (eql(name,
+            \\[:graph:]
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code10[0..] };
+        }
+        if (eql(name,
+            \\[:^graph:]
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code10[0..] };
+        }
+        if (eql(name,
+            \\[:lower:]
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code11[0..] };
+        }
+        if (eql(name,
+            \\[:^lower:]
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code11[0..] };
+        }
+        if (eql(name,
+            \\[:print:]
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code12[0..] };
+        }
+        if (eql(name,
+            \\[:^print:]
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code12[0..] };
+        }
+        if (eql(name,
+            \\[:punct:]
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code13[0..] };
+        }
+        if (eql(name,
+            \\[:^punct:]
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code13[0..] };
+        }
+        if (eql(name,
+            \\[:space:]
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code14[0..] };
+        }
+        if (eql(name,
+            \\[:^space:]
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code14[0..] };
+        }
+        if (eql(name,
+            \\[:upper:]
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code15[0..] };
+        }
+        if (eql(name,
+            \\[:^upper:]
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code15[0..] };
+        }
+        if (eql(name,
+            \\[:word:]
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code16[0..] };
+        }
+        if (eql(name,
+            \\[:^word:]
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code16[0..] };
+        }
+        if (eql(name,
+            \\[:xdigit:]
+        )) {
+            return CharGroup{ .sign = .Plus, .class = code17[0..] };
+        }
+        if (eql(name,
+            \\[:^xdigit:]
+        )) {
+            return CharGroup{ .sign = .Minus, .class = code17[0..] };
+        }
+    }
+};
+
+const CharGroup = struct {
+    sign: Sign,
+    class: []const i32,
+
+    pub const Sign = enum {
+        Plus,
+        Minus,
     };
 };
 
@@ -404,5 +684,20 @@ const Parser = struct {
             }
         }
         return true;
+    }
+
+    fn concat(self: *Parser) !?*Regexp {
+        try self.maybeConcat(-1, 0);
+        // Scan down to find pseudo-operator | or (.
+        var i = self.stack.len;
+        while (i > 0 and self.stack.at(i - 1).op < OpPseudo) {
+            if (i > 0) i -= 1;
+        }
+        const subs = self.stack.toSlice()[i..];
+        try self.stack.resize(i);
+        if (subs.len == 0) {
+            return self.push(try self.newRexep(.EmptyMatch));
+        }
+        return self.push(try self.collapse(subs, .Concat));
     }
 };
