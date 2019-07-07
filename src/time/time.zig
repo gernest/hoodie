@@ -2383,7 +2383,7 @@ fn startsWithLowerCase(str: []const u8) bool {
     return 'a' <= c and c <= 'z';
 }
 
-const chunkResult = struct {
+pub const chunkResult = struct {
     prefix: []const u8,
     suffix: []const u8,
     chunk: chunk,
@@ -2399,7 +2399,7 @@ const std0x = [_]chunk{
     chunk.stdYear,
 };
 
-fn nextStdChunk(layout: []const u8) chunkResult {
+pub fn nextStdChunk(layout: []const u8) chunkResult {
     var i: usize = 0;
     while (i < layout.len) : (i += 1) {
         switch (layout[i]) {
@@ -2453,13 +2453,21 @@ fn nextStdChunk(layout: []const u8) chunkResult {
                     }
                 }
             },
-            '0' => {
+            '0' => { // 01, 02, 03, 04, 05, 06, 002
                 if (layout.len >= i + 2 and '1' <= layout[i + 1] and layout[i + 1] <= '6') {
                     const x = layout[i + 1] - '1';
                     return chunkResult{
                         .prefix = layout[0..i],
                         .chunk = std0x[x],
                         .suffix = layout[i + 2 ..],
+                        .args_shift = null,
+                    };
+                }
+                if (layout.len >= i + 3 and layout[i + 1] == '0' and layout[i + 2] == '2') {
+                    return chunkResult{
+                        .prefix = layout[0..i],
+                        .chunk = .stdZeroYearDay,
+                        .suffix = layout[i + 3 ..],
                         .args_shift = null,
                     };
                 }

@@ -270,3 +270,92 @@ test "TestFormatShortYear" {
         }
     }
 }
+
+test "TestNextStdChunk" {
+    const next_std_chunk_tests = [_][]const u8{
+        "(2006)-(01)-(02)T(15):(04):(05)(Z07:00)",
+        "(2006)-(01)-(02) (002) (15):(04):(05)",
+        "(2006)-(01) (002) (15):(04):(05)",
+        "(2006)-(002) (15):(04):(05)",
+        "(2006)(002)(01) (15):(04):(05)",
+        "(2006)(002)(04) (15):(04):(05)",
+    };
+    var buf = &try std.Buffer.init(std.debug.global_allocator, "");
+    defer buf.deinit();
+    for (next_std_chunk_tests) |marked, i| {
+        try markChunk(buf, marked);
+        testing.expect(buf.eql(marked));
+    }
+}
+
+var tmp: [39]u8 = undefined;
+
+fn removeParen(format: []const u8) []const u8 {
+    var s = tmp[0..format.len];
+    var i: usize = 0;
+    var n = i;
+    while (i < format.len) : (i += 1) {
+        if (format[i] == '(' or format[i] == ')') {
+            continue;
+        }
+        s[n] = format[i];
+        n += 1;
+    }
+    return s[0..n];
+}
+
+fn markChunk(buf: *std.Buffer, format: []const u8) !void {
+    try buf.resize(0);
+    var s = removeParen(format);
+
+    while (s.len > 0) {
+        const ch = time.nextStdChunk(s);
+        try buf.append(ch.prefix);
+        if (ch.chunk != .none) {
+            try buf.append("(");
+            try buf.append(chunName(ch.chunk));
+            try buf.append(")");
+        }
+        s = ch.suffix;
+    }
+}
+
+fn chunName(ch: time.chunk) []const u8 {
+    return switch (ch) {
+        .none => "",
+        .stdLongMonth => "January",
+        .stdMonth => "Jan",
+        .stdNumMonth => "1",
+        .stdZeroMonth => "01",
+        .stdLongWeekDay => "Monday",
+        .stdWeekDay => "Mon",
+        .stdDay => "2",
+        .stdUnderDay => "_2",
+        .stdZeroDay => "02",
+        .stdUnderYearDay => "__2",
+        .stdZeroYearDay => "002",
+        .stdHour => "15",
+        .stdHour12 => "3",
+        .stdZeroHour12 => "03",
+        .stdMinute => "4",
+        .stdZeroMinute => "04",
+        .stdSecond => "5",
+        .stdZeroSecond => "05",
+        .stdLongYear => "2006",
+        .stdYear => "06",
+        .stdPM => "PM",
+        .stdpm => "pm",
+        .stdTZ => "MST",
+        .stdISO8601TZ => "Z0700",
+        .stdISO8601SecondsTZ => "Z070000",
+        .stdISO8601ShortTZ => "Z07",
+        .stdISO8601ColonTZ => "Z07:00",
+        .stdISO8601ColonSecondsTZ => "Z07:00:00",
+        .stdNumTZ => "-0700",
+        .stdNumSecondsTz => "-070000",
+        .stdNumShortTZ => "-07",
+        .stdNumColonTZ => "-07:00",
+        .stdNumColonSecondsTZ => "-07:00:00",
+        else => "unknown",
+    };
+}
