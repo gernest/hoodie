@@ -1208,16 +1208,16 @@ pub const Time = struct {
                     // Note that we allow any one- or two-digit day here.
                     // The month, day, year combination is validated after we've completed parsing
                 },
-                .stdUnderDay, .stdZeroDay => {
+                .stdUnderYearDay, .stdZeroYearDay => {
                     var i: usize = 0;
                     while (i < 2) : (i += 1) {
-                        if (ctx.chunk == .stdUnderDay and
+                        if (ctx.chunk == .stdUnderYearDay and
                             val.len > 0 and val[0] == ' ')
                         {
                             val = val[1..];
                         }
                     }
-                    const n = try getNum(val, ctx.chunk == .stdZeroYearDay);
+                    const n = try getNum3(val, ctx.chunk == .stdZeroYearDay);
                     parsed_yday = n.value;
                     val = n.string;
                     // Note that we allow any one-, two-, or three-digit year-day here.
@@ -2336,6 +2336,8 @@ pub const chunk = enum {
     stdDay, // "2"
     stdUnderDay, // "_2"
     stdZeroDay, // "02"
+    stdUnderYearDay, // "__2"
+    stdZeroYearDay, // "002"
     stdHour, // "15"
     stdHour12, // "3"
     stdZeroHour12, // "03"
@@ -2680,7 +2682,7 @@ fn isDigit(s: []const u8, i: usize) bool {
     return '0' <= c and c <= '9';
 }
 
-const long_day_names = [][]const u8{
+const long_day_names = [_][]const u8{
     "Sunday",
     "Monday",
     "Tuesday",
@@ -2690,7 +2692,7 @@ const long_day_names = [][]const u8{
     "Saturday",
 };
 
-const short_day_names = [][]const u8{
+const short_day_names = [_][]const u8{
     "Sun",
     "Mon",
     "Tue",
@@ -2700,7 +2702,7 @@ const short_day_names = [][]const u8{
     "Sat",
 };
 
-const short_month_names = [][]const u8{
+const short_month_names = [_][]const u8{
     "Jan",
     "Feb",
     "Mar",
@@ -2715,7 +2717,7 @@ const short_month_names = [][]const u8{
     "Dec",
 };
 
-const long_month_names = [][]const u8{
+const long_month_names = [_][]const u8{
     "January",
     "February",
     "March",
@@ -2752,7 +2754,7 @@ fn match(s1: []const u8, s2: []const u8) bool {
     return true;
 }
 
-fn lookup(tab: [][]const u8, val: []const u8) !usize {
+fn lookup(tab: []const []const u8, val: []const u8) !usize {
     for (tab) |v, i| {
         if (val.len >= v.len and match(val[0..v.len], v)) {
             return i;
@@ -2769,7 +2771,7 @@ const Number = struct {
 // getnum parses s[0:1] or s[0:2] (fixed forces s[0:2])
 // as a decimal integer and returns the integer and the
 // remainder of the string.
-fn getNum(s: []const u8, fixde: bool) !Number {
+fn getNum(s: []const u8, fixed: bool) !Number {
     if (!isDigit(s, 0)) {
         return error.BadData;
     }
@@ -2793,10 +2795,10 @@ fn getNum(s: []const u8, fixde: bool) !Number {
 // as a decimal integer and returns the integer and the remainder
 // of the string.
 fn getNum3(s: []const u8, fixed: bool) !Number {
-    var n: usize = 0;
+    var n: isize = 0;
     var i: usize = 0;
     while (i < 3 and isDigit(s, i)) : (i += 1) {
-        n = n * 10 + @intCast(usize, s[i] - '0');
+        n = n * 10 + @intCast(isize, s[i] - '0');
     }
     if (i == 0 or fixed and i != 3) {
         return error.BadData;
