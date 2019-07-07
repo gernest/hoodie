@@ -1227,19 +1227,44 @@ pub const Time = struct {
                     const n = try getNum(val, false);
                     parsed_hour = n.value;
                     val = n.string;
-                    //TODO(gernest); hour range
+                    if (parsed_hour < 0 or 24 <= parsed_hour) {
+                        return error.BadHourRange;
+                    }
                 },
                 .stdHour12, .stdZeroHour12 => {
                     const n = try getNum(val, ctx.chunk == .stdZeroHour12);
                     parsed_hour = n.value;
                     val = n.string;
-                    //TODO(gernest); hour range
+                    if (parsed_hour < 0 or 12 <= parsed_hour) {
+                        return error.BadHourRange;
+                    }
                 },
                 .stdMinute, .stdZeroMinute => {
                     const n = try getNum(val, ctx.chunk == .stdZeroMinute);
                     parsed_min = n.value;
                     val = n.string;
-                    //TODO(gernest); minute range
+                    if (parsed_min < 0 or 60 <= parsed_min) {
+                        return error.BadMinuteRange;
+                    }
+                },
+                .stdSecond, .stdZeroSecond => {
+                    const n = try getNum(val, ctx.chunk == .stdZeroSecond);
+                    parsed_sec = n.value;
+                    val = n.string;
+                    if (parsed_sec < 0 or 60 <= parsed_sec) {
+                        return error.BadSecondRange;
+                    }
+                    if (val.len > 2 and val[0] == '.' and isDigit(val, 1)) {
+                        const ch = nextStdChunk(lay);
+                        if (ch.chunk == .stdFracSecond0 or ch.chunk == .stdFracSecond9) {
+                            // Fractional second in the layout; proceed normally
+                            break;
+                        }
+                        const f: usize = 0;
+                        while (f < val.len and isDigit(val, f)) : (f += 1) {}
+                        parsed_nsec = try parseNanoseconds(val, f);
+                        val = val[f..];
+                    }
                 },
                 else => {},
             }
@@ -2823,4 +2848,20 @@ fn getNum3(s: []const u8, fixed: bool) !Number {
         .value = n,
         .string = s[i..],
     };
+}
+
+fn parseNanoseconds(value: []const u8, nbytes: usize) !usize {
+    if (value[0] != '.') {
+        return error.BadData;
+    }
+    var ns = try fmt.parseInt(isize, value[1..nbytes], 10);
+    if (ns < 0 or 1e9 <= ns) {
+        return error.BadFractionalRange;
+    }
+    const scale_digits = 10 - digits;
+    var i: usize = 0;
+    while (i < scale_digits) : (i += 1) {
+        ns *= 10;
+    }
+    return n;
 }
