@@ -1196,6 +1196,51 @@ pub const Time = struct {
                     const idx = try lookup(long_day_names, val);
                     val = val[long_day_names[idx].len..];
                 },
+                .stdDay, .stdUnderDay, .stdZeroDay => {
+                    if (ctx.chunk == .stdUnderDay and
+                        val.len > 0 and val[0] == ' ')
+                    {
+                        val = val[1..];
+                    }
+                    const n = try getNum(val, ctx.chunk == .stdZeroDay);
+                    parsed_day = n.value;
+                    val = n.string;
+                    // Note that we allow any one- or two-digit day here.
+                    // The month, day, year combination is validated after we've completed parsing
+                },
+                .stdUnderDay, .stdZeroDay => {
+                    var i: usize = 0;
+                    while (i < 2) : (i += 1) {
+                        if (ctx.chunk == .stdUnderDay and
+                            val.len > 0 and val[0] == ' ')
+                        {
+                            val = val[1..];
+                        }
+                    }
+                    const n = try getNum(val, ctx.chunk == .stdZeroYearDay);
+                    parsed_yday = n.value;
+                    val = n.string;
+                    // Note that we allow any one-, two-, or three-digit year-day here.
+                    // The year-day, year combination is validated after we've completed parsing.
+                },
+                .stdHour => {
+                    const n = try getNum(val, false);
+                    parsed_hour = n.value;
+                    val = n.string;
+                    //TODO(gernest); hour range
+                },
+                .stdHour12, .stdZeroHour12 => {
+                    const n = try getNum(val, ctx.chunk == .stdZeroHour12);
+                    parsed_hour = n.value;
+                    val = n.string;
+                    //TODO(gernest); hour range
+                },
+                .stdMinute, .stdZeroMinute => {
+                    const n = try getNum(val, ctx.chunk == .stdZeroMinute);
+                    parsed_min = n.value;
+                    val = n.string;
+                    //TODO(gernest); minute range
+                },
                 else => {},
             }
         }
@@ -2721,9 +2766,9 @@ const Number = struct {
     string: []const u8,
 };
 
-/// getnum3 parses s[0:1], s[0:2], or s[0:3] (fixed forces s[0:3])
-/// as a decimal integer and returns the integer and the remainder
-/// of the string as value and string fields of Number.
+// getnum parses s[0:1] or s[0:2] (fixed forces s[0:2])
+// as a decimal integer and returns the integer and the
+// remainder of the string.
 fn getNum(s: []const u8, fixde: bool) !Number {
     if (!isDigit(s, 0)) {
         return error.BadData;
@@ -2741,5 +2786,23 @@ fn getNum(s: []const u8, fixde: bool) !Number {
     return Number{
         .value = n,
         .string = s[1..],
+    };
+}
+
+// getnum3 parses s[0:1], s[0:2], or s[0:3] (fixed forces s[0:3])
+// as a decimal integer and returns the integer and the remainder
+// of the string.
+fn getNum3(s: []const u8, fixed: bool) !Number {
+    var n: usize = 0;
+    var i: usize = 0;
+    while (i < 3 and isDigit(s, i)) : (i += 1) {
+        n = n * 10 + @intCast(usize, s[i] - '0');
+    }
+    if (i == 0 or fixed and i != 3) {
+        return error.BadData;
+    }
+    return Number{
+        .value = n,
+        .string = s[i..],
     };
 }
