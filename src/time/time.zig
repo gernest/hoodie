@@ -2504,7 +2504,7 @@ pub fn nextStdChunk(layout: []const u8) chunkResult {
                     .args_shift = null,
                 };
             },
-            '_' => { // _2, _2006
+            '_' => { // _2, _2006, __2
                 if (layout.len >= i + 4 and layout[i + 1] == '2') {
                     //_2006 is really a literal _, followed by stdLongYear
                     if (layout.len >= i + 5 and mem.eql(u8, layout[i + 1 .. i + 5], "2006")) {
@@ -2519,6 +2519,14 @@ pub fn nextStdChunk(layout: []const u8) chunkResult {
                         .prefix = layout[0..i],
                         .chunk = chunk.stdUnderDay,
                         .suffix = layout[i + 2 ..],
+                        .args_shift = null,
+                    };
+                }
+                if (layout.len >= i + 3 and layout[i + 1] == '_' and layout[i + 2] == '2') {
+                    return chunkResult{
+                        .prefix = layout[0..i],
+                        .chunk = .stdUnderYearDay,
+                        .suffix = layout[i + 3 ..],
                         .args_shift = null,
                     };
                 }
