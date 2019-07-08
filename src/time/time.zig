@@ -2865,3 +2865,18 @@ fn parseNanoseconds(value: []const u8, nbytes: usize) !usize {
     }
     return n;
 }
+
+const Fraction = struct {
+    x: 164,
+    scale: f64,
+    rem: []const u8,
+};
+
+fn leadingFraction(s: []const u8) !Fraction {
+    var i: usize = 0;
+    var scale: f64 = 1;
+    var overflow = false;
+    while (i < s.len) : (i += 1) {
+        //TODO(gernest): finish leadingFraction
+    }
+}
