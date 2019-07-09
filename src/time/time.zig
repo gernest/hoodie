@@ -1260,7 +1260,7 @@ pub const Time = struct {
                             // Fractional second in the layout; proceed normally
                             break;
                         }
-                        const f: usize = 0;
+                        var f: usize = 0;
                         while (f < val.len and isDigit(val, f)) : (f += 1) {}
                         parsed_nsec = try parseNanoseconds(val, f);
                         val = val[f..];
@@ -1269,6 +1269,7 @@ pub const Time = struct {
                 else => {},
             }
         }
+        return error.TODO;
     }
 
     /// skip removes the given prefix from value,
@@ -2850,20 +2851,21 @@ fn getNum3(s: []const u8, fixed: bool) !Number {
     };
 }
 
-fn parseNanoseconds(value: []const u8, nbytes: usize) !usize {
+fn parseNanoseconds(value: []const u8, nbytes: usize) !isize {
     if (value[0] != '.') {
         return error.BadData;
     }
-    var ns = try fmt.parseInt(isize, value[1..nbytes], 10);
-    if (ns < 0 or 1e9 <= ns) {
+    var ns = try std.fmt.parseInt(isize, value[1..nbytes], 10);
+    const nf = @intToFloat(f64, ns);
+    if (nf < 0 or 1e9 <= nf) {
         return error.BadFractionalRange;
     }
-    const scale_digits = 10 - digits;
+    const scale_digits = 10 - nbytes;
     var i: usize = 0;
     while (i < scale_digits) : (i += 1) {
         ns *= 10;
     }
-    return n;
+    return ns;
 }
 
 const Fraction = struct {

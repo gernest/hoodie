@@ -12,4 +12,5 @@ test "hoodie" {
     _ = @import("compress/all_test.zig");
     _ = @import("path/all_test.zig");
     _ = @import("ignore/ignore_test.zig");
+    _ = @import("encoding/csv/csv_test.zig");
 }

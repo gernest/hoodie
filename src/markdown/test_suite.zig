@@ -1815,7 +1815,9 @@ pub const all_cases = [_]TestCase{
     TestCase{
         .example = 302,
         .sec = "Entity and numeric character references",
-        .html = "<p>\u00a0 &amp; © Æ Ď\n¾ ℋ ⅆ\n∲ ≧̸</p>\n",
+        .html =
+            \\<p>\u00a0 &amp; © Æ Ď\n¾ ℋ ⅆ\n∲ ≧̸</p>\n
+        ,
         .markdown = "&nbsp; &amp; &copy; &AElig; &Dcaron;\n&frac34; &HilbertSpace; &DifferentialD;\n&ClockwiseContourIntegral; &ngE;\n",
     },
     TestCase{
@@ -1917,9 +1919,12 @@ pub const all_cases = [_]TestCase{
     TestCase{
         .example = 319,
         .sec = "Code spans",
-        .html = "<p><code>a\u00a0\u00a0b</code></p>\n",
-        .markdown = "`a\u00a0\u00a0b`\n",
-    },
+        .html =
+            \\<p><code>a\u00a0\u00a0b</code></p>\n
+        ,
+        .markdown =
+            \\`a\u00a0\u00a0b`\n
+            },
     TestCase{
         .example = 320,
         .sec = "Code spans",
@@ -2007,9 +2012,12 @@ pub const all_cases = [_]TestCase{
     TestCase{
         .example = 334,
         .sec = "Emphasis and strong emphasis",
-        .html = "<p>*\u00a0a\u00a0*</p>\n",
-        .markdown = "*\u00a0a\u00a0*\n",
-    },
+        .html =
+            \\<p>*\u00a0a\u00a0*</p>\n
+        ,
+        .markdown =
+            \\*\u00a0a\u00a0*\n
+            },
     TestCase{
         .example = 335,
         .sec = "Emphasis and strong emphasis",
@@ -2872,8 +2880,9 @@ pub const all_cases = [_]TestCase{
         .example = 478,
         .sec = "Links",
         .html = "<p><a href=\"/url%C2%A0%22title%22\">link</a></p>\n",
-        .markdown = "[link](/url\u00a0\"title\")\n",
-    },
+        .markdown =
+            \\[link](/url\u00a0\"title\")\n
+            },
     TestCase{
         .example = 479,
         .sec = "Links",

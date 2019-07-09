@@ -4,8 +4,13 @@ const unicode = @import("unicode");
 const io = std.io;
 const mem = std.mem;
 const utf8 = unicode.utf8;
+const warn = std.debug.warn;
 
-pub fn Writer(comptime Errot: type) type {
+pub const WriteError = io.BufferOutStream.Error;
+
+/// WriterCommon returns a csv Writer that can write OutStream initialized with
+/// Error trype.
+pub fn WriterCommon(comptime Errot: type) type {
     return struct {
         const Self = @This();
         pub const BufferedOutStream = io.BufferedOutStream(Errot);
@@ -37,7 +42,7 @@ pub fn Writer(comptime Errot: type) type {
 
                 // If we don't have to have a quoted field then just
                 // write out the field and continue to the next field.
-                if (fieldNeedsQuotes(self.comma, field)) {
+                if (!fieldNeedsQuotes(self.comma, field)) {
                     try stream.write(field);
                     continue;
                 }
@@ -45,7 +50,7 @@ pub fn Writer(comptime Errot: type) type {
                 var f = field;
                 while (f.len > 0) {
                     var i = f.len;
-                    if (mem.indexOfAny(u8, field, "\"\r\n")) |idx| {
+                    if (mem.indexOfAny(u8, f, "\"\r\n")) |idx| {
                         i = idx;
                     }
                     try stream.write(f[0..i]);
@@ -69,7 +74,7 @@ pub fn Writer(comptime Errot: type) type {
                                     try stream.writeByte('\n');
                                 }
                             },
-                            else => unreachable,
+                            else => {},
                         }
                         f = f[1..];
                     }
@@ -84,6 +89,13 @@ pub fn Writer(comptime Errot: type) type {
         }
     };
 }
+
+/// writer that can write to streams from
+// io.BufferOutStream
+///
+/// please see WriterCommon if you want to write to a custome stream
+/// implementation.
+pub const Writer = WriterCommon(WriteError);
 
 fn validDelim(r: u8) bool {
     return r != 0 and r != '"' and r != '\r' and r != '\n';
@@ -112,7 +124,7 @@ fn fieldNeedsQuotes(comma: u8, field: []const u8) bool {
     {
         return true;
     }
-    const run = utf8.decodeRune(field) catch |err| {
+    const rune = utf8.decodeRune(field) catch |err| {
         return false;
     };
     return unicode.isSpace(rune.value);
