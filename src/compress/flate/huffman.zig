@@ -1,7 +1,9 @@
 const std = @import("std");
+
 const math = std.math;
 const assert = std.debug.assert;
 const warn = std.debug.warn;
+const Allocator = std.mem.Allocator;
 
 pub const max_num_lit = 286;
 pub const max_bits_limit = 16;
@@ -17,10 +19,10 @@ pub const Huffman = struct {
     bit_count: [17]i32,
 
     /// sorted by literal
-    lns: []LitaralNode,
+    lns: LiteralList,
 
     ///sorted by freq
-    lfs: []LitaralNode,
+    lfs: LiteralList,
 
     pub const Code = struct {
         code: u16,
@@ -37,10 +39,36 @@ pub const Huffman = struct {
                 .freq = math.maxInt(i32),
             };
         }
+
+        pub const SortBy = enum {
+            Literal,
+            Freq,
+        };
+
+        fn sort(ls: []LitaralNode, by: SortBy) void {
+            switch (by) {
+                .Literal => {
+                    std.sort.sort(LitaralNode, ls, sortByLiteralFn);
+                },
+                .Freq => {
+                    std.sort.sort(LitaralNode, ls, sortByFreqFn);
+                },
+            }
+        }
+
+        fn sortByLiteralFn(lhs: LitaralNode, rhs: LitaralNode) bool {
+            return lhs.literal < rhs.literal;
+        }
+
+        fn sortByFreqFn(lhs: LitaralNode, rhs: LitaralNode) bool {
+            if (lhs.freq == rhs.freq) {
+                return lhs.literal < rhs.literal;
+            }
+            return lhs.freq < rhs.freq;
+        }
     };
 
-    pub const ByLiteral = []LitaralNode;
-    pub const ByFreq = []LitaralNode;
+    pub const LiteralList = std.ArrayList(LitaralNode);
 
     const LevelInfo = struct {
         level: i32,
@@ -50,10 +78,17 @@ pub const Huffman = struct {
         needed: i32,
     };
 
-    pub fn init(comptime size: usize) Huffman {
+    pub fn init(size: usize) Huffman {
         assert(size <= max_num_lit);
         var h: Huffman = undefined;
         h.codes_len = size;
+        return h;
+    }
+
+    pub fn initAlloc(allocator: *Allocator, size: usize) Huffman {
+        var h = init(size);
+        h.lhs = LiteralList.init(a);
+        h.rhs = LiteralList.init(a);
         return h;
     }
 
@@ -181,6 +216,80 @@ pub const Huffman = struct {
             bits += 1;
         }
         return bit_count;
+    }
+
+    /// Look at the leaves and assign them a bit count and an encoding as specified
+    /// in RFC 1951 3.2.2
+    pub fn assignEncodingAndSize(
+        self: *Huffman,
+        bit_count: []const i32,
+        list: []LitaralNode,
+    ) !void {
+        var ls = list;
+        var code: u16 = 0;
+        for (bit_count) |bits, n| {
+            code = math.shl(u16, code, 1);
+            if (n == 0 or bits == 0) {
+                continue;
+            }
+            // The literals list[len(list)-bits] .. list[len(list)-bits]
+            // are encoded using "bits" bits, and get the values
+            // code, code + 1, ....  The code values are
+            // assigned in literal order (not frequency order).
+            var chunk = ls[ls.len - @intCast(usize, bits) ..];
+            LitaralNode.sort(chunk, .Literal);
+            try self.lhs.append(chunk);
+            for (chunk) |node| {
+                self.codes[@intCast(usize, node.literal)] = Code{
+                    .code = reverseBits(code, @intCast(u16, n)),
+                    .len = @intCast(u16, n),
+                };
+            }
+            ls = ls[0 .. ls.len - @intCast(usize, bits)];
+        }
+    }
+
+    pub fn generate(
+        self: *Huffman,
+        freq: []const i32,
+        max_bits: i32,
+    ) !void {
+        var list = self.freq_cache[0 .. freq.len + 1];
+        var count: usize = 0;
+        for (freq) |f, i| {
+            if (f != 0) {
+                list[count] = LitaralNode{
+                    .literal = @intCast(u16, i),
+                    .freq = f,
+                };
+                count += 1;
+            } else {
+                ls[count] = LitaralNode{
+                    .literal = 0,
+                    .freq = 0,
+                };
+                self.codes[i].len = 0;
+            }
+        }
+        ls[freq.len] = LitaralNode{
+            .literal = 0,
+            .freq = 0,
+        };
+        ls = ls[0..count];
+        if (count <= 2) {
+            for (ls) |node, i| {
+                // Handle the small cases here, because they are awkward for the general case code. With
+                // two or fewer literals, everything has bit length 1.
+                var x = &self.codes[@intCast(usize, node.literal)];
+                x.code = @intCast(u16, i);
+                x.len = 1;
+            }
+            return;
+        }
+        LitaralNode.sort(ls, .Freq);
+        try self.lfs.append(ls);
+        const bit_counts = try self.bitCounts(ls, max_bits);
+        try self.assignEncodingAndSize(bit_count, ls);
     }
 };
 
