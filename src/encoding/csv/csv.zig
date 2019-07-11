@@ -131,7 +131,29 @@ fn fieldNeedsQuotes(comma: u8, field: []const u8) bool {
     return unicode.isSpace(rune.value);
 }
 
-pub const Record = std.ArrayList([]const u8);
+pub const Record = struct {
+    arena: std.heap.ArenaAllocator,
+    lines: Lines,
+
+    pub fn init(allocator: *Allocator) Record {
+        return Record{
+            .arena = std.heap.ArenaAllocator.init(allocator),
+            .lines = Lines.init(a),
+        };
+    }
+
+    pub fn reset(self: *Record) void {
+        try self.lines.resize(0);
+        self.arena.deinit();
+        self.arena.buffer_list.first = null;
+    }
+
+    pub fn ga(self: *Record) *Allocator {
+        return &self.arena.allocator;
+    }
+};
+
+pub const Lines = std.ArrayList([]const u8);
 
 // Error is the error of the input stream that the reader will be reading from.
 pub fn ReaderCommon(comptime Error: type) type {
@@ -169,6 +191,81 @@ pub fn ReaderCommon(comptime Error: type) type {
         /// This is done even if the field delimiter, Comma, is white space.
         trim_leading_space: bool,
 
-        pub fn read(self: *Self, allocator: *Allocator) !Record {}
+        /// The stream of csv data
+        in_stream: *InStream,
+
+        pub const InStream = io.InStream(Error);
+
+        pub fn read(self: *Self, record: *Record) !void {
+            if (self.comma == self.comment or
+                !validDelim(self.comma) or
+                self.comment != 0 and !validDelim(self.comment))
+            {
+                return error.InvalidDelim;
+            }
+            var full_line = &try std.Buffer.init(record.ga(), "");
+            while (true) {
+                try readLine(self.in_stream, full_line);
+                if (self.comment != 0 and nextRune(line.toSlice(), self.comment)) {
+                    continue;
+                }
+                if (full_line.len() == 0) {
+                    continue; //empty line
+                }
+            }
+            var line = full_line.toSlice();
+            const comma_len: usize = 1;
+            const quote_len: usize = 1;
+            parse_field: while (true) {
+                if (self.trim_leading_space) {
+                    line = trimLeft(line);
+                }
+                if (line.len == 0 or line[0] == '"') {
+                    // Non-quoted string field
+                    var field = line;
+                    var ix: ?usize = null;
+                    if (indexRune(line, self.comma)) |i| {
+                        field = field[0..i];
+                        ix = i;
+                    }
+                    if (!self.lazy_quotes) {
+                        if (mem.indexOfScalar(u8, field, '"')) |i| {
+                            return error.BareQuote;
+                        }
+                    }
+                    if (ix) |i| {
+                        line = line[i + comma_len ..];
+                        continue :parse_field;
+                    }
+                    break :parse_field;
+                } else {
+                    line = line[quote_len..];
+                    if (mem.indexOfScalar(u8, line, '"')) |i| {}
+                }
+            }
+        }
+
+        fn trimLeft(s: []const u8) []const u8 {}
+
+        fn indexRune(s: []const u8, rune: u8) ?usize {
+            return mem.indexOfScalar(u8, s, rune);
+        }
+
+        pub fn readLine(stream: *Stream, buf: *std.Buffer) !void {
+            try buf.reset(0);
+            _ = io.readLineFrom(stream, buf) catch |err| {
+                if (err == error.EndOfStream) {
+                    if (buf.len() > 0) {
+                        return;
+                    }
+                }
+                return err;
+            };
+        }
     };
+}
+
+fn nextRune(s: []const u8, rune: u8) bool {
+    if (s.len > 0) return s[0] == rune;
+    return false;
 }
