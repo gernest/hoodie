@@ -1266,6 +1266,34 @@ pub const Time = struct {
                         val = val[f..];
                     }
                 },
+                .stdPM => {
+                    if (val.len < 2) {
+                        return error.BadValue;
+                    }
+                    const p = val[0..2];
+                    val = val[2..];
+                    if (mem.eql(u8, p, "PM")) {
+                        pm_set = true;
+                    } else if (mem.eql(u8, p, "AM")) {
+                        am_set = true;
+                    } else {
+                        return error.BadValue;
+                    }
+                },
+                .stdpm => {
+                    if (val.len < 2) {
+                        return error.BadValue;
+                    }
+                    const p = val[0..2];
+                    val = val[2..];
+                    if (mem.eql(u8, p, "pm")) {
+                        pm_set = true;
+                    } else if (mem.eql(u8, p, "am")) {
+                        am_set = true;
+                    } else {
+                        return error.BadValue;
+                    }
+                },
                 else => {},
             }
         }
