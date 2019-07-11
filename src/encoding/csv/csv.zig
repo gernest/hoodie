@@ -5,6 +5,7 @@ const io = std.io;
 const mem = std.mem;
 const utf8 = unicode.utf8;
 const warn = std.debug.warn;
+const Allocator = mem.Allocator;
 
 pub const WriteError = io.BufferOutStream.Error;
 
@@ -128,4 +129,46 @@ fn fieldNeedsQuotes(comma: u8, field: []const u8) bool {
         return false;
     };
     return unicode.isSpace(rune.value);
+}
+
+pub const Record = std.ArrayList([]const u8);
+
+// Error is the error of the input stream that the reader will be reading from.
+pub fn ReaderCommon(comptime Error: type) type {
+    return struct {
+        const Self = @This();
+
+        /// Comma is the field delimiter.
+        /// It is set to comma (',') by NewReader.
+        /// Comma must be a valid rune and must not be \r, \n,
+        /// or the Unicode replacement character (0xFFFD).
+        comma: u8,
+
+        /// Comment, if not 0, is the comment character. Lines beginning with the
+        /// Comment character without preceding whitespace are ignored.
+        /// With leading whitespace the Comment character becomes part of the
+        /// field, even if TrimLeadingSpace is true.
+        /// Comment must be a valid rune and must not be \r, \n,
+        /// or the Unicode replacement character (0xFFFD).
+        /// It must also not be equal to Comma.
+        comment: u8,
+
+        /// fields_per_record is the number of expected fields per record.
+        /// If FieldsPerRecord is positive, Read requires each record to
+        /// have the given number of fields. If FieldsPerRecord is 0, Read sets it to
+        /// the number of fields in the first record, so that future records must
+        /// have the same field count. If fields_per_record is null, no check is
+        /// made and records may have a variable number of fields.
+        fields_per_record: ?usize,
+
+        /// If lazy_quotes is true, a quote may appear in an unquoted field and a
+        /// non-doubled quote may appear in a quoted field.
+        lazy_quotes: bool,
+
+        /// If TrimLeadingSpace is true, leading white space in a field is ignored.
+        /// This is done even if the field delimiter, Comma, is white space.
+        trim_leading_space: bool,
+
+        pub fn read(self: *Self, allocator: *Allocator) !Record {}
+    };
 }
