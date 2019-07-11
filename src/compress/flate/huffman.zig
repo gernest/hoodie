@@ -2,7 +2,6 @@ const std = @import("std");
 const math = std.math;
 const assert = std.debug.assert;
 const warn = std.debug.warn;
-const reverseU16 = @import("bits.zig").reverseU16;
 
 pub const max_num_lit = 286;
 pub const max_bits_limit = 16;
@@ -186,5 +185,5 @@ pub const Huffman = struct {
 };
 
 fn reverseBits(number: u16, bit_length: u16) u16 {
-    return reverseU16(math.shl(u16, number, 16 - bit_length));
+    return @bitReverse(u16, math.shl(u16, number, 16 - bit_length));
 }
