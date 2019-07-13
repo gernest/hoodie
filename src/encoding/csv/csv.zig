@@ -142,10 +142,18 @@ pub const Record = struct {
         };
     }
 
+    pub fn append(self: *Record, line: []const u8) !void {
+        try self.lines.append(line);
+    }
+
     pub fn reset(self: *Record) void {
         try self.lines.resize(0);
         self.arena.deinit();
         self.arena.buffer_list.first = null;
+    }
+
+    pub fn size(self: *Record) usize {
+        return self.lines.len;
     }
 
     pub fn ga(self: *Record) *Allocator {
@@ -154,6 +162,27 @@ pub const Record = struct {
 };
 
 pub const Lines = std.ArrayList([]const u8);
+
+pub const ParserError = struct {
+    start_line: usize,
+    line: usize,
+    column: usize,
+    err: []const u8,
+
+    pub fn init(
+        start_line: usize,
+        line: usize,
+        column: usize,
+        err: []const u8,
+    ) ParserError {
+        return ParserError{
+            .start_line = start_line,
+            .line = line,
+            .column = column,
+            .err = err,
+        };
+    }
+};
 
 // Error is the error of the input stream that the reader will be reading from.
 pub fn ReaderCommon(comptime Error: type) type {
@@ -194,7 +223,29 @@ pub fn ReaderCommon(comptime Error: type) type {
         /// The stream of csv data
         in_stream: *InStream,
 
+        num_line: usize,
+        record_buffer: std.Buffer,
+        field_index: std.ArrayList(usize),
+
         pub const InStream = io.InStream(Error);
+
+        pub fn init(allocator: *Allocator, stream: *InStream) Self {
+            return Self{
+                .comma = ',',
+                .comment = 0,
+                .fields_per_record = 0,
+                .lazy_quotes = false,
+                .trim_leading_space = false,
+                .in_stream = stream,
+                .num_line = 0,
+                .record_buffer = std.Buffer.init(a, "") catch unreachable,
+                .field_index = std.ArrayList(usize).init(a),
+            };
+        }
+        pub fn deinit(self: *Self) void {
+            self.record_buffer.deinit();
+            self.field_index.deinit();
+        }
 
         pub fn read(self: *Self, record: *Record) !void {
             if (self.comma == self.comment or
@@ -203,19 +254,29 @@ pub fn ReaderCommon(comptime Error: type) type {
             {
                 return error.InvalidDelim;
             }
-            var full_line = &try std.Buffer.init(record.ga(), "");
+            var line_buffer = &try std.Buffer.init(record.ga(), "");
+            var full_line = "";
+            var line = "";
             while (true) {
-                try readLine(self.in_stream, full_line);
-                if (self.comment != 0 and nextRune(line.toSlice(), self.comment)) {
+                try self.readLine(line_buffer);
+                line = line_buffer.toSlice();
+                if (self.comment != 0 and nextRune(line, self.comment)) {
+                    line = "";
                     continue;
                 }
-                if (full_line.len() == 0) {
+                if (line.len == 0) {
                     continue; //empty line
                 }
+                full_line = line;
             }
-            var line = full_line.toSlice();
+
             const comma_len: usize = 1;
             const quote_len: usize = 1;
+            var record_line = self.num_line;
+
+            try self.record_buffer.resize(0);
+            try self.field_index.resize(0);
+
             parse_field: while (true) {
                 if (self.trim_leading_space) {
                     line = trimLeft(line);
@@ -230,9 +291,18 @@ pub fn ReaderCommon(comptime Error: type) type {
                     }
                     if (!self.lazy_quotes) {
                         if (mem.indexOfScalar(u8, field, '"')) |i| {
+                            const e = ParserError.init(
+                                record_line,
+                                self.num_line,
+                                column,
+                                "BareQuote",
+                            );
+                            warn("csv: {}\n", e);
                             return error.BareQuote;
                         }
                     }
+                    try self.record_buffer.append(field);
+                    try self.field_index.append(self.record_buffer.len());
                     if (ix) |i| {
                         line = line[i + comma_len ..];
                         continue :parse_field;
@@ -240,27 +310,113 @@ pub fn ReaderCommon(comptime Error: type) type {
                     break :parse_field;
                 } else {
                     line = line[quote_len..];
-                    if (mem.indexOfScalar(u8, line, '"')) |i| {}
+                    while (true) {
+                        if (mem.indexOfScalar(u8, line, '"')) |i| {
+                            try self.record_buffer.append(line[0..i]);
+                            line = line[i + quote_len ..];
+                            if (line.len > 0) {
+                                switch (line[0]) {
+                                    '"' => {
+                                        try self.record_buffer.appendByte('"');
+                                        line = line[quote_len..];
+                                    },
+                                    self.comma => {
+                                        line = line[comma_len..];
+                                        try self.field_index.append(self.record_buffer.len);
+                                        continue :parse_field;
+                                    },
+                                    else => {
+                                        if (self.lazy_quotes) {
+                                            try self.record_buffer.appendByte('"');
+                                        } else {
+                                            const col = full_line[0 .. full_line.len - line.len - quote_len];
+                                            const e = ParserError.init(
+                                                record_line,
+                                                self.num_line,
+                                                col,
+                                                "Quote",
+                                            );
+                                            warn("csv: {}\n", e);
+                                            return error.Quote;
+                                        }
+                                    },
+                                }
+                            } else {
+                                try self.field_index.append(self.record_buffer.len);
+                                break :parse_field;
+                            }
+                        } else if (line.len > 0) {
+                            try record.append(line);
+                            try self.readLine(line_buffer);
+                            line = line_buffer.toSlice();
+                            full_line = line;
+                        }
+                    }
                 }
+            }
+            if (err != null) {
+                warn("csv: {}\n", err);
+                return error.ParserError;
+            }
+            var pre_id: usize = 0;
+            const src = self.record_buffer.toSlice();
+            try record.reset();
+            for (self.field_index) |idx| {
+                try record.append(src[pre_id..idx]);
+                pre_id = idx;
+            }
+            if (self.fields_per_record > 0) {
+                if (record.size() != self.fields_per_record) {
+                    const e = ParserError.init(
+                        record_line,
+                        record_line,
+                        column,
+                        "FieldCount",
+                    );
+                    warn("csv: {}\n", e);
+                    return error.FieldCount;
+                }
+            } else if (self.fields_per_record == 0) {
+                self.fields_per_record = record.size();
             }
         }
 
-        fn trimLeft(s: []const u8) []const u8 {}
+        //trims space at the beginning of s
+        fn trimLeft(s: []const u8) []const u8 {
+            var i: usize = 0;
+            while (i < s.len) {
+                if (!std.ascii.isSpace(s[i])) {
+                    break;
+                }
+                i += 1;
+            }
+            return s[i..];
+        }
 
         fn indexRune(s: []const u8, rune: u8) ?usize {
             return mem.indexOfScalar(u8, s, rune);
         }
 
-        pub fn readLine(stream: *Stream, buf: *std.Buffer) !void {
-            try buf.reset(0);
-            _ = io.readLineFrom(stream, buf) catch |err| {
-                if (err == error.EndOfStream) {
-                    if (buf.len() > 0) {
-                        return;
+        fn readLine(self: *Selr, buf: *std.Buffer) !void {
+            readLineInternal(self, buf) catch |err| {
+                if (buf.len() > 0 and err == error.EndOfStream) {
+                    if (buf.endsWith('\r')) {
+                        try buf.resize(buf.len() - 1);
                     }
+                    self.num_line += 1;
+                    return;
                 }
                 return err;
             };
+            self.num_line += 1;
+            //TODO normalize \r\n
+        }
+
+        const max_line_size: usize = 1024 * 5;
+
+        fn readLineInternal(self: *Selr, buf: *std.Buffer) !void {
+            try buf.reset(0);
+            try self.in_stream.readUntilDelimiterBuffer('\n', max_line_size);
         }
     };
 }
