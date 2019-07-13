@@ -177,7 +177,7 @@ pub fn lexParts(ls: *std.ArrayList(Part), s: []const u8) !void {
         }
     }
     if (pos - start > 0) {
-        try ls.append(Part{ .Placeholder = s[start..pos] });
+        try ls.append(Part{ .Raw = s[start..pos] });
     }
 }
 
