@@ -15,7 +15,7 @@ const Value = union(enum) {
 };
 
 pub const Part = union(enum) {
-    Placeholder: usize,
+    Place: usize,
     Raw: []const u8,
 };
 
@@ -28,8 +28,8 @@ pub fn sanitizeSQL(allocator: *allocator, sql: []const u8, args: ...) ![]u8 {
     try lexParts(&parts, sql);
     for (parts.toList()) |part| {
         switch (part) {
-            .Placeholder => |idx| {
-                if (idx == 0) return error.ZeroIndexPlaceholder;
+            .Place => |idx| {
+                if (idx == 0) return error.ZeroIndexPlace;
                 const args_id = idx - 1;
                 if (args_id >= args.len) return error.InsufficiendArguments;
                 switch (args[args_id]) {
@@ -156,15 +156,22 @@ pub fn lexParts(ls: *std.ArrayList(Part), s: []const u8) !void {
                     start = pos;
                     var num: usize = 0;
                     while (true) {
-                        const x = (try nextRune(s, pos)) orelse break :raw_state;
+                        const x = (try nextRune(s, pos)) orelse {
+                            if (num > 0) {
+                                try ls.append(Part{
+                                    .Place = num,
+                                });
+                                start = pos;
+                            }
+                            break :raw_state;
+                        };
                         pos += x.width;
-                        warn(">>  {}\n", s[pos..]);
                         if ('0' <= x.r and x.r <= '9') {
                             num *= 10;
                             num += @intCast(usize, x.r - '0');
                         } else {
                             try ls.append(Part{
-                                .Placeholder = num,
+                                .Place = num,
                             });
                             pos -= x.width;
                             start = pos;

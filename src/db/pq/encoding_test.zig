@@ -35,15 +35,12 @@ test "lexParts" {
     var a = std.debug.global_allocator;
     var ls = std.ArrayList(Part).init(a);
     for (lex_parts_cases) |case, i| {
-        if (i != 1) {
-            continue;
-        }
         try ls.resize(0);
         try encoding.lexParts(&ls, case.src);
-        warn("==>{}\n> ", i);
+        warn("==>{} {}\n> ", i, case.src);
         for (ls.toSlice()) |p| {
-            warn("{}\n", p);
+            warn("{},", p);
         }
-        warn("\n");
+        warn("\n\n");
     }
 }
