@@ -7,7 +7,6 @@ test "hoodie" {
     _ = @import("lsp/all_test.zig");
     _ = @import("flags/cli_test.zig");
     _ = @import("html/html_test.zig");
-    _ = @import("markdown/markdown_test.zig");
     _ = @import("image/all_test.zig");
     _ = @import("compress/all_test.zig");
     _ = @import("path/all_test.zig");
