@@ -793,4 +793,28 @@ const Parser = struct {
         }
         return self.push(try self.collapse(subs, .Concat));
     }
+
+    /// cleanAlt cleans re for eventual inclusion in an alternation.
+    fn cleanAlt(re: *Regexp) void {
+        if (re.op == .CharClass) {
+            re.rune = clearClass(&re.rune);
+            if (re.rune.len == 2 and re.rune.at(0) == 0 and
+                re.rune.at(1) == unicode.utf8.max_rune)
+            {
+                re.rune.resize(0) catch unreachable;
+                re.op = .AnyChar;
+                return;
+            }
+            if (re.rune.len == 4 and
+                re.rune.at(0) == 0 and
+                re.rune.at(1) == ('\n' - 1) and
+                re.rune.at(2) == ('\n' + 1) and
+                re.rune.at(3) == unicode.utf8.max_rune)
+            {
+                re.rune.resize(0) catch unreachable;
+                re.op = .AnyCharNotNL;
+                return;
+            }
+        }
+    }
 };
