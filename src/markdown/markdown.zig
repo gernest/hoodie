@@ -143,4 +143,47 @@ pub const HTML = struct {
     pub const Params = struct {};
     const xhtml_close = "/>";
     const html_close = ">";
+
+    fn escapeChar(ch: u8) bool {
+        return switch (ch) {
+            '"', '&', '<', '>' => true,
+            else => false,
+        };
+    }
+
+    fn escapeSingleChar(buf: *Buffer, char: u8) !void {
+        switch (char) {
+            '"' => {
+                try buf.append("&quot;");
+            },
+            '&' => {
+                try buf.append("&amp;");
+            },
+            '<' => {
+                try buf.append("&lt;");
+            },
+            '>' => {
+                try buf.append("&gt;");
+            },
+            else => {},
+        }
+    }
+
+    fn escapeSingleChar(buf: *Buffer, src: []const u8) !void {
+        var o: usize = 0;
+        for (src) |s, i| {
+            if (escapeChar(s)) {
+                if (i > o) {
+                    try buf.append(src[o..i]);
+                }
+                o = i + 1;
+                try escapeSingleChar(buf, s);
+            }
+        }
+        if (o < src.len) {
+            try buf.append(src[o..]);
+        }
+    }
+
+    fn titleBlock(r: *Renderer, buf: *Buffer, text: []const u8) !void {}
 };
