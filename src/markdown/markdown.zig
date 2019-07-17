@@ -139,6 +139,7 @@ pub const HTML = struct {
     header_count: usize,
     current_level: usize,
     toc: *Buffer,
+    renderer: Renderer,
 
     pub const Params = struct {};
     const xhtml_close = "/>";
@@ -185,5 +186,31 @@ pub const HTML = struct {
         }
     }
 
-    fn titleBlock(r: *Renderer, buf: *Buffer, text: []const u8) !void {}
+    // naiveReplace simple replacing occurance of orig ,with with contents while
+    // writing the result to buf.
+    // Not optimized.
+    fn naiveReplace(buf: *Buffer, src: []const u8, orig: []const u8, with: []const u8) !void {
+        if (src.len < orig.len) return;
+        var s = src;
+        var start: usize = 0;
+        while (orig.len < s.len) |idx| {
+            if (mem.indexOf(u8, s, orig)) |idx| {
+                try buf.append(s[start..idx]);
+                try buf.append(with);
+                start += idx + with.len;
+            } else {
+                break;
+            }
+        }
+        if (start < s.len) {
+            try buf.append(s[start..]);
+        }
+    }
+
+    fn titleBlock(r: *Renderer, buf: *Buffer, text: []const u8) !void {
+        try buf.append("<h1 class=\"title\">");
+        const txt = mem.trimLeft(u8, text, "% ");
+        try naiveReplace(buf, txt, "\n% ", "\n");
+        try buf.append("\n</h1>");
+    }
 };
