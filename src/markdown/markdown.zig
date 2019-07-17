@@ -129,6 +129,63 @@ pub const HTML_SMARTYPANTS_ANGLED_QUOTES = 65536;
 pub const HTML_SMARTYPANTS_QUOTES_NBSP = 131072;
 pub const HTML_FOOTNOTE_RETURN_LINKS = 262144;
 
+pub const ID = struct {
+    txt: ?[]const u8,
+    prefix: ?[]const u8,
+    suffix: ?[]const u8,
+    index: i64,
+    toc: bool,
+
+    pub fn init(
+        txt: ?[]const u8,
+        prefix: ?[]const u8,
+        suffix: ?[]const u8,
+        index: i64,
+        toc: bool,
+    ) ID {
+        return ID{
+            .txt = txt,
+            .prefix = prefix,
+            .suffix = suffix,
+            .index = index,
+            .toc = toc,
+        };
+    }
+
+    pub fn valid(self: ID) bool {
+        if (self.txt != null or self.toc) return true;
+        return false;
+    }
+
+    pub fn format(
+        self: ID,
+        comptime fmt: []const u8,
+        comptime options: std.fmt.FormatOptions,
+        context: var,
+        comptime Errors: type,
+        output: fn (@typeOf(context), []const u8) Errors!void,
+    ) Errors!void {
+        if (self.prefix) |prefix| {
+            try output(context, prefix);
+        }
+        if (self.txt) |txt| {
+            try output(context, prefix);
+        } else if (self.toc) {
+            try output(context, "toc");
+        }
+        try std.fmt.format(
+            context,
+            Errors,
+            output,
+            "_{}",
+            self.index,
+        );
+        if (self.suffix) |suffix| {
+            try output(context, suffix);
+        }
+    }
+};
+
 pub const HTML = struct {
     flags: usize,
     close_tag: []const u8,
@@ -136,7 +193,7 @@ pub const HTML = struct {
     css: ?[]const u8,
     render_params: Params,
     toc_marker: usize,
-    header_count: usize,
+    header_count: i64,
     current_level: usize,
     toc: *Buffer,
     renderer: Renderer,
@@ -212,5 +269,53 @@ pub const HTML = struct {
         const txt = mem.trimLeft(u8, text, "% ");
         try naiveReplace(buf, txt, "\n% ", "\n");
         try buf.append("\n</h1>");
+    }
+
+    fn doubleSpace(buf: *Buffer) !void {
+        if (buf.len() > 0) {
+            try buf.appendByte('\n');
+        }
+    }
+
+    fn getHeaderID(self: *HTML) i64 {
+        const id = self.header_count;
+        self.header_count += 1;
+        return id;
+    }
+
+    fn printBuffer(buf: *Buffer, comptime fmt: []const u8, args: ...) !void {
+        var stream = &io.BufferOutStream.init(buf).stream;
+        try stream.print(fmt, args);
+    }
+
+    fn header(
+        r: *Renderer,
+        buf: *Buffer,
+        text: *TextIter,
+        level: usize,
+        id: ?[]const u8,
+    ) !void {
+        const marker = buf.len();
+        try doubleSpace(buf);
+        const self = @fieldParentPtr(HTML, "renderer", r);
+        var stream = &io.BufferOutStream.init(buf).stream;
+        const hid = ID.init(
+            id,
+            self.params.header_id_prefix,
+            self.params.header_id_suffix,
+            self.getHeaderID(),
+            self.flags & HTML_TOC != 0,
+        );
+        if (hid.valid()) {
+            try stream.print("<{} id=\"{}\"", level, hid);
+        } else {
+            try stream.print("<{}", level);
+        }
+        const toc_marker = buf.len();
+        if (!text.text()) {
+            try buf.resize(marker);
+            return;
+        }
+        try stream.print("</h{}>\n", level);
     }
 };
