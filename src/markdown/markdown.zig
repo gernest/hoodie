@@ -371,4 +371,19 @@ pub const HTML = struct {
         try buf.append(text);
         try buf.append("</blockquote>\n");
     }
+
+    fn table(
+        r: *Renderer,
+        buf: *Buffer,
+        header: []const u8,
+        body: []const u8,
+        colum_data: []const usize,
+    ) !void {
+        try doubleSpace(buf);
+        try buf.append("<table>\n<thead>\n");
+        try buf.append(header);
+        try buf.append("</thead>\n\n<tbody>\n");
+        try buf.append(body);
+        try buf.append("</tbody>\n</table>\n");
+    }
 };
