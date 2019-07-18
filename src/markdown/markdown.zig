@@ -202,6 +202,28 @@ pub const HTML = struct {
     const xhtml_close = "/>";
     const html_close = ">";
 
+    pub fn init() HTML {
+        return HTML{
+            .renderer = Renderer{
+                .blockCodeFn = blockCode,
+                .blockQuoteFn = blockQuote,
+                .blockHtmlFn = blockQuote,
+                .headerFn = header,
+                .hruleFn = hrule,
+                .listFn = list,
+                .listItemFn = listItem,
+                .paragraphFn = paragraph,
+                .tableFn = table,
+                .tableRowFn = tableRow,
+                .tableHeaderCellFn = tableHeaderCell,
+                .tableCellFn = tableCell,
+                .footnotesFn = footnotes,
+                .footnoteItemFn = footnoteItem,
+                .titleBlockFn = titleBlock,
+            },
+        };
+    }
+
     fn escapeChar(ch: u8) bool {
         return switch (ch) {
             '"', '&', '<', '>' => true,
