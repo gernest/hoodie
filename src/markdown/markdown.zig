@@ -422,4 +422,29 @@ pub const HTML = struct {
         try buf.append(text);
         try buf.append("</th>");
     }
+
+    fn tableCell(
+        r: *Renderer,
+        buf: *Buffer,
+        text: []const u8,
+        alignment: usize,
+    ) !void {
+        try doubleSpace(buf);
+        switch (alignment) {
+            TABLE_ALIGNMENT_LEFT => {
+                try buf.append("<td align=\"left\">");
+            },
+            TABLE_ALIGNMENT_RIGHT => {
+                try buf.append("<td align=\"right\">");
+            },
+            TABLE_ALIGNMENT_CENTER => {
+                try buf.append("<td align=\"center\">");
+            },
+            else => {
+                try buf.append("<td>");
+            },
+        }
+        try buf.append(text);
+        try buf.append("</td>");
+    }
 };
