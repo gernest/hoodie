@@ -318,4 +318,14 @@ pub const HTML = struct {
         }
         try stream.print("</h{}>\n", level);
     }
+
+    fn blockHtml(r: *Renderer, buf: *Buffer, text: []const u8) !void {
+        const self = @fieldParentPtr(HTML, "renderer", r);
+        if (self.flags & HTML_SKIP_HTML != 0) {
+            return;
+        }
+        try doubleSpace(buf);
+        try buf.append(text);
+        try buf.appendByte('\n');
+    }
 };
