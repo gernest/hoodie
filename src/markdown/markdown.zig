@@ -328,4 +328,12 @@ pub const HTML = struct {
         try buf.append(text);
         try buf.appendByte('\n');
     }
+
+    fn hrule(r: *Renderer, buf: *Buffer) !void {
+        const self = @fieldParentPtr(HTML, "renderer", r);
+        try doubleSpace(buf);
+        try buf.append("<hr");
+        try buf.append(self.close_tag);
+        try buf.appendByte('\n');
+    }
 };
