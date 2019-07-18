@@ -227,7 +227,7 @@ pub const HTML = struct {
         }
     }
 
-    fn escapeSingleChar(buf: *Buffer, src: []const u8) !void {
+    fn attrEscape(buf: *Buffer, src: []const u8) !void {
         var o: usize = 0;
         for (src) |s, i| {
             if (escapeChar(s)) {
@@ -335,5 +335,29 @@ pub const HTML = struct {
         try buf.append("<hr");
         try buf.append(self.close_tag);
         try buf.appendByte('\n');
+    }
+
+    fn blockCode(
+        r: *Renderer,
+        buf: *Buffer,
+        text: []const u8,
+        info: []const u8,
+    ) !void {
+        try doubleSpace(buf);
+        const self = @fieldParentPtr(HTML, "renderer", r);
+        var end_of_lang: usize = 0;
+        if (mem.indexAny(u8, info, "\t ")) |idx| {
+            end_of_lang = idx;
+        }
+        const lang = if (end_of_lang != 0) info[0..end_of_lang] else "";
+        if (lang.len == 0 or lan[0] == '.') {
+            try buf.append("<pre><code>");
+        } else {
+            try buf.append("<pre><code class=\"language-)");
+            try attrEscape(buf, lang);
+            try buf.append("\">");
+        }
+        try buf.append(text);
+        try buf.append("</code></pre>\n");
     }
 };
