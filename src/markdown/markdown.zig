@@ -360,4 +360,15 @@ pub const HTML = struct {
         try buf.append(text);
         try buf.append("</code></pre>\n");
     }
+
+    fn blockQuote(
+        r: *Renderer,
+        buf: *Buffer,
+        text: []const u8,
+    ) !void {
+        try doubleSpace(buf);
+        try buf.append("<blockquote>\n");
+        try buf.append(text);
+        try buf.append("</blockquote>\n");
+    }
 };
