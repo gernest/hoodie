@@ -470,6 +470,17 @@ pub const HTML = struct {
         try buf.append("</td>");
     }
 
+    fn footnotes(
+        r: *Renderer,
+        buf: *Buffer,
+        text: *TextIter,
+    ) !void {
+        try buf.append("<div class=\"footnotes\">\n");
+        try r.hrule(buf);
+        try r.list(buf, text, LIST_TYPE_ORDERED);
+        try buf.append("</div>\n");
+    }
+
     fn list(
         r: *Renderer,
         buf: *Buffer,
