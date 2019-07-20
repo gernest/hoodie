@@ -469,4 +469,31 @@ pub const HTML = struct {
         try buf.append(text);
         try buf.append("</td>");
     }
+
+    fn list(
+        r: *Renderer,
+        buf: *Buffer,
+        text: *TextIter,
+        flags: usize,
+    ) !void {
+        const marker = buf.len();
+        try doubleSpace(buf);
+        if (flags & LIST_TYPE_DEFINITION != 0) {
+            try buf.append("<dl>");
+        } else if (flags & LIST_TYPE_ORDERED != 0) {
+            try buf.append("<oll>");
+        } else {
+            try buf.append("<ul>");
+        }
+        if (!text.text()) {
+            try buf.resize(marker);
+        }
+        if (flags & LIST_TYPE_DEFINITION != 0) {
+            try buf.append("</dl>\n");
+        } else if (flags & LIST_TYPE_ORDERED != 0) {
+            try buf.append("</oll>\n");
+        } else {
+            try buf.append("</ul>\n");
+        }
+    }
 };
