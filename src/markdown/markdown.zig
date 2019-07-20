@@ -1,4 +1,7 @@
 const std = @import("std");
+
+const ascii = std.ascii;
+
 const Buffer = std.Buffer;
 
 pub const EXTENSION_NO_INTRA_EMPHASIS = 1;
@@ -479,6 +482,46 @@ pub const HTML = struct {
         try r.hrule(buf);
         try r.list(buf, text, LIST_TYPE_ORDERED);
         try buf.append("</div>\n");
+    }
+
+    fn slugify(buf: *Buffer, src: []const u8) !void {
+        if (src.len == 0) return;
+        const m = buf.len();
+        try buf.resize(m + src.len);
+        var s = buf.toSlice()[m..];
+        var sym = false;
+        for (src) |ch, i| {
+            if (ascii.isAlNum(ch)) {
+                s[i] = ch;
+            } else {
+                s[i] = '-';
+            }
+        }
+    }
+
+    fn footnoteItem(
+        r: *Renderer,
+        buf: *Buffer,
+        text: []const u8,
+        flags: usize,
+    ) !void {
+        if ((flags & LIST_ITEM_CONTAINS_BLOCK != 0) or (flags & LIST_ITEM_BEGINNING_OF_LIST != 0)) {
+            try doubleSpace(buf);
+        }
+        const self = @fieldParentPtr(HTML, "renderer", r);
+        try buf.append("<li id=\"fn:");
+        try buf.append(self.params.footnote_anchor_prefix);
+        try slugify(buf, text);
+        try buf.appendByte('>');
+        if (self.flags & HTML_FOOTNOTE_RETURN_LINKS != 0) {
+            try buf.append(" <a class=\"footnote-return\" href=\"#fnref:");
+            try buf.append(self.params.footnote_anchor_prefix);
+            try slugify(buf, text);
+            try buf.appendByte('>');
+            try buf.append(self.params.footnote_return_link_contents);
+            try buf.append("</a>");
+        }
+        try buf.append("</li>\n");
     }
 
     fn list(
