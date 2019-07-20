@@ -551,3 +551,32 @@ pub const HTML = struct {
         }
     }
 };
+
+pub const OkMap = std.AutoHash([]const u8, void);
+
+pub const Parser = struct {
+    r: *Renderer,
+    refs: ReferenceMap,
+    inline_callback: [256]?fn (
+        p: *Parser,
+        buf: *Buffer,
+        data: []const u8,
+        offset: usize,
+    ) !usize,
+    flags: usize,
+    nesting: usize,
+    max_nesting: usize,
+    inside_link: bool,
+    notes: std.ArrayList(*Reference),
+    notes_record: OkMap,
+
+    pub const ReferenceMap = std.AutoHash([]const u8, *Reference);
+
+    pub const Reference = struct {
+        link: ?[]const u8,
+        title: ?[]const u8,
+        note_id: usize,
+        has_block: bool,
+        text: ?[]const u8,
+    };
+};
