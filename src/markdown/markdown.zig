@@ -1,7 +1,7 @@
 const std = @import("std");
 
 const ascii = std.ascii;
-
+const mem = std.mem;
 const Buffer = std.Buffer;
 
 pub const EXTENSION_NO_INTRA_EMPHASIS = 1;
@@ -21,6 +21,17 @@ pub const EXTENSION_AUTO_HEADER_IDS = 8192;
 pub const EXTENSION_BACKSLASH_LINE_BREAK = 16384;
 pub const EXTENSION_DEFINITION_LISTS = 32768;
 pub const EXTENSION_JOIN_LINES = 65536;
+
+const common_extensions = 0 |
+    EXTENSION_NO_INTRA_EMPHASIS |
+    EXTENSION_TABLES |
+    EXTENSION_FENCED_CODE |
+    EXTENSION_AUTOLINK |
+    EXTENSION_STRIKETHROUGH |
+    EXTENSION_SPACE_HEADERS |
+    EXTENSION_HEADER_IDS |
+    EXTENSION_BACKSLASH_LINE_BREAK |
+    EXTENSION_DEFINITION_LISTS;
 
 pub const LINK_TYPE_NOT_AUTOLINK = 1;
 pub const LINK_TYPE_NORMAL = 2;
@@ -49,149 +60,149 @@ pub const TextIter = struct {
 
 pub const Renderer = struct {
     //block-level
-    blockCodeFn: fn (r: *Renderer, out: *Buffer, text: []const u8, info_string: []const u8) !void,
-    blockQuoteFn: fn (r: *Renderer, out: *Buffer, text: []const u8) !void,
-    blockHtmlFn: fn (r: *Renderer, out: *Buffer, text: []const u8) !void,
-    headerFn: fn (r: *Renderer, out: *Buffer, text: *TextIter, level: usize, id: []const u8) !void,
-    hruleFn: fn (r: *Renderer, out: *Buffer) !void,
-    listFn: fn (r: *Renderer, out: *Buffer, text: *TextIter, flags: usize) !void,
-    listItemFn: fn (r: *Renderer, out: *Buffer, text: []const u8, flags: usize) !void,
-    paragraphFn: fn (r: *Renderer, out: *Buffer, text: *TextIter) !void,
-    tableFn: fn (r: *Renderer, out: *Buffer, header: []const u8, body: []const u8, colum_data: []usize) !void,
-    tableRowFn: fn (r: *Renderer, out: *Buffer, text: []const u8) !void,
-    tableHeaderCellFn: fn (r: *Renderer, out: *Buffer, text: []const u8, flags: usize) !void,
-    tableCellFn: fn (r: *Renderer, out: *Buffer, text: []const u8, flags: usize) !void,
-    footnotesFn: fn (r: *Renderer, out: *Buffer, text: *TextIter) !void,
-    footnoteItemFn: fn (r: *Renderer, out: *Buffer, name: []const u8, text: []const u8, flags: usize) !void,
-    titleBlockFn: fn (r: *Renderer, out: *Buffer, text: []const u8) !void,
+    blockCodeFn: fn (r: *Renderer, out: *Buffer, text: []const u8, info_string: []const u8) anyerror!void,
+    blockQuoteFn: fn (r: *Renderer, out: *Buffer, text: []const u8) anyerror!void,
+    blockHtmlFn: fn (r: *Renderer, out: *Buffer, text: []const u8) anyerror!void,
+    headerFn: fn (r: *Renderer, out: *Buffer, text: *TextIter, level: usize, id: ?[]const u8) anyerror!void,
+    hruleFn: fn (r: *Renderer, out: *Buffer) anyerror!void,
+    listFn: fn (r: *Renderer, out: *Buffer, text: *TextIter, flags: usize) anyerror!void,
+    listItemFn: fn (r: *Renderer, out: *Buffer, text: []const u8, flags: usize) anyerror!void,
+    paragraphFn: fn (r: *Renderer, out: *Buffer, text: *TextIter) anyerror!void,
+    tableFn: fn (r: *Renderer, out: *Buffer, header: []const u8, body: []const u8, colum_data: []usize) anyerror!void,
+    tableRowFn: fn (r: *Renderer, out: *Buffer, text: []const u8) anyerror!void,
+    tableHeaderCellFn: fn (r: *Renderer, out: *Buffer, text: []const u8, flags: usize) anyerror!void,
+    tableCellFn: fn (r: *Renderer, out: *Buffer, text: []const u8, flags: usize) anyerror!void,
+    footnotesFn: fn (r: *Renderer, out: *Buffer, text: *TextIter) anyerror!void,
+    footnoteItemFn: fn (r: *Renderer, out: *Buffer, name: []const u8, text: []const u8, flags: usize) anyerror!void,
+    titleBlockFn: fn (r: *Renderer, out: *Buffer, text: []const u8) anyerror!void,
 
     // Span-level callbacks
-    autoLinkFn: fn (r: *Renderer, buf: *Buffer, link: []const u8, kind: usize) !void,
-    codeSpanFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) !void,
-    doubleEmphasisFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) !void,
-    emphasisFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) !void,
-    imageFn: fn (r: *Renderer, buf: *Buffer, link: []const u8, title: ?[]const u8, alt: ?[]const u8) !void,
-    lineBreakFn: fn (r: *Renderer, buf: *Buffer) !void,
-    linkFn: fn (r: *Renderer, buf: *Buffer, link: []const u8, title: []const u8, content: []const u8) !void,
-    rawHtmlTagFn: fn (r: *Renderer, buf: *Buffer, tag: []const u8) !void,
-    tripleEmphasisFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) !void,
-    strikeThroughFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) !void,
-    footnoteRefFn: fn (r: *Renderer, buf: *Buffer, ref: []const u8, id: usize) !void,
+    autoLinkFn: fn (r: *Renderer, buf: *Buffer, link: []const u8, kind: usize) anyerror!void,
+    codeSpanFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) anyerror!void,
+    doubleEmphasisFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) anyerror!void,
+    emphasisFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) anyerror!void,
+    imageFn: fn (r: *Renderer, buf: *Buffer, link: []const u8, title: ?[]const u8, alt: ?[]const u8) anyerror!void,
+    lineBreakFn: fn (r: *Renderer, buf: *Buffer) anyerror!void,
+    linkFn: fn (r: *Renderer, buf: *Buffer, link: []const u8, title: []const u8, content: []const u8) anyerror!void,
+    rawHtmlTagFn: fn (r: *Renderer, buf: *Buffer, tag: []const u8) anyerror!void,
+    tripleEmphasisFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) anyerror!void,
+    strikeThroughFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) anyerror!void,
+    footnoteRefFn: fn (r: *Renderer, buf: *Buffer, ref: []const u8, id: usize) anyerror!void,
 
     // Low-level callbacks
-    entityFn: fn (r: *Renderer, buf: *Buffer, entity: []const u8) !void,
-    normalTextFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) !void,
+    entityFn: fn (r: *Renderer, buf: *Buffer, entity: []const u8) anyerror!void,
+    normalTextFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) anyerror!void,
 
     // Header and footer
-    documentHeaderFn: fn (r: *Renderer, buf: *Buffer) !void,
-    documentFooterFn: fn (r: *Renderer, buf: *Buffer) !void,
+    documentHeaderFn: fn (r: *Renderer, buf: *Buffer) anyerror!void,
+    documentFooterFn: fn (r: *Renderer, buf: *Buffer) anyerror!void,
 
     getFlagsFn: fn (r: *Renderer) usize,
 
-    pub fn blockCode(self: *Renderer, out: *Buffer, text: []const u8, info_string: []const u8) !void {
+    pub fn blockCode(self: *Renderer, out: *Buffer, text: []const u8, info_string: []const u8) anyerror!void {
         self.blockCodeFn(self, out, text, info_string);
     }
-    pub fn blockQuote(self: *Renderer, out: *Buffer, text: []const u8) !void {
+    pub fn blockQuote(self: *Renderer, out: *Buffer, text: []const u8) anyerror!void {
         self.blockQuoteFn(self, out, text);
     }
-    pub fn blockHtml(self: *Renderer, out: *Buffer, text: []const u8) !void {
+    pub fn blockHtml(self: *Renderer, out: *Buffer, text: []const u8) anyerror!void {
         self.blockHtmlFn(self, out, text);
     }
-    pub fn header(self: *Renderer, out: *Buffer, text: *TextIter, level: usize, id: []const u8) !void {
+    pub fn header(self: *Renderer, out: *Buffer, text: *TextIter, level: usize, id: []const u8) anyerror!void {
         self.headerFn(self, out, text, level, id);
     }
-    pub fn hrule(self: *Renderer, out: *Buffer) !void {
+    pub fn hrule(self: *Renderer, out: *Buffer) anyerror!void {
         self.hruleFn(self, out);
     }
-    pub fn list(self: *Renderer, out: *Buffer, text: *TextIter, flags: usize) !void {
+    pub fn list(self: *Renderer, out: *Buffer, text: *TextIter, flags: usize) anyerror!void {
         self.listFn(self, out, text, flags);
     }
-    pub fn listItem(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) !void {
+    pub fn listItem(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) anyerror!void {
         self.listItemFn(self, out, text, flags);
     }
-    pub fn paragraph(self: *Renderer, out: *Buffer, text: *TextIter) !void {
+    pub fn paragraph(self: *Renderer, out: *Buffer, text: *TextIter) anyerror!void {
         self.paragraphFn(self, out, text);
     }
-    pub fn table(self: *Renderer, out: *Buffer, header: []const u8, body: []const u8, colum_data: []usize) !void {
+    pub fn table(self: *Renderer, out: *Buffer, header: []const u8, body: []const u8, colum_data: []usize) anyerror!void {
         self.tableFn(self, out, header, body, colum_data);
     }
-    pub fn tableRow(self: *Renderer, out: *Buffer, text: []const u8) !void {
+    pub fn tableRow(self: *Renderer, out: *Buffer, text: []const u8) anyerror!void {
         self.tableRowFn(self, out, text);
     }
-    pub fn tableHeaderCell(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) !void {
+    pub fn tableHeaderCell(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) anyerror!void {
         self.tableHeaderCellFn(self, out, text, flags);
     }
-    pub fn tableCell(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) !void {
+    pub fn tableCell(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) anyerror!void {
         self.tableCellFn(self, out, text, flags);
     }
-    pub fn footnotes(self: *Renderer, out: *Buffer, text: *TextIter) !void {
+    pub fn footnotes(self: *Renderer, out: *Buffer, text: *TextIter) anyerror!void {
         self.footnotesFn(self, out, text);
     }
-    pub fn footnoteItem(self: *Renderer, out: *Buffer, name: []const u8, text: []const u8, flags: usize) !void {
+    pub fn footnoteItem(self: *Renderer, out: *Buffer, name: []const u8, text: []const u8, flags: usize) anyerror!void {
         self.footnoteItemFn(self, out, name, text, flags);
     }
 
-    pub fn titleBlock(self: *Renderer, out: *Buffer, text: []const u8) !void {
+    pub fn titleBlock(self: *Renderer, out: *Buffer, text: []const u8) anyerror!void {
         self.titleBlockFn(self, out, text);
     }
 
-    pub fn autoLink(self: *Renderer, buf: *Buffer, link: []const u8, kind: usize) !void {
+    pub fn autoLink(self: *Renderer, buf: *Buffer, link: []const u8, kind: usize) anyerror!void {
         try self.autoLinkFn(self, buf, link, kind);
     }
 
-    pub fn codeSpan(self: *Renderer, buf: *Buffer, text: []const u8) !void {
+    pub fn codeSpan(self: *Renderer, buf: *Buffer, text: []const u8) anyerror!void {
         try self.codeSpanFn(self, buf, text);
     }
 
-    pub fn doubleEmphasis(self: *Renderer, buf: *Buffer, text: []const u8) !void {
+    pub fn doubleEmphasis(self: *Renderer, buf: *Buffer, text: []const u8) anyerror!void {
         try self.doubleEmphasisFn(self, buf, text);
     }
 
-    pub fn emphasis(self: *Renderer, buf: *Buffer, text: []const u8) !void {
+    pub fn emphasis(self: *Renderer, buf: *Buffer, text: []const u8) anyerror!void {
         try self.emphasisFn(self, buf, text);
     }
 
-    pub fn image(self: *Renderer, buf: *Buffer, link: []const u8, title: []const u8, alt: []const u8) !void {
+    pub fn image(self: *Renderer, buf: *Buffer, link: []const u8, title: []const u8, alt: []const u8) anyerror!void {
         try self.imageFn(self, buf, link, title, alt);
     }
 
-    pub fn lineBreak(self: *Renderer, buf: *Buffer) !void {
+    pub fn lineBreak(self: *Renderer, buf: *Buffer) anyerror!void {
         try self.lineBreakFn(self, buf);
     }
 
-    pub fn link(self: *Renderer, buf: *Buffer, link: []const u8, title: []const u8, content: []const u8) !void {
+    pub fn link(self: *Renderer, buf: *Buffer, link: []const u8, title: []const u8, content: []const u8) anyerror!void {
         try self.linkFn(self, buf, link, title, content);
     }
 
-    pub fn rawHtmlTag(self: *Renderer, buf: *Buffer, tag: []const u8) !void {
+    pub fn rawHtmlTag(self: *Renderer, buf: *Buffer, tag: []const u8) anyerror!void {
         try self.rawHtmlTagFn(self, buf, tag);
     }
 
-    pub fn tripleEmphasis(self: *Renderer, buf: *Buffer, text: []const u8) !void {
+    pub fn tripleEmphasis(self: *Renderer, buf: *Buffer, text: []const u8) anyerror!void {
         try self.tripleEmphasisFn(self, buf, text);
     }
 
-    pub fn strikeThrough(self: *Renderer, buf: *Buffer, text: []const u8) !void {
+    pub fn strikeThrough(self: *Renderer, buf: *Buffer, text: []const u8) anyerror!void {
         try self.strikeThroughFn(self, buf, text);
     }
 
-    pub fn footnoteRef(self: *Renderer, buf: *Buffer, ref: []const u8, id: usize) !void {
+    pub fn footnoteRef(self: *Renderer, buf: *Buffer, ref: []const u8, id: usize) anyerror!void {
         try self.footnoteRefFn(self, buf, id);
     }
 
-    pub fn entity(self: *Renderer, buf: *Buffer, entity: []const u8) !void {
+    pub fn entity(self: *Renderer, buf: *Buffer, entity: []const u8) anyerror!void {
         try self.entityFn(self, buf, entity);
     }
 
-    pub fn normalText(self: *Renderer, buf: *Buffer, text: []const u8) !void {
+    pub fn normalText(self: *Renderer, buf: *Buffer, text: []const u8) anyerror!void {
         try self.normalTextFn(self, buf, text);
     }
 
-    pub fn documentHeader(self: *Renderer, buf: *Buffer) !void {
+    pub fn documentHeader(self: *Renderer, buf: *Buffer) anyerror!void {
         try self.documentHeaderFn(self, buf);
     }
 
-    pub fn documentFooter(self: *Renderer, buf: *Buffer) !void {
+    pub fn documentFooter(self: *Renderer, buf: *Buffer) anyerror!void {
         try self.documentFooterFn(self, buf);
     }
 
@@ -219,6 +230,13 @@ pub const HTML_SMARTYPANTS_LATEX_DASHES = 32768;
 pub const HTML_SMARTYPANTS_ANGLED_QUOTES = 65536;
 pub const HTML_SMARTYPANTS_QUOTES_NBSP = 131072;
 pub const HTML_FOOTNOTE_RETURN_LINKS = 262144;
+
+const common_html_flags = 0 |
+    HTML_USE_XHTML |
+    HTML_USE_SMARTYPANTS |
+    HTML_SMARTYPANTS_FRACTIONS |
+    HTML_SMARTYPANTS_DASHES |
+    HTML_SMARTYPANTS_LATEX_DASHES;
 
 pub const ID = struct {
     txt: ?[]const u8,
@@ -282,11 +300,11 @@ pub const HTML = struct {
     close_tag: []const u8,
     title: ?[]const u8,
     css: ?[]const u8,
-    render_params: Params,
+    params: Params,
     toc_marker: usize,
     header_count: i64,
     current_level: usize,
-    toc: *Buffer,
+    toc: Buffer,
     renderer: Renderer,
 
     pub const Params = struct {
@@ -299,8 +317,22 @@ pub const HTML = struct {
     const xhtml_close = "/>";
     const html_close = ">";
 
-    pub fn init() HTML {
+    pub fn init(a: *mem.Allocator) !HTML {
         return HTML{
+            .flags = common_html_flags,
+            .close_tag = html_close,
+            .title = null,
+            .css = null,
+            .params = Params{
+                .absolute_prefix = null,
+                .footnote_anchor_prefix = null,
+                .footnote_return_link_contents = "<sup>[return]</sup>",
+                .header_id_suffix = null,
+            },
+            .toc_marker = 0,
+            .header_count = 0,
+            .current_level = 0,
+            .toc = try Buffer.init(a, ""),
             .renderer = Renderer{
                 .blockCodeFn = blockCode,
                 .blockQuoteFn = blockQuote,
@@ -317,6 +349,22 @@ pub const HTML = struct {
                 .footnotesFn = footnotes,
                 .footnoteItemFn = footnoteItem,
                 .titleBlockFn = titleBlock,
+                .autoLinkFn = autoLink,
+                .codeSpanFn = codeSpan,
+                .doubleEmphasisFn = doubleEmphasis,
+                .emphasisFn = emphasis,
+                .imageFn = image,
+                .lineBreakFn = lineBreak,
+                .linkFn = link,
+                .rawHtmlTagFn = rawHtmlTag,
+                .tripleEmphasisFn = tripleEmphasis,
+                .strikeThroughFn = strikeThrough,
+                .footnoteRefFn = footnoteRef,
+                .entityFn = entity,
+                .normalTextFn = normalText,
+                .documentHeaderFn = documentHeader,
+                .documentFooterFn = documentFooter,
+                .getFlagsFn = getFlags,
             },
         };
     }
@@ -596,6 +644,7 @@ pub const HTML = struct {
     fn footnoteItem(
         r: *Renderer,
         buf: *Buffer,
+        name: []const u8,
         text: []const u8,
         flags: usize,
     ) !void {
@@ -605,12 +654,13 @@ pub const HTML = struct {
         const self = @fieldParentPtr(HTML, "renderer", r);
         try buf.append("<li id=\"fn:");
         try buf.append(self.params.footnote_anchor_prefix);
-        try slugify(buf, text);
+        try slugify(buf, name);
         try buf.appendByte('>');
+        try buf.append(text);
         if (self.flags & HTML_FOOTNOTE_RETURN_LINKS != 0) {
             try buf.append(" <a class=\"footnote-return\" href=\"#fnref:");
             try buf.append(self.params.footnote_anchor_prefix);
-            try slugify(buf, text);
+            try slugify(buf, name);
             try buf.appendByte('>');
             try buf.append(self.params.footnote_return_link_contents);
             try buf.append("</a>");
@@ -677,8 +727,7 @@ pub const HTML = struct {
     fn paragraph(
         r: *Renderer,
         buf: *Buffer,
-        text: []const u8,
-        flags: usize,
+        text: *TextIter,
     ) !void {
         const marker = buf.len();
         try doubleSpace(buf);
@@ -916,3 +965,8 @@ pub const Parser = struct {
         text: ?[]const u8,
     };
 };
+
+test "HTML" {
+    var a = std.debug.global_allocator;
+    var h = try HTML.init(a);
+}
