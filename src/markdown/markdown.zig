@@ -49,65 +49,65 @@ pub const TextIter = struct {
 
 pub const Renderer = struct {
     //block-level
-    blockCodeFn: fn (r: *Renderer, out: *Buffer, text: []const u8, info_string: []const u8) void,
-    blockQuoteFn: fn (r: *Renderer, out: *Buffer, text: []const u8) void,
-    blockHtmlFn: fn (r: *Renderer, out: *Buffer, text: []const u8) void,
-    headerFn: fn (r: *Renderer, out: *Buffer, text: *TextIter, level: usize, id: []const u8) void,
-    hruleFn: fn (r: *Renderer, out: *Buffer) void,
-    listFn: fn (r: *Renderer, out: *Buffer, text: *TextIter, flags: usize) void,
-    listItemFn: fn (r: *Renderer, out: *Buffer, text: []const u8, flags: usize) void,
-    paragraphFn: fn (r: *Renderer, out: *Buffer, text: *TextIter) void,
-    tableFn: fn (r: *Renderer, out: *Buffer, header: []const u8, body: []const u8, colum_data: []usize) void,
-    tableRowFn: fn (r: *Renderer, out: *Buffer, text: []const u8) void,
-    tableHeaderCellFn: fn (r: *Renderer, out: *Buffer, text: []const u8, flags: usize) void,
-    tableCellFn: fn (r: *Renderer, out: *Buffer, text: []const u8, flags: usize) void,
-    footnotesFn: fn (r: *Renderer, out: *Buffer, text: *TextIter) void,
-    footnoteItemFn: fn (r: *Renderer, out: *Buffer, name: []const u8, text: []const u8, flags: usize) void,
-    titleBlockFn: fn (r: *Renderer, out: *Buffer, text: []const u8) void,
+    blockCodeFn: fn (r: *Renderer, out: *Buffer, text: []const u8, info_string: []const u8) !void,
+    blockQuoteFn: fn (r: *Renderer, out: *Buffer, text: []const u8) !void,
+    blockHtmlFn: fn (r: *Renderer, out: *Buffer, text: []const u8) !void,
+    headerFn: fn (r: *Renderer, out: *Buffer, text: *TextIter, level: usize, id: []const u8) !void,
+    hruleFn: fn (r: *Renderer, out: *Buffer) !void,
+    listFn: fn (r: *Renderer, out: *Buffer, text: *TextIter, flags: usize) !void,
+    listItemFn: fn (r: *Renderer, out: *Buffer, text: []const u8, flags: usize) !void,
+    paragraphFn: fn (r: *Renderer, out: *Buffer, text: *TextIter) !void,
+    tableFn: fn (r: *Renderer, out: *Buffer, header: []const u8, body: []const u8, colum_data: []usize) !void,
+    tableRowFn: fn (r: *Renderer, out: *Buffer, text: []const u8) !void,
+    tableHeaderCellFn: fn (r: *Renderer, out: *Buffer, text: []const u8, flags: usize) !void,
+    tableCellFn: fn (r: *Renderer, out: *Buffer, text: []const u8, flags: usize) !void,
+    footnotesFn: fn (r: *Renderer, out: *Buffer, text: *TextIter) !void,
+    footnoteItemFn: fn (r: *Renderer, out: *Buffer, name: []const u8, text: []const u8, flags: usize) !void,
+    titleBlockFn: fn (r: *Renderer, out: *Buffer, text: []const u8) !void,
 
-    pub fn blockCode(self: *Renderer, out: *Buffer, text: []const u8, info_string: []const u8) void {
+    pub fn blockCode(self: *Renderer, out: *Buffer, text: []const u8, info_string: []const u8) !void {
         self.blockCodeFn(self, out, text, info_string);
     }
-    pub fn blockQuote(self: *Renderer, out: *Buffer, text: []const u8) void {
+    pub fn blockQuote(self: *Renderer, out: *Buffer, text: []const u8) !void {
         self.blockQuoteFn(self, out, text);
     }
-    pub fn blockHtml(self: *Renderer, out: *Buffer, text: []const u8) void {
+    pub fn blockHtml(self: *Renderer, out: *Buffer, text: []const u8) !void {
         self.blockHtmlFn(self, out, text);
     }
-    pub fn header(self: *Renderer, out: *Buffer, text: *TextIter, level: usize, id: []const u8) void {
+    pub fn header(self: *Renderer, out: *Buffer, text: *TextIter, level: usize, id: []const u8) !void {
         self.headerFn(self, out, text, level, id);
     }
-    pub fn hrule(self: *Renderer, out: *Buffer) void {
+    pub fn hrule(self: *Renderer, out: *Buffer) !void {
         self.hruleFn(self, out);
     }
-    pub fn list(self: *Renderer, out: *Buffer, text: *TextIter, flags: usize) void {
+    pub fn list(self: *Renderer, out: *Buffer, text: *TextIter, flags: usize) !void {
         self.listFn(self, out, text, flags);
     }
-    pub fn listItem(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) void {
+    pub fn listItem(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) !void {
         self.listItemFn(self, out, text, flags);
     }
-    pub fn paragraph(self: *Renderer, out: *Buffer, text: *TextIter) void {
+    pub fn paragraph(self: *Renderer, out: *Buffer, text: *TextIter) !void {
         self.paragraphFn(self, out, text);
     }
-    pub fn table(self: *Renderer, out: *Buffer, header: []const u8, body: []const u8, colum_data: []usize) void {
+    pub fn table(self: *Renderer, out: *Buffer, header: []const u8, body: []const u8, colum_data: []usize) !void {
         self.tableFn(self, out, header, body, colum_data);
     }
-    pub fn tableRow(self: *Renderer, out: *Buffer, text: []const u8) void {
+    pub fn tableRow(self: *Renderer, out: *Buffer, text: []const u8) !void {
         self.tableRowFn(self, out, text);
     }
-    pub fn tableHeaderCell(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) void {
+    pub fn tableHeaderCell(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) !void {
         self.tableHeaderCellFn(self, out, text, flags);
     }
-    pub fn tableCell(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) void {
+    pub fn tableCell(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) !void {
         self.tableCellFn(self, out, text, flags);
     }
-    pub fn footnotes(self: *Renderer, out: *Buffer, text: *TextIter) void {
+    pub fn footnotes(self: *Renderer, out: *Buffer, text: *TextIter) !void {
         self.footnotesFn(self, out, text);
     }
-    pub fn footnoteItem(self: *Renderer, out: *Buffer, name: []const u8, text: []const u8, flags: usize) void {
+    pub fn footnoteItem(self: *Renderer, out: *Buffer, name: []const u8, text: []const u8, flags: usize) !void {
         self.footnoteItemFn(self, out, name, text, flags);
     }
-    pub fn titleBlock(self: *Renderer, out: *Buffer, text: []const u8) void {
+    pub fn titleBlock(self: *Renderer, out: *Buffer, text: []const u8) !void {
         self.titleBlockFn(self, out, text);
     }
 };
@@ -709,7 +709,7 @@ pub const HTML = struct {
         r: *Renderer,
         buf: *Buffer,
         link: []const u8,
-        title: []const u8,
+        title: ?[]const u8,
         alt: ?[]const u8,
     ) !void {
         const self = @fieldParentPtr(HTML, "renderer", r);
