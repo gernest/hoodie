@@ -201,7 +201,13 @@ pub const HTML = struct {
     toc: *Buffer,
     renderer: Renderer,
 
-    pub const Params = struct {};
+    pub const Params = struct {
+        absolute_prefix: ?[]const u8,
+        footnote_anchor_prefix: ?[]const u8,
+        footnote_return_link_contents: ?[]const u8,
+        header_id_suffix: ?[]const u8,
+    };
+
     const xhtml_close = "/>";
     const html_close = ">";
 
@@ -594,6 +600,138 @@ pub const HTML = struct {
             return;
         }
         try buf.append("</p>\n");
+    }
+
+    fn autoLink(
+        r: *Renderer,
+        buf: *Buffer,
+        link: []const u8,
+        kind: usize,
+    ) !void {
+        const self = @fieldParentPtr(HTML, "renderer", r);
+        if (self.flags & HTML_SAFELINK != 0 and !Util.isSafeLink(link) and
+            kind != LINK_TYPE_EMAIL)
+        {
+            try buf.append("<tt>");
+            try attrEscape(buf, link);
+            try buf.append("</tt>");
+            return;
+        }
+        try buf.append("<a href=\"");
+        if (kind == LINK_TYPE_EMAIL) {
+            try buf.append("mailto:");
+        } else {
+            try self.maybeWriteAbsolutePrefix(buf, link);
+        }
+        try attrEscape(buf, link);
+        var no_follow = false;
+        var no_referer = false;
+        if (self.flags & HTML_NOFOLLOW_LINKS != 0 and !isRelativeLink(link)) {
+            no_follow = true;
+        }
+        if (self.flags & HTML_NOREFERRER_LINKS != 0 and !isRelativeLink(link)) {
+            no_referer = true;
+        }
+        if (no_follow or no_referer) {
+            try buf.append("\" rel=\"");
+            if (no_follow) {
+                try buf.append("nofollow");
+            }
+            if (no_referer) {
+                try buf.append(" noreferrer");
+            }
+            try buf.appendByte('"');
+        }
+        if (self.flags & HTML_HREF_TARGET_BLANK != 0 and !isRelativeLink(link)) {
+            try buf.append("\" target=\"_blank");
+        }
+        // Pretty print: if we get an email address as
+        // an actual URI, e.g. `mailto:foo@bar.com`, we don't
+        // want to print the `mailto:` prefix
+        const mailto = "mailto://";
+        if (mem.startsWith(u8, link, mailto)) {
+            try attrEscape(buf, link[mailto.len..]);
+        } else if (mem.startsWith(u8, link, mailto[0 .. mailto.len - 2])) {
+            try attrEscape(buf, link[mailto.len - 2 ..]);
+        } else {
+            try attrEscape(buf, link);
+        }
+        try buf.append("</a>");
+    }
+
+    fn maybeWriteAbsolutePrefix(
+        self: *HTML,
+        buf: *Buffer,
+        link: []const u8,
+    ) !void {
+        if (self.params.absolute_prefix != null and isRelativeLink(link) and
+            link[0] != '.')
+        {
+            try buf.append(self.params.absolute_prefix.?);
+            if (link[0] != '/') {
+                try buf.appendByte('/');
+            }
+        }
+    }
+};
+
+pub const Util = struct {
+    const valid_url = [_][]const u8{
+        "http://", "https://", "ftp://", "mailto://",
+    };
+
+    const valid_paths = [_][]const u8{
+        "/", "https://", "./", "../",
+    };
+
+    pub fn isSafeLink(link: []const u8) bool {
+        for (valid_path) |p| {
+            if (mem.startsWith(u8, link, p)) {
+                if (link.len == p.len) {
+                    return true;
+                }
+                if (ascii.isAlNum(link[p.len])) {
+                    return true;
+                }
+            }
+        }
+        for (valid_url) |u| {
+            if (link.len > u.len and eqlLower(link[0..u.len], u) and ascii.isAlNum(link[u.len])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// eqlLower compares a, and b with all caharacters from aconverted to lower
+    /// case.
+    pub fn eqlLower(a: []const u8, b: []const u8) bool {
+        if (a.len != b.len) return false;
+        for (b) |v, i| {
+            if (ascii.toLower(a[i]) != v) return false;
+        }
+        return true;
+    }
+
+    pub fn isRelativeLink(link: []const u8) bool {
+        if (link.len == 0) return false;
+        if (link[0] == '#') return true;
+        // link begin with '/' but not '//', the second maybe a protocol relative link
+        if (link.len >= 2 and link[0] == '/' and link[1] != '/') {
+            return true;
+        }
+        // only the root '/'
+        if (link.len == 1 and link[0] == '/') {
+            return true;
+        }
+        // current directory : begin with "./"
+        if (mem.startsWith(u8, link, "./")) {
+            return true;
+        }
+        // parent directory : begin with "../"
+        if (mem.startsWith(u8, link, "../")) {
+            return true;
+        }
     }
 };
 
