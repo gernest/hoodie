@@ -579,6 +579,22 @@ pub const HTML = struct {
             try buf.append("</li>\n");
         }
     }
+
+    fn paragraph(
+        r: *Renderer,
+        buf: *Buffer,
+        text: []const u8,
+        flags: usize,
+    ) !void {
+        const marker = buf.len();
+        try doubleSpace(buf);
+        try buf.append("<p>");
+        if (!text.text()) {
+            try buf.resize(marker);
+            return;
+        }
+        try buf.append("</p>\n");
+    }
 };
 
 pub const OkMap = std.AutoHash([]const u8, void);
