@@ -65,6 +65,29 @@ pub const Renderer = struct {
     footnoteItemFn: fn (r: *Renderer, out: *Buffer, name: []const u8, text: []const u8, flags: usize) !void,
     titleBlockFn: fn (r: *Renderer, out: *Buffer, text: []const u8) !void,
 
+    // Span-level callbacks
+    autoLinkFn: fn (r: *Renderer, buf: *Buffer, link: []const u8, kind: usize) !void,
+    codeSpanFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) !void,
+    doubleEmphasisFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) !void,
+    emphasisFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) !void,
+    imageFn: fn (r: *Renderer, buf: *Buffer, link: []const u8, title: ?[]const u8, alt: ?[]const u8) !void,
+    lineBreakFn: fn (r: *Renderer, buf: *Buffer) !void,
+    linkFn: fn (r: *Renderer, buf: *Buffer, link: []const u8, title: []const u8, content: []const u8) !void,
+    rawHtmlTagFn: fn (r: *Renderer, buf: *Buffer, tag: []const u8) !void,
+    tripleEmphasisFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) !void,
+    strikeThroughFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) !void,
+    footnoteRefFn: fn (r: *Renderer, buf: *Buffer, ref: []const u8, id: usize) !void,
+
+    // Low-level callbacks
+    entityFn: fn (r: *Renderer, buf: *Buffer, entity: []const u8) !void,
+    normalTextFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) !void,
+
+    // Header and footer
+    documentHeaderFn: fn (r: *Renderer, buf: *Buffer) !void,
+    documentFooterFn: fn (r: *Renderer, buf: *Buffer) !void,
+
+    getFlagsFn: fn (r: *Renderer) usize,
+
     pub fn blockCode(self: *Renderer, out: *Buffer, text: []const u8, info_string: []const u8) !void {
         self.blockCodeFn(self, out, text, info_string);
     }
@@ -107,8 +130,73 @@ pub const Renderer = struct {
     pub fn footnoteItem(self: *Renderer, out: *Buffer, name: []const u8, text: []const u8, flags: usize) !void {
         self.footnoteItemFn(self, out, name, text, flags);
     }
+
     pub fn titleBlock(self: *Renderer, out: *Buffer, text: []const u8) !void {
         self.titleBlockFn(self, out, text);
+    }
+
+    pub fn autoLink(self: *Renderer, buf: *Buffer, link: []const u8, kind: usize) !void {
+        try self.autoLinkFn(self, buf, link, kind);
+    }
+
+    pub fn codeSpan(self: *Renderer, buf: *Buffer, text: []const u8) !void {
+        try self.codeSpanFn(self, buf, text);
+    }
+
+    pub fn doubleEmphasis(self: *Renderer, buf: *Buffer, text: []const u8) !void {
+        try self.doubleEmphasisFn(self, buf, text);
+    }
+
+    pub fn emphasis(self: *Renderer, buf: *Buffer, text: []const u8) !void {
+        try self.emphasisFn(self, buf, text);
+    }
+
+    pub fn image(self: *Renderer, buf: *Buffer, link: []const u8, title: []const u8, alt: []const u8) !void {
+        try self.imageFn(self, buf, link, title, alt);
+    }
+
+    pub fn lineBreak(self: *Renderer, buf: *Buffer) !void {
+        try self.lineBreakFn(self, buf);
+    }
+
+    pub fn link(self: *Renderer, buf: *Buffer, link: []const u8, title: []const u8, content: []const u8) !void {
+        try self.linkFn(self, buf, link, title, content);
+    }
+
+    pub fn rawHtmlTag(self: *Renderer, buf: *Buffer, tag: []const u8) !void {
+        try self.rawHtmlTagFn(self, buf, tag);
+    }
+
+    pub fn tripleEmphasis(self: *Renderer, buf: *Buffer, text: []const u8) !void {
+        try self.tripleEmphasisFn(self, buf, text);
+    }
+
+    pub fn strikeThrough(self: *Renderer, buf: *Buffer, text: []const u8) !void {
+        try self.strikeThroughFn(self, buf, text);
+    }
+
+    pub fn footnoteRef(self: *Renderer, buf: *Buffer, ref: []const u8, id: usize) !void {
+        try self.footnoteRefFn(self, buf, id);
+    }
+
+    pub fn entity(self: *Renderer, buf: *Buffer, entity: []const u8) !void {
+        try self.entityFn(self, buf, entity);
+    }
+
+    pub fn normalText(self: *Renderer, buf: *Buffer, text: []const u8) !void {
+        try self.normalTextFn(self, buf, text);
+    }
+
+    pub fn documentHeader(self: *Renderer, buf: *Buffer) !void {
+        try self.documentHeaderFn(self, buf);
+    }
+
+    pub fn documentFooter(self: *Renderer, buf: *Buffer) !void {
+        try self.documentFooterFn(self, buf);
+    }
+
+    pub fn getFlags(self: *Renderer) usize {
+        try self.getFlagsFn(self);
     }
 };
 
