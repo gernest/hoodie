@@ -626,10 +626,10 @@ pub const HTML = struct {
         try attrEscape(buf, link);
         var no_follow = false;
         var no_referer = false;
-        if (self.flags & HTML_NOFOLLOW_LINKS != 0 and !isRelativeLink(link)) {
+        if (self.flags & HTML_NOFOLLOW_LINKS != 0 and !Util.isRelativeLink(link)) {
             no_follow = true;
         }
-        if (self.flags & HTML_NOREFERRER_LINKS != 0 and !isRelativeLink(link)) {
+        if (self.flags & HTML_NOREFERRER_LINKS != 0 and !Util.isRelativeLink(link)) {
             no_referer = true;
         }
         if (no_follow or no_referer) {
@@ -642,7 +642,7 @@ pub const HTML = struct {
             }
             try buf.appendByte('"');
         }
-        if (self.flags & HTML_HREF_TARGET_BLANK != 0 and !isRelativeLink(link)) {
+        if (self.flags & HTML_HREF_TARGET_BLANK != 0 and !Util.isRelativeLink(link)) {
             try buf.append("\" target=\"_blank");
         }
         // Pretty print: if we get an email address as
@@ -672,6 +672,71 @@ pub const HTML = struct {
                 try buf.appendByte('/');
             }
         }
+    }
+
+    fn codeSpan(
+        r: *Renderer,
+        buf: *Buffer,
+        text: []const u8,
+    ) !void {
+        try buf.append("<code>");
+        try attrEscape(buf, text);
+        try buf.append("</code>");
+    }
+
+    fn doubleEmphasis(
+        r: *Renderer,
+        buf: *Buffer,
+        text: []const u8,
+    ) !void {
+        try buf.append("<strong>");
+        try attrEscape(buf, text);
+        try buf.append("</strong>");
+    }
+
+    fn emphasis(
+        r: *Renderer,
+        buf: *Buffer,
+        text: []const u8,
+    ) !void {
+        if (text.len == 0) return;
+        try buf.append("<em>");
+        try attrEscape(buf, text);
+        try buf.append("</em>");
+    }
+
+    fn image(
+        r: *Renderer,
+        buf: *Buffer,
+        link: []const u8,
+        title: []const u8,
+        alt: ?[]const u8,
+    ) !void {
+        const self = @fieldParentPtr(HTML, "renderer", r);
+        if (self.flags & HTML_SKIP_IMAGES != 0) return;
+        try buf.append("<img src=\"");
+        try self.maybeWriteAbsolutePrefix(buf, link);
+        try attrEscape(buf, link);
+        try buf.append("\" alt=\"");
+        if (alt) |v| {
+            try attrEscape(buf, v);
+        }
+        if (title) |v| {
+            try buf.append("\" title=\"");
+            try attrEscape(buf, v);
+        }
+        try buf.appendByte('"');
+        try buf.append(self.close_tag);
+    }
+
+    fn lineBreak(
+        r: *Renderer,
+        buf: *Buffer,
+    ) !void {
+        const self = @fieldParentPtr(HTML, "renderer", r);
+        try buf.append("<br");
+        try buf.append(self.close_tag);
+        try buf.appendByte('\n');
     }
 };
 
