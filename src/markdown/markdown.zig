@@ -550,6 +550,35 @@ pub const HTML = struct {
             try buf.append("</ul>\n");
         }
     }
+
+    fn listItem(
+        r: *Renderer,
+        buf: *Buffer,
+        text: []const u8,
+        flags: usize,
+    ) !void {
+        if ((flags & LIST_ITEM_CONTAINS_BLOCK != 0 and
+            flags & LIST_TYPE_DEFINITION != 0) or
+            flags & LIST_ITEM_BEGINNING_OF_LIST != 0)
+        {
+            try doubleSpace(buf);
+        }
+        if (flags & LIST_TYPE_TERM != 0) {
+            try buf.append("<dt>");
+        } else if (flags & LIST_TYPE_DEFINITION != 0) {
+            try buf.append("<dd>");
+        } else {
+            try buf.append("<li>");
+        }
+        try buf.append(text);
+        if (flags & LIST_TYPE_TERM != 0) {
+            try buf.append("</dt>\n");
+        } else if (flags & LIST_TYPE_DEFINITION != 0) {
+            try buf.append("</dd>\n");
+        } else {
+            try buf.append("</li>\n");
+        }
+    }
 };
 
 pub const OkMap = std.AutoHash([]const u8, void);
