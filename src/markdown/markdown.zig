@@ -83,7 +83,7 @@ pub const Renderer = struct {
     emphasisFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) anyerror!void,
     imageFn: fn (r: *Renderer, buf: *Buffer, link: []const u8, title: ?[]const u8, alt: ?[]const u8) anyerror!void,
     lineBreakFn: fn (r: *Renderer, buf: *Buffer) anyerror!void,
-    linkFn: fn (r: *Renderer, buf: *Buffer, link: []const u8, title: []const u8, content: []const u8) anyerror!void,
+    linkFn: fn (r: *Renderer, buf: *Buffer, link: []const u8, title: ?[]const u8, content: []const u8) anyerror!void,
     rawHtmlTagFn: fn (r: *Renderer, buf: *Buffer, tag: []const u8) anyerror!void,
     tripleEmphasisFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) anyerror!void,
     strikeThroughFn: fn (r: *Renderer, buf: *Buffer, text: []const u8) anyerror!void,
@@ -170,7 +170,7 @@ pub const Renderer = struct {
         try self.lineBreakFn(self, buf);
     }
 
-    pub fn link(self: *Renderer, buf: *Buffer, link: []const u8, title: []const u8, content: []const u8) anyerror!void {
+    pub fn link(self: *Renderer, buf: *Buffer, link: []const u8, title: ?[]const u8, content: []const u8) anyerror!void {
         try self.linkFn(self, buf, link, title, content);
     }
 
@@ -874,6 +874,53 @@ pub const HTML = struct {
         try buf.append("<br");
         try buf.append(self.close_tag);
         try buf.appendByte('\n');
+    }
+
+    fn link(
+        r: *Renderer,
+        buf: *Buffer,
+        link: []const u8,
+        title: ?[]const u8,
+        content: []const u8,
+    ) !void {
+        const self = @fieldParentPtr(HTML, "renderer", r);
+        if (self.flags & HTML_SKIP_LINKS != 0) {
+            try buf.append("<tt>");
+            try attrEscape(buf, content);
+            try buf.append("</tt>");
+            return;
+        }
+        try buf.append("<a href=\"");
+        try self.maybeWriteAbsolutePrefix(buf, link);
+        try attrEscape(buf, link);
+        if (title) |v| {
+            try buf.append("\" title=\"");
+            try attrEscape(buf, title);
+        }
+        var no_follow = false;
+        var no_referer = false;
+        if (self.flags & HTML_NOFOLLOW_LINKS != 0 and !Util.isRelativeLink(link)) {
+            no_follow = true;
+        }
+        if (self.flags & HTML_NOREFERRER_LINKS != 0 and !Util.isRelativeLink(link)) {
+            no_referer = true;
+        }
+        if (no_follow or no_referer) {
+            try buf.append("\" rel=\"");
+            if (no_follow) {
+                try buf.append("nofollow");
+            }
+            if (no_referer) {
+                try buf.append(" noreferrer");
+            }
+            try buf.appendByte('"');
+        }
+        if (self.flags & HTML_HREF_TARGET_BLANK != 0 and !Util.isRelativeLink(link)) {
+            try buf.append("\" target=\"_blank");
+        }
+        try buf.append("\">");
+        try buf.append(content);
+        try buf.append("</a>");
     }
 };
 
