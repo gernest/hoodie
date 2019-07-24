@@ -418,7 +418,7 @@ pub const HTML = struct {
         var s = src;
         var start: usize = 0;
         while (orig.len < s.len) |idx| {
-            if (mem.indexOf(u8, s, orig)) |idx| {
+            if (mem.indexOfScalar(u8, s, orig)) |idx| {
                 try buf.append(s[start..idx]);
                 try buf.append(with);
                 start += idx + with.len;
@@ -513,7 +513,7 @@ pub const HTML = struct {
         try doubleSpace(buf);
         const self = @fieldParentPtr(HTML, "renderer", r);
         var end_of_lang: usize = 0;
-        if (mem.indexAny(u8, info, "\t ")) |idx| {
+        if (mem.indexOfAny(u8, info, "\t ")) |idx| {
             end_of_lang = idx;
         }
         const lang = if (end_of_lang != 0) info[0..end_of_lang] else "";
