@@ -2,6 +2,8 @@ const std = @import("std");
 
 const ascii = std.ascii;
 const mem = std.mem;
+const io = std.io;
+
 const Buffer = std.Buffer;
 
 pub const EXTENSION_NO_INTRA_EMPHASIS = 1;
@@ -100,50 +102,50 @@ pub const Renderer = struct {
     getFlagsFn: fn (r: *Renderer) usize,
 
     pub fn blockCode(self: *Renderer, out: *Buffer, text: []const u8, info_string: []const u8) anyerror!void {
-        self.blockCodeFn(self, out, text, info_string);
+        try self.blockCodeFn(self, out, text, info_string);
     }
     pub fn blockQuote(self: *Renderer, out: *Buffer, text: []const u8) anyerror!void {
-        self.blockQuoteFn(self, out, text);
+        try self.blockQuoteFn(self, out, text);
     }
     pub fn blockHtml(self: *Renderer, out: *Buffer, text: []const u8) anyerror!void {
-        self.blockHtmlFn(self, out, text);
+        try self.blockHtmlFn(self, out, text);
     }
     pub fn header(self: *Renderer, out: *Buffer, text: *TextIter, level: usize, id: []const u8) anyerror!void {
-        self.headerFn(self, out, text, level, id);
+        try self.headerFn(self, out, text, level, id);
     }
     pub fn hrule(self: *Renderer, out: *Buffer) anyerror!void {
-        self.hruleFn(self, out);
+        try self.hruleFn(self, out);
     }
     pub fn list(self: *Renderer, out: *Buffer, text: *TextIter, flags: usize) anyerror!void {
-        self.listFn(self, out, text, flags);
+        try self.listFn(self, out, text, flags);
     }
     pub fn listItem(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) anyerror!void {
-        self.listItemFn(self, out, text, flags);
+        try self.listItemFn(self, out, text, flags);
     }
     pub fn paragraph(self: *Renderer, out: *Buffer, text: *TextIter) anyerror!void {
-        self.paragraphFn(self, out, text);
+        try self.paragraphFn(self, out, text);
     }
     pub fn table(self: *Renderer, out: *Buffer, header: []const u8, body: []const u8, colum_data: []usize) anyerror!void {
-        self.tableFn(self, out, header, body, colum_data);
+        try self.tableFn(self, out, header, body, colum_data);
     }
     pub fn tableRow(self: *Renderer, out: *Buffer, text: []const u8) anyerror!void {
-        self.tableRowFn(self, out, text);
+        try self.tableRowFn(self, out, text);
     }
     pub fn tableHeaderCell(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) anyerror!void {
-        self.tableHeaderCellFn(self, out, text, flags);
+        try self.tableHeaderCellFn(self, out, text, flags);
     }
     pub fn tableCell(self: *Renderer, out: *Buffer, text: []const u8, flags: usize) anyerror!void {
-        self.tableCellFn(self, out, text, flags);
+        try self.tableCellFn(self, out, text, flags);
     }
     pub fn footnotes(self: *Renderer, out: *Buffer, text: *TextIter) anyerror!void {
-        self.footnotesFn(self, out, text);
+        try self.footnotesFn(self, out, text);
     }
     pub fn footnoteItem(self: *Renderer, out: *Buffer, name: []const u8, text: []const u8, flags: usize) anyerror!void {
-        self.footnoteItemFn(self, out, name, text, flags);
+        try self.footnoteItemFn(self, out, name, text, flags);
     }
 
     pub fn titleBlock(self: *Renderer, out: *Buffer, text: []const u8) anyerror!void {
-        self.titleBlockFn(self, out, text);
+        try self.titleBlockFn(self, out, text);
     }
 
     pub fn autoLink(self: *Renderer, buf: *Buffer, link: []const u8, kind: usize) anyerror!void {
@@ -278,7 +280,7 @@ pub const ID = struct {
             try output(context, prefix);
         }
         if (self.txt) |txt| {
-            try output(context, prefix);
+            try output(context, txt);
         } else if (self.toc) {
             try output(context, "toc");
         }
@@ -311,6 +313,7 @@ pub const HTML = struct {
         absolute_prefix: ?[]const u8,
         footnote_anchor_prefix: ?[]const u8,
         footnote_return_link_contents: ?[]const u8,
+        header_id_prefix: ?[]const u8,
         header_id_suffix: ?[]const u8,
     };
 
@@ -327,6 +330,7 @@ pub const HTML = struct {
                 .absolute_prefix = null,
                 .footnote_anchor_prefix = null,
                 .footnote_return_link_contents = "<sup>[return]</sup>",
+                .header_id_prefix = null,
                 .header_id_suffix = null,
             },
             .toc_marker = 0,
@@ -417,8 +421,8 @@ pub const HTML = struct {
         if (src.len < orig.len) return;
         var s = src;
         var start: usize = 0;
-        while (orig.len < s.len) |idx| {
-            if (mem.indexOfScalar(u8, s, orig)) |idx| {
+        while (orig.len < s.len) {
+            if (mem.indexOf(u8, s, orig)) |idx| {
                 try buf.append(s[start..idx]);
                 try buf.append(with);
                 start += idx + with.len;
@@ -517,7 +521,7 @@ pub const HTML = struct {
             end_of_lang = idx;
         }
         const lang = if (end_of_lang != 0) info[0..end_of_lang] else "";
-        if (lang.len == 0 or lan[0] == '.') {
+        if (lang.len == 0 or lang[0] == '.') {
             try buf.append("<pre><code>");
         } else {
             try buf.append("<pre><code class=\"language-)");
@@ -542,13 +546,13 @@ pub const HTML = struct {
     fn table(
         r: *Renderer,
         buf: *Buffer,
-        header: []const u8,
+        table_header: []const u8,
         body: []const u8,
         colum_data: []const usize,
     ) !void {
         try doubleSpace(buf);
         try buf.append("<table>\n<thead>\n");
-        try buf.append(header);
+        try buf.append(table_header);
         try buf.append("</thead>\n\n<tbody>\n");
         try buf.append(body);
         try buf.append("</tbody>\n</table>\n");
@@ -653,16 +657,22 @@ pub const HTML = struct {
         }
         const self = @fieldParentPtr(HTML, "renderer", r);
         try buf.append("<li id=\"fn:");
-        try buf.append(self.params.footnote_anchor_prefix);
+        if (self.params.footnote_anchor_prefix) |v| {
+            try buf.append(v);
+        }
         try slugify(buf, name);
         try buf.appendByte('>');
         try buf.append(text);
         if (self.flags & HTML_FOOTNOTE_RETURN_LINKS != 0) {
             try buf.append(" <a class=\"footnote-return\" href=\"#fnref:");
-            try buf.append(self.params.footnote_anchor_prefix);
+            if (self.params.footnote_anchor_prefix) |v| {
+                try buf.append(v);
+            }
             try slugify(buf, name);
             try buf.appendByte('>');
-            try buf.append(self.params.footnote_return_link_contents);
+            if (self.params.footnote_return_link_contents) |v| {
+                try buf.append(v);
+            }
             try buf.append("</a>");
         }
         try buf.append("</li>\n");
@@ -742,15 +752,15 @@ pub const HTML = struct {
     fn autoLink(
         r: *Renderer,
         buf: *Buffer,
-        link: []const u8,
+        link_: []const u8,
         kind: usize,
     ) !void {
         const self = @fieldParentPtr(HTML, "renderer", r);
-        if (self.flags & HTML_SAFELINK != 0 and !Util.isSafeLink(link) and
+        if (self.flags & HTML_SAFELINK != 0 and !Util.isSafeLink(link_) and
             kind != LINK_TYPE_EMAIL)
         {
             try buf.append("<tt>");
-            try attrEscape(buf, link);
+            try attrEscape(buf, link_);
             try buf.append("</tt>");
             return;
         }
@@ -758,15 +768,15 @@ pub const HTML = struct {
         if (kind == LINK_TYPE_EMAIL) {
             try buf.append("mailto:");
         } else {
-            try self.maybeWriteAbsolutePrefix(buf, link);
+            try self.maybeWriteAbsolutePrefix(buf, link_);
         }
-        try attrEscape(buf, link);
+        try attrEscape(buf, link_);
         var no_follow = false;
         var no_referer = false;
-        if (self.flags & HTML_NOFOLLOW_LINKS != 0 and !Util.isRelativeLink(link)) {
+        if (self.flags & HTML_NOFOLLOW_LINKS != 0 and !Util.isRelativeLink(link_)) {
             no_follow = true;
         }
-        if (self.flags & HTML_NOREFERRER_LINKS != 0 and !Util.isRelativeLink(link)) {
+        if (self.flags & HTML_NOREFERRER_LINKS != 0 and !Util.isRelativeLink(link_)) {
             no_referer = true;
         }
         if (no_follow or no_referer) {
@@ -779,19 +789,19 @@ pub const HTML = struct {
             }
             try buf.appendByte('"');
         }
-        if (self.flags & HTML_HREF_TARGET_BLANK != 0 and !Util.isRelativeLink(link)) {
+        if (self.flags & HTML_HREF_TARGET_BLANK != 0 and !Util.isRelativeLink(link_)) {
             try buf.append("\" target=\"_blank");
         }
         // Pretty print: if we get an email address as
         // an actual URI, e.g. `mailto:foo@bar.com`, we don't
         // want to print the `mailto:` prefix
         const mailto = "mailto://";
-        if (mem.startsWith(u8, link, mailto)) {
-            try attrEscape(buf, link[mailto.len..]);
-        } else if (mem.startsWith(u8, link, mailto[0 .. mailto.len - 2])) {
-            try attrEscape(buf, link[mailto.len - 2 ..]);
+        if (mem.startsWith(u8, link_, mailto)) {
+            try attrEscape(buf, link_[mailto.len..]);
+        } else if (mem.startsWith(u8, link_, mailto[0 .. mailto.len - 2])) {
+            try attrEscape(buf, link_[mailto.len - 2 ..]);
         } else {
-            try attrEscape(buf, link);
+            try attrEscape(buf, link_);
         }
         try buf.append("</a>");
     }
@@ -799,13 +809,13 @@ pub const HTML = struct {
     fn maybeWriteAbsolutePrefix(
         self: *HTML,
         buf: *Buffer,
-        link: []const u8,
+        link_: []const u8,
     ) !void {
-        if (self.params.absolute_prefix != null and isRelativeLink(link) and
-            link[0] != '.')
+        if (self.params.absolute_prefix != null and Util.isRelativeLink(link_) and
+            link_[0] != '.')
         {
             try buf.append(self.params.absolute_prefix.?);
-            if (link[0] != '/') {
+            if (link_[0] != '/') {
                 try buf.appendByte('/');
             }
         }
@@ -845,15 +855,15 @@ pub const HTML = struct {
     fn image(
         r: *Renderer,
         buf: *Buffer,
-        link: []const u8,
+        link_: []const u8,
         title: ?[]const u8,
         alt: ?[]const u8,
     ) !void {
         const self = @fieldParentPtr(HTML, "renderer", r);
         if (self.flags & HTML_SKIP_IMAGES != 0) return;
         try buf.append("<img src=\"");
-        try self.maybeWriteAbsolutePrefix(buf, link);
-        try attrEscape(buf, link);
+        try self.maybeWriteAbsolutePrefix(buf, link_);
+        try attrEscape(buf, link_);
         try buf.append("\" alt=\"");
         if (alt) |v| {
             try attrEscape(buf, v);
@@ -879,7 +889,7 @@ pub const HTML = struct {
     fn link(
         r: *Renderer,
         buf: *Buffer,
-        link: []const u8,
+        link_: []const u8,
         title: ?[]const u8,
         content: []const u8,
     ) !void {
@@ -891,18 +901,18 @@ pub const HTML = struct {
             return;
         }
         try buf.append("<a href=\"");
-        try self.maybeWriteAbsolutePrefix(buf, link);
-        try attrEscape(buf, link);
+        try self.maybeWriteAbsolutePrefix(buf, link_);
+        try attrEscape(buf, link_);
         if (title) |v| {
             try buf.append("\" title=\"");
-            try attrEscape(buf, title);
+            try attrEscape(buf, v);
         }
         var no_follow = false;
         var no_referer = false;
-        if (self.flags & HTML_NOFOLLOW_LINKS != 0 and !Util.isRelativeLink(link)) {
+        if (self.flags & HTML_NOFOLLOW_LINKS != 0 and !Util.isRelativeLink(link_)) {
             no_follow = true;
         }
-        if (self.flags & HTML_NOREFERRER_LINKS != 0 and !Util.isRelativeLink(link)) {
+        if (self.flags & HTML_NOREFERRER_LINKS != 0 and !Util.isRelativeLink(link_)) {
             no_referer = true;
         }
         if (no_follow or no_referer) {
@@ -915,7 +925,7 @@ pub const HTML = struct {
             }
             try buf.appendByte('"');
         }
-        if (self.flags & HTML_HREF_TARGET_BLANK != 0 and !Util.isRelativeLink(link)) {
+        if (self.flags & HTML_HREF_TARGET_BLANK != 0 and !Util.isRelativeLink(link_)) {
             try buf.append("\" target=\"_blank");
         }
         try buf.append("\">");
@@ -966,7 +976,7 @@ pub const HTML = struct {
 };
 
 pub const Util = struct {
-    const valid_url = [_][]const u8{
+    const valid_urls = [_][]const u8{
         "http://", "https://", "ftp://", "mailto://",
     };
 
@@ -975,7 +985,7 @@ pub const Util = struct {
     };
 
     pub fn isSafeLink(link: []const u8) bool {
-        for (valid_path) |p| {
+        for (valid_paths) |p| {
             if (mem.startsWith(u8, link, p)) {
                 if (link.len == p.len) {
                     return true;
@@ -985,7 +995,7 @@ pub const Util = struct {
                 }
             }
         }
-        for (valid_url) |u| {
+        for (valid_urls) |u| {
             if (link.len > u.len and eqlLower(link[0..u.len], u) and ascii.isAlNum(link[u.len])) {
                 return true;
             }
@@ -1022,12 +1032,13 @@ pub const Util = struct {
         if (mem.startsWith(u8, link, "../")) {
             return true;
         }
+        return false;
     }
 
     pub fn isHtmlTag(
         tag: []const u8,
         tag_name: []const u8,
-    ) ?usize {
+    ) bool {
         if (findHtmlTagPos(tag, tag_name)) |_| return true;
         return false;
     }
@@ -1044,7 +1055,7 @@ pub const Util = struct {
         if (i < tag.len and tag[0] == '/') i += 1;
         i = skipSpace(t, i);
         var j: usize = 0;
-        while (i < t) : ({
+        while (i < t.len) : ({
             i += 1;
             j += 1;
         }) {
@@ -1124,7 +1135,7 @@ pub const Parser = struct {
     };
 };
 
-test "HTML" {
+test "HTML.test" {
     var a = std.debug.global_allocator;
     var h = try HTML.init(a);
 }
