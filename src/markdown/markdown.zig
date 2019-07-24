@@ -943,6 +943,26 @@ pub const HTML = struct {
         }
         try buf.append(text);
     }
+
+    fn tripleEmphasis(
+        r: *Renderer,
+        buf: *Buffer,
+        text: []const u8,
+    ) !void {
+        try buf.append("<strong><em>");
+        try buf.append(text);
+        try buf.append("</em></strong>");
+    }
+
+    fn strikeThrough(
+        r: *Renderer,
+        buf: *Buffer,
+        text: []const u8,
+    ) !void {
+        try buf.append("<del>");
+        try buf.append(text);
+        try buf.append("</del>");
+    }
 };
 
 pub const Util = struct {
