@@ -922,6 +922,27 @@ pub const HTML = struct {
         try buf.append(content);
         try buf.append("</a>");
     }
+
+    fn rawHtmlTag(
+        r: *Renderer,
+        buf: *Buffer,
+        text: []const u8,
+    ) !void {
+        const self = @fieldParentPtr(HTML, "renderer", r);
+        if (self.flags & HTML_SKIP_HTML != 0) {
+            return;
+        }
+        if (self.flags & HTML_SKIP_STYLE != 0 and Util.isHtmlTag(text, "style")) {
+            return;
+        }
+        if (self.flags & HTML_SKIP_LINKS != 0 and Util.isHtmlTag(text, "a")) {
+            return;
+        }
+        if (self.flags & HTML_SKIP_IMAGES != 0 and Util.isHtmlTag(text, "img")) {
+            return;
+        }
+        try buf.append(text);
+    }
 };
 
 pub const Util = struct {
@@ -981,6 +1002,76 @@ pub const Util = struct {
         if (mem.startsWith(u8, link, "../")) {
             return true;
         }
+    }
+
+    pub fn isHtmlTag(
+        tag: []const u8,
+        tag_name: []const u8,
+    ) ?usize {
+        if (findHtmlTagPos(tag, tag_name)) |_| return true;
+        return false;
+    }
+
+    pub fn findHtmlTagPos(
+        tag: []const u8,
+        tag_name: []const u8,
+    ) ?usize {
+        var t = tag;
+        var i: usize = 0;
+        if (i < tag.len and tag[0] != '<') return null;
+        i += 1;
+        i = skipSpace(t, i);
+        if (i < tag.len and tag[0] == '/') i += 1;
+        i = skipSpace(t, i);
+        var j: usize = 0;
+        while (i < t) : ({
+            i += 1;
+            j += 1;
+        }) {
+            if (j >= tag_name.len) {
+                break;
+            }
+            if (ascii.toLower(t[i]) != tag_name[j]) {
+                return null;
+            }
+        }
+        if (i == t.len) {
+            return null;
+        }
+        const a = skipUntilCharIgnoreQuotes(t, i, '>');
+        if (a > i) return a;
+        return null;
+    }
+
+    fn skipUntilCharIgnoreQuotes(html: []const u8, start: usize, char: u8) usize {
+        var s = false;
+        var d = false;
+        var g = false;
+        var i = start;
+        while (i < html.len) {
+            if (html[i] == char and !s and !d and !g) {
+                return i;
+            } else if (html[i] == '\'') {
+                s = !s;
+            } else if (html[i] == '"') {
+                d = !d;
+            } else if (html[i] == '`') {
+                g = !g;
+            }
+            i += 1;
+        }
+        return start;
+    }
+
+    pub fn skipSpace(s: []const u8, at: usize) usize {
+        var v = s;
+        var i = at;
+        while (i < s.len) : (i += 1) {
+            if (!ascii.isSpace(s[i])) {
+                break;
+            }
+        }
+        return i;
     }
 };
 
