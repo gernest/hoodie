@@ -1003,6 +1003,14 @@ pub const HTML = struct {
     ) !void {
         try buf.append(text);
     }
+
+    fn normalText(
+        r: *Renderer,
+        buf: *Buffer,
+        text: []const u8,
+    ) !void {
+        try attrEscape(buf, text);
+    }
 };
 
 pub const Util = struct {
