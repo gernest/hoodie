@@ -1011,6 +1011,27 @@ pub const HTML = struct {
     ) !void {
         try attrEscape(buf, text);
     }
+
+    fn documentHeader(
+        r: *Renderer,
+        buf: *Buffer,
+    ) anyerror!void {
+        //noop
+    }
+
+    fn documentFooter(
+        r: *Renderer,
+        buf: *Buffer,
+    ) anyerror!void {
+        //noop
+    }
+
+    fn getFlags(
+        r: *Renderer,
+    ) usize {
+        const self = @fieldParentPtr(HTML, "renderer", r);
+        return self.flags;
+    }
 };
 
 pub const Util = struct {
