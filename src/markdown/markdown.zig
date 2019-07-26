@@ -995,6 +995,14 @@ pub const HTML = struct {
         try printBuffer(buf, "{}", id);
         try buf.append("</a></sup>");
     }
+
+    fn entity(
+        r: *Renderer,
+        buf: *Buffer,
+        text: []const u8,
+    ) !void {
+        try buf.append(text);
+    }
 };
 
 pub const Util = struct {
