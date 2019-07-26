@@ -973,6 +973,28 @@ pub const HTML = struct {
         try buf.append(text);
         try buf.append("</del>");
     }
+
+    fn footnoteRef(
+        r: *Renderer,
+        buf: *Buffer,
+        ref: []const u8,
+        id: usize,
+    ) !void {
+        const self = @fieldParentPtr(HTML, "renderer", r);
+        try buf.append("<sup class=\"footnote-ref\" id=\"fnref:");
+        if (self.params.footnote_anchor_prefix) |v| {
+            try buf.append(v);
+        }
+        try slugify(buf, ref);
+        try buf.append("\"><a href=\"#fn:");
+        if (self.params.footnote_anchor_prefix) |v| {
+            try buf.append(v);
+        }
+        try slugify(buf, ref);
+        try buf.append("\">");
+        try printBuffer(buf, "{}", id);
+        try buf.append("</a></sup>");
+    }
 };
 
 pub const Util = struct {
