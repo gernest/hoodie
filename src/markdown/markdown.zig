@@ -1168,6 +1168,7 @@ pub const Util = struct {
 pub const OkMap = std.AutoHash([]const u8, void);
 
 pub const Parser = struct {
+    allocator: *Allocator,
     r: *Renderer,
     refs: ReferenceMap,
     inline_callback: [256]?fn (
@@ -1302,15 +1303,64 @@ pub const Parser = struct {
     fn helperEmphasis(
         self: *Parser,
         buf: *Buffer,
-        text: []const u8,
+        data: []const u8,
         c: u8,
     ) !usize {
         var i: usize = 0;
-        var data = text;
         if (data.len > 1 and data[0] == c and data[1] == c) {
             i = 1;
         }
-        while (i < data.len) {}
+        while (i < data.len) {
+            const l = helperFindEmphChar(data[i..], c);
+            if (l == 0) return 0;
+            i += l;
+            if (i >= data.len) return 0;
+            if (i + 1 < data.len and data[i + 1] == c) {
+                i += 1;
+                continue;
+            }
+            if (data[i] == c and isSpace(data[i - 1])) {
+                if (self.flags & EXTENSION_NO_INTRA_EMPHASIS != 0) {
+                    if (!(i + 1 == data.len or isspace(data[i + 1]) or ispunct(data[i + 1]))) {
+                        continue;
+                    }
+                }
+                var w = &try Buffer.init(self.allocator, "");
+                try self.inlineFn(w, data[0..i]);
+                try self.r.empasis(buf, w.toSlice());
+                w.deinit();
+                return i + 1;
+            }
+        }
+        return 0;
+    }
+
+    fn helperDoubleEmphasis(
+        self: *Parser,
+        buf: *Buffer,
+        data: []const u8,
+        c: u8,
+    ) !usize {
+        var i: usize = 0;
+        while (i < data.len) {
+            const l = helperFindEmphChar(data[i..], c);
+            if (l == 0) return 0;
+            i += 1;
+            if (i + 1 < data.len and data[i] == c and data[i + 1] == c and i > 0 and !isSpace(data[i - 1])) {
+                try self.inlineFn(w, data[i..]);
+                var w = &try Buffer.init(self.allocator, "");
+                if (w.len() > 0) {
+                    if (c == '~') {
+                        try self.r.strikeThrough(buf, w.toSlice());
+                    } else {
+                        try self.r.doubleEmphasis(buf, w.toSlice());
+                    }
+                }
+                w.deinit();
+                return i += 2;
+            }
+            i += 1;
+        }
     }
 
     fn empasis(
