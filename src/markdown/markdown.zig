@@ -1201,6 +1201,38 @@ pub const Parser = struct {
     }
 
     // INLINE
+    fn inlineFn(
+        self: *Parser,
+        buf: *Buffer,
+        data: []const u8,
+    ) !void {
+        if (self.nesting >= self.max_nesting) {
+            return;
+        }
+        self.nesting += 1;
+        var i: usize = 0;
+        var end: usize = 0;
+        while (i < data.len) {
+            while (end < data.len and self.inline_callback[data[end]] == null) {
+                end += 1;
+            }
+            try self.r.normalText(buf, data[i..end]);
+            if (end >= data.len) {
+                break;
+            }
+            i = end;
+            const h = self.inline_callback[data[end]].?;
+            const c = try h(self, buf, data, i);
+            if (c == 0) {
+                end = i + 1;
+            } else {
+                i += c;
+                end = i;
+            }
+        }
+        self.nesting -= 1;
+    }
+
     fn helperFindEmphChar(
         data: []const u8,
         c: u8,
