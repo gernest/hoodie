@@ -1192,6 +1192,104 @@ pub const Parser = struct {
         has_block: bool,
         text: ?[]const u8,
     };
+
+    fn isSpace(c: u8) bool {
+        return switch (c) {
+            ' ', '\t', '\n', '\r', '\f', '\v' => true,
+            else => false,
+        };
+    }
+
+    // INLINE
+    fn helperFindEmphChar(
+        data: []const u8,
+        c: u8,
+    ) usize {
+        var i: usize = 0;
+        while (i < data.len) {
+            while (i < data.len and data[i] != c and data[i] != '`' and data[i] != '[') {
+                i += 1;
+            }
+            if (i >= data.len) {
+                return 0;
+            }
+            if (i != 0 and data[i - 1] == '\\') {
+                i += 1;
+                continue;
+            }
+            if (data[i] == c) {
+                return i;
+            }
+            if (data[i] == '`') {
+                var tmp: usize = 0;
+                i += 1;
+                while (i < data.len and data[i] != '`') {
+                    if (tmp == 0 and data[i] == c) {
+                        tmp = i;
+                    }
+                    i += 1;
+                }
+                if (i >= data.len) {
+                    return tmp;
+                }
+                i += 1;
+            } else if (data[i] == '[') {
+                var tmp: usize = 0;
+                i += 1;
+                while (i < data.len and data[i] != ']') {
+                    if (tmp == 0 and data[i] == c) {
+                        tmp = i;
+                    }
+                    i += 1;
+                }
+                i += 1;
+                while (i < data.len and (data[i] == ' ' or data[i] == '\n')) {
+                    i += 1;
+                }
+                if (i >= data.len) return tmp;
+                if (data[i] != '[' and data[i] != '(') {
+                    if (tmp > 0) return tmp;
+                    continue;
+                }
+                var cc = data[i];
+                while (i < data.len and data[i] != cc) {
+                    if (tmp == 0 and data[i] == c) {
+                        return i;
+                    }
+                    i += 1;
+                }
+                if (i >= data.len) {
+                    return tmp;
+                }
+                i += 1;
+            }
+        }
+        return 0;
+    }
+
+    fn helperEmphasis(
+        self: *Parser,
+        buf: *Buffer,
+        text: []const u8,
+        c: u8,
+    ) !usize {
+        var i: usize = 0;
+        var data = text;
+        if (data.len > 1 and data[0] == c and data[1] == c) {
+            i = 1;
+        }
+        while (i < data.len) {}
+    }
+
+    fn empasis(
+        self: *Parser,
+        buf: *Buffer,
+        text: []const u8,
+        offset: usize,
+    ) !usize {
+        var data = text[offset..];
+        const c = data[0];
+    }
 };
 
 test "HTML.test" {
